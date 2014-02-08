@@ -1,0 +1,36 @@
+export(clusterAlgo
+      ,clusterInit
+      ,clusterStrategy
+      ,clusterFastStrategy
+      ,diagGaussianNames
+      ,validDiagGaussianNames
+      ,gammaNames
+      ,validGammaNames
+      ,validCategoricalNames
+      ,clusterDiagGaussian
+      ,clusterGamma
+      ,clusterCategorical
+      )
+
+export(CxxFlags,
+       LdFlags
+      )
+
+exportClasses(ClusterAlgo
+             ,ClusterInit
+             ,ClusterStrategy
+             ,IClusterModel
+             ,ClusterCategorical
+             ,ClusterDiagGaussian
+             ,ClusterGamma
+             )
+
+exportMethods(print)
+exportMethods(plot)
+exportMethods(show)
+exportMethods(summary)
+
+import(Rcpp)
+importFrom(methods,show)
+
+useDynLib(rtkpp)

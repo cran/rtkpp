@@ -1,0 +1,10 @@
+#-----------------------------------------------------------------------
+# makevars
+# author: Serge Iovleff
+#-----------------------------------------------------------------------
+# This file allow to activate the Verbose and Debug flag
+#-----------------------------------------------------------------------
+# flags in Debug mode
+# STK_CXXFLAGS  += -DSTK_ALGEBRA_VERBOSE -DSTK_ALGEBRA_VERY_VERBOSE
+# STK_CXXFLAGS  += -DSTK_ALGEBRA_VERBOSE -DSTK_ALGEBRA_DEBUG
+
