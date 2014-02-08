@@ -128,6 +128,9 @@ void Gaussian_sk<Array>::randomInit()
                        ? 1.
                        : std::sqrt(variance/(this->nbSample()*this->nbVariable()));
   }
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Gaussian_sk<Array>::randomInit() done\n");
+#endif
 }
 
 /* Compute the weighted mean and the common standard deviation. */

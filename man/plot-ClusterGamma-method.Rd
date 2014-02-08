@@ -11,7 +11,7 @@
 \item{x}{an object of class [\code{\linkS4class{ClusterGamma}}]}
 
 \item{y}{a list of variables to plot (subset). Variables names or indices.
-If missing all the variables are represented.}
+If missingValues all the variables are represented.}
 
 \item{...}{further arguments passed to or from other methods}
 }

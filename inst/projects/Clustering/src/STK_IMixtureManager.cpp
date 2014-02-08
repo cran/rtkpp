@@ -32,8 +32,9 @@
  *  @brief In this file we implement the Interface IMixtureManager class.
  **/
 
+#include "DManager/include/STK_IDataHandler.h"
 #include "../include/STK_MixtureComposer.h"
-#include "../include/STK_IDataManager.h"
+#include "../include/STK_IMixtureData.h"
 
 #include "../include/STK_IMixtureManager.h"
 
@@ -76,6 +77,7 @@ Clust::Mixture IMixtureManager::getIdModel( String const& idData) const
  **/
 void IMixtureManager::createMixtures(MixtureComposer& composer, int nbCluster)
 {
+  typedef IDataHandler::InfoMap InfoMap;
   for (InfoMap::const_iterator it=p_handler_->info().begin(); it!=p_handler_->info().end(); ++it)
   {
     Clust::Mixture idModel = Clust::stringToMixture(it->second);
@@ -102,22 +104,22 @@ IMixture* IMixtureManager::createMixture(String const& idData, int nbCluster)
  *  deleted.
  *  @param p_data a pointer on the data manager
  **/
-void IMixtureManager::registerDataManager(IDataManager* p_data)
+void IMixtureManager::registerMixtureData(IMixtureData* p_data)
 { v_data_.push_back(p_data);}
 /* release a data set from v_data_.
  *  @param idData name of the data set to release
  **/
-void IMixtureManager::releaseDataManager(String const& idData)
+void IMixtureManager::releaseMixtureData(String const& idData)
 {
   for (DataIterator it = v_data_.begin(); it != v_data_.end(); ++it)
   { if ((*it)->idData() == idData) {delete (*it); v_data_.erase(it); break;}}
 }
 
-/* Utility lookup function allowing to find a DataManager from its idData
+/* Utility lookup function allowing to find a MixtureData from its idData
  *  @param idData the id name of the mixture we want to get
- *  @return a pointer on the DataManager
+ *  @return a pointer on the MixtureData
  **/
-IDataManager* IMixtureManager::getDataManager( String const& idData) const
+IMixtureData* IMixtureManager::getMixtureData( String const& idData) const
 {
   for (ConstDataIterator it = v_data_.begin(); it != v_data_.end(); ++it)
   {  if ((*it)->idData() == idData) return (*it);}

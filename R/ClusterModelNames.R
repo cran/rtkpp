@@ -51,19 +51,19 @@
 #'
 #' @return A vector of character with the model names.
 #' @examples
-#' diagGaussianNames()
-#' diagGaussianNames("all", "equal", "free") # same as c("gaussian_p_sk", "gaussian_pk_sk")
+#' clusterDiagGaussianNames()
+#' clusterDiagGaussianNames("all", "equal", "free") # same as c("gaussian_p_sk", "gaussian_pk_sk")
 #'
-#' @rdname diagGaussianNames
+#' @rdname clusterDiagGaussianNames
 #' @export
-diagGaussianNames <- function(prop = "all", sdInCluster="all", sdBetweenCluster = "all")
+clusterDiagGaussianNames <- function(prop = "all", sdInCluster="all", sdBetweenCluster = "all")
 {
   if(sum(prop %in% c("equal","free","all")) != 1)
-  { stop("prop is not valid. See ?diagGaussianNames for the list of prop.")}
+  { stop("prop is not valid. See ?clusterDiagGaussianNames for the list of prop.")}
   if(sum(sdInCluster %in% c("equal","free","all")) != 1)
-  { stop("sdInCluster is not valid. See ?diagGaussianNames for the list of sdInCluster.")}
+  { stop("sdInCluster is not valid. See ?clusterDiagGaussianNames for the list of sdInCluster.")}
   if(sum(sdBetweenCluster %in% c("equal","free","all")) != 1)
-  { stop("sdBetweenCluster is not valid. See ?diagGaussianNames for the list of sdBetweenCluster.")}
+  { stop("sdBetweenCluster is not valid. See ?clusterDiagGaussianNames for the list of sdBetweenCluster.")}
 
   all = c( "gaussian_pk_sjk", "gaussian_pk_sj", "gaussian_pk_sk", "gaussian_pk_s"
          , "gaussian_p_sjk", "gaussian_p_sj", "gaussian_p_sk", "gaussian_p_s")
@@ -87,9 +87,9 @@ diagGaussianNames <- function(prop = "all", sdInCluster="all", sdBetweenCluster 
 
 #' check if a vector of diagonal Gaussian model name is correct.
 #' @param names a vector of character
-#' @rdname diagGaussianNames
+#' @rdname clusterDiagGaussianNames
 #' @keywords internal
-validDiagGaussianNames <- function(names)
+clusterValidDiagGaussianNames <- function(names)
 {
   nb = length(names)
   if ( nb == 0 ) { return(FALSE);}
@@ -139,24 +139,25 @@ validDiagGaussianNames <- function(names)
 #'
 #' @return A vector of character with the model names.
 #' @examples
-#' gammaNames()
-#' gammaNames("all", "equal", "free", "free", "equal") # same as c("gamma_p_ak_bj", "gamma_pk_ak_bj")
+#' clusterGammaNames()
+#' ## same as c("gamma_p_ak_bj", "gamma_pk_ak_bj")
+#' clusterGammaNames("all", "equal", "free", "free", "equal")
 #'
-#' @rdname gammaNames
+#' @rdname clusterGammaNames
 #' @export
-gammaNames <- function(prop = "all", shapeInCluster="all", shapeBetweenCluster="free"
+clusterGammaNames <- function(prop = "all", shapeInCluster="all", shapeBetweenCluster="free"
                                    , scaleInCluster= "all", scaleBetweenCluster="all")
 {
   if(sum(prop %in% c("equal","free","all")) != 1)
-  { stop("prop is not valid. See ?gammaNames for the list of prop.")}
+  { stop("prop is not valid. See ?clusterGammaNames for the list of prop.")}
   if(sum(shapeInCluster %in% c("equal","free","all")) != 1)
-  { stop("shapeInCluster is not valid. See ?gammaNames for the list of shapeInCluster.")}
+  { stop("shapeInCluster is not valid. See ?clusterGammaNames for the list of shapeInCluster.")}
   if(sum(shapeBetweenCluster %in% c("equal","free","all")) != 1)
-  { stop("shapeBetweenCluster is not valid. See ?gammaNames for the list of shapeBetweenCluster.")}
+  { stop("shapeBetweenCluster is not valid. See ?clusterGammaNames for the list of shapeBetweenCluster.")}
   if(sum(scaleInCluster %in% c("equal","free","all")) != 1)
-  { stop("scaleInCluster is not valid. See ?gammaNames for the list of scaleInCluster.")}
+  { stop("scaleInCluster is not valid. See ?clusterGammaNames for the list of scaleInCluster.")}
   if(sum(scaleBetweenCluster %in% c("equal","free","all")) != 1)
-  { stop("scaleBetweenCluster is not valid. See ?gammaNames for the list of scaleBetweenCluster.")}
+  { stop("scaleBetweenCluster is not valid. See ?clusterGammaNames for the list of scaleBetweenCluster.")}
 
   all = c( "gamma_p_ajk_bjk",  "gamma_p_ajk_bk",  "gamma_p_ajk_bj",  "gamma_p_ajk_b"
          , "gamma_p_ak_bjk",  "gamma_p_ak_bk",  "gamma_p_ak_bj",  "gamma_p_ak_b"
@@ -247,9 +248,9 @@ gammaNames <- function(prop = "all", shapeInCluster="all", shapeBetweenCluster="
 
 #' check if a vector of gamma model name is correct.
 #' @param names a vector of character
-#' @rdname diagGaussianNames
+#' @rdname clusterGammaNames
 #' @keywords internal
-validGammaNames <- function(names)
+clusterValidGammaNames <- function(names)
 {
   nb = length(names)
   if ( nb == 0 ) { return(FALSE);}
@@ -268,18 +269,67 @@ validGammaNames <- function(names)
   return(TRUE)
 }
 
+#' Build a vector of Categorical model names.
+#'
+#' In a Categorical model, we can build 4 models:
+#' \enumerate{
+#'  \item {The proportions can be equal or free.}
+#'  \item {The probabilities can be equal or free for all the variables.}
+#' }
+#'
+#' The model names are summarized in the following array:
+#' \tabular{lll}{
+#'  Model Name         \tab Proportions \tab Probabilities between variables  \cr
+#'  categorical_p_pjk  \tab Equal       \tab Free                             \cr
+#'  categorical_p_pk   \tab Equal       \tab Equal                            \cr
+#'  categorical_pk_pjk \tab Free        \tab Free                             \cr
+#'  categorical_pk_pk  \tab Free        \tab Equal                            \cr
+#' }
+#'
+#' @param prop A character string equal to "equal", "free" or "all". Default is "all".
+#' @param probabilities A character string equal to "equal", "free" or "all". Default is "all".
+#'
+#' @return A vector of character with the model names.
+#' @examples
+#' clusterCategoricalNames()
+#' clusterCategoricalNames("all", "equal") # same as c( "categorical_pk_pk", "categorical_p_pk")
+#'
+#' @rdname clusterCategoricalNames
+#' @export
+clusterCategoricalNames <- function(prop = "all", probabilities="all")
+{
+  if(sum(prop %in% c("equal","free","all")) != 1)
+  { stop("prop is not valid. See ?clusterCategoricalNames for the list of prop.")}
+  if(sum(probabilities %in% c("equal","free","all")) != 1)
+  { stop("probabilities is not valid. See ?clusterCategoricalNames for the list of probabilities.")}
+  
+  all = c( "categorical_pk_pjk", "categorical_pk_pk", "categorical_p_pjk", "categorical_p_sk")
+  propFree  = c( "categorical_pk_pjk", "categorical_pk_pk")
+  propEqual = c( "categorical_p_pjk", "categorical_p_pk")
+  probFree  = c( "categorical_pk_pjk", "categorical_p_pjk")
+  probEqual = c( "categorical_pk_pk", "categorical_p_pk")
+  
+  res = all;
+  if (prop == "free")  { res = intersect(res, propFree);}
+  if (prop == "equal") { res = intersect(res, propEqual);}
+  if (probabilities =="free")  { res = intersect(res, probFree);}
+  if (probabilities =="equal") { res = intersect(res, probEqual);}
+  
+  res
+}
+
 #' check if a vector of Categorical model name is correct.
 #' @param names a vector of character
-#' @rdname CategoricalNames
+#' @rdname clusterCategoricalNames
 #' @keywords internal
-validCategoricalNames <- function(names)
+clusterValidCategoricalNames <- function(names)
 {
   nb = length(names)
   if ( nb == 0 ) { return(FALSE);}
 
   all = c( "categorical_pk_pjk", "categorical_p_pjk",  "categorical_pk_pk", "categorical_p_pk")
   for (i in 1:nb)
-  {?  if ( sum(names[i] %in% all) != 1 ) { return(FALSE);}}
+  {  if ( sum(names[i] %in% all) != 1 ) { return(FALSE);}}
   return(TRUE)
 }
 

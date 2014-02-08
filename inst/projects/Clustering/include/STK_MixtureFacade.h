@@ -37,6 +37,7 @@
 #ifndef STK_MIXTUREFACADE_H
 #define STK_MIXTUREFACADE_H
 
+#include "../../Sdk/include/STK_IRunner.h"
 #include "STK_Clust_Util.h"
 
 namespace STK
@@ -49,17 +50,17 @@ class IMixtureStrategy;
  * The StrategyFacade allow to create the strategy for estimating a mixture model
  * with less effort
  **/
-class StrategyFacade
+class StrategyFacade: public IRunnerBase
 {
   public:
     /** constructor.
      * @param p_model a reference on the current model
      **/
     inline StrategyFacade( IMixtureComposer*& p_model)
-                        : p_model_(p_model), p_strategy_(0)
+                         : IRunnerBase(), p_model_(p_model), p_strategy_(0)
     {}
     /** destructor. */
-    ~StrategyFacade();
+    virtual ~StrategyFacade();
     /** set model in case we want to use the strategy again
      *  @param p_model the model to set
      **/
@@ -74,7 +75,7 @@ class StrategyFacade
                            , Clust::algoType shortAlgo, int nbShortIter, Real shortEpsilon
                            , Clust::algoType longAlgo, int nblongIter, Real longEpsilon);
     /** run the strategy */
-    bool run();
+   virtual bool run();
 
   protected:
     /** the mixture model to estimate */

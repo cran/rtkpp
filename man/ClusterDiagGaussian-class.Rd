@@ -8,7 +8,7 @@
 This class defines a diagonal Gaussian mixture Model.
 }
 \details{
-This class inherits from the [\code{\linkS4class{IClusterModel}}] class.
+This class inherits from the [\code{\linkS4class{IClusterModelBase}}] class.
 A diagonal gaussian model is a mixture model of the form:
 \deqn{
   f({x}|\boldsymbol{\theta})
@@ -19,9 +19,8 @@ A diagonal gaussian model is a mixture model of the form:
 \section{Slots}{
 
 \describe{
-\item{\code{mean}}{Matrix with the mean of the jth variable in the kth cluster.}
-
-\item{\code{sigma}}{Matrix with the standard deviation of the jth variable in the kth cluster.}
+\item{\code{component}}{A [\code{\linkS4class{ClusterDiagGaussianComponent}}] with the
+mean and standard deviation of the diagonal mixture model.}
 }}
 \examples{
 getSlots("ClusterDiagGaussian")
@@ -32,6 +31,6 @@ new("ClusterDiagGaussian", data=geyser)
 Serge Iovleff
 }
 \seealso{
-[\code{\linkS4class{IClusterModel}}] class
+[\code{\linkS4class{IClusterModelBase}}] class
 }
 

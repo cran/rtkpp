@@ -133,10 +133,10 @@ void Gamma_a_bk<Array>::randomInit()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     Real mean = this->meank(k), variance = this->variancek(k);
-    p_param(k)->scale_ = Law::Exponential::rand(variance/mean);
+    p_param(k)->scale_ = Law::Exponential::rand((variance/mean));
     value += p_param(k)->tk_ * (mean*mean/variance);
   }
-  shape_ = STK::Law::Exponential::rand(value/this->nbSample());
+  shape_ = STK::Law::Exponential::rand(value/(this->nbSample()));
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_a_bk<Array>::randomInit() done\n");
   this->writeParameters(stk_cout);

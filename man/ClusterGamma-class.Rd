@@ -5,7 +5,7 @@
 \alias{ClusterGamma-class}
 \title{Definition of the [\code{\linkS4class{ClusterGamma}}] class}
 \description{
-This class inherits from the [\code{\linkS4class{IClusterModel}}] class.
+This class inherits from the [\code{\linkS4class{IClusterModelBase}}] class.
 A gamma mixture model is a mixture model of the form:
 \deqn{
   f({x}|\boldsymbol{\theta}) \\
@@ -16,9 +16,8 @@ A gamma mixture model is a mixture model of the form:
 \section{Slots}{
 
 \describe{
-\item{\code{shape}}{Matrix with the shape of the jth variable in the kth cluster.}
-
-\item{\code{scale}}{Matrix with the scale of the jth variable in the kth cluster.}
+\item{\code{component}}{A [\code{\linkS4class{ClusterGammaComponent}}] with the
+shape and the scale of the component mixture model.}
 }}
 \examples{
 getSlots("ClusterGamma")
@@ -29,6 +28,6 @@ getSlots("ClusterGamma")
 Serge Iovleff
 }
 \seealso{
-[\code{\linkS4class{IClusterModel}}] class
+[\code{\linkS4class{IClusterModelBase}}] class
 }
 

@@ -71,7 +71,35 @@ namespace STK
  * @param cosinus the cosinus of the Givens rotation (output)
  * @param sinus the sinus of the Givens rotation rotation (output)
  **/
-Real compGivens( Real const& y, Real const& z, Real& cosinus, Real& sinus);
+template<class Type>
+Real compGivens( Type const& y, Type const& z, Type& cosinus, Type& sinus)
+{
+  // trivial case
+  if (z == 0)
+  {
+    sinus   = 0.0;
+    cosinus = 1.0;
+    return y;
+  }
+  // compute Givens rotation avoiding underflow and overflow
+  if (std::abs(z) > std::abs(y))
+  {
+    Type aux = y/z;
+    Type t   = sign(z, sqrt(1.0+aux*aux));
+    sinus    = 1.0/t;
+    cosinus  = sinus * aux;
+    return t*z;
+  }
+  else
+  {
+    Type aux = z/y;
+    Type t   = sign(y, sqrt(1.0+aux*aux));
+    cosinus  = 1.0/t;
+    sinus    = cosinus * aux;
+    return t*y;
+  }
+}
+
 
 /** @ingroup Algebra
  *  @brief Apply Givens rotation.
@@ -89,13 +117,14 @@ Real compGivens( Real const& y, Real const& z, Real& cosinus, Real& sinus);
  **/
 template < class TContainer2D>
 void rightGivens( ArrayBase<TContainer2D>& M, int j1, int j2
-                , Real const& cosinus, Real const& sinus
+                , typename TContainer2D::Type const& cosinus, typename TContainer2D::Type const& sinus
                 )
 {
+  typedef typename TContainer2D::Type Type;
   // Apply givens rotation
   for (int i = M.beginRows(); i < M.endRows(); i++)
   {
-    const Real aux1 = M.elt(i, j1), aux2 = M.elt(i, j2);
+    const Type aux1 = M.elt(i, j1), aux2 = M.elt(i, j2);
     M.elt(i, j1) = cosinus * aux1 + sinus * aux2;
     M.elt(i, j2) = cosinus * aux2 - sinus * aux1;
   }
@@ -117,13 +146,14 @@ void rightGivens( ArrayBase<TContainer2D>& M, int j1, int j2
  **/
 template < class TContainer2D>
 void leftGivens( ArrayBase<TContainer2D>& M, int i1, int i2
-               , Real const& cosinus, Real const& sinus
+               , typename TContainer2D::Type const& cosinus, typename TContainer2D::Type const& sinus
                )
 {
+  typedef typename TContainer2D::Type Type;
   // apply left Givens rotation
   for (int j = M.beginCols(); j< M.endCols(); j++)
   {
-    const Real aux1 = M.elt(i1, j), aux2 = M.elt(i2, j);
+    const Type aux1 = M.elt(i1, j), aux2 = M.elt(i2, j);
     M.elt(i1, j) = cosinus * aux1 + sinus * aux2;
     M.elt(i2, j) = cosinus * aux2 - sinus * aux1;
   }

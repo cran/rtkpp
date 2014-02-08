@@ -39,9 +39,9 @@
 
 namespace STK
 {
-
+// threshold_ is set to this value in order to get stability on the results
 void IMixtureAlgo::setModel(IMixtureComposer* p_model)
-{ p_model_ = p_model; threshold_ = 0.03*p_model->nbSample();}
+{ p_model_ = p_model; threshold_ = std::min(10., 0.03*p_model_->nbSample());}
 
 /* run the CEM allgorithm */
 bool CEMAlgo::run()
@@ -170,6 +170,52 @@ bool SEMAlgo::run()
     msg_error_ = Clust::exceptionToString(error);
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("An error occur in SEM algorithm: ") << msg_error_ << _T("\n");
+#endif
+    return false;
+  }
+  return true;
+}
+
+bool SemiSEMAlgo::run()
+{
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Entering SemiSEMAlgo::run() with:\n")
+           << _T("nbIterMax_ = ") << nbIterMax_ << _T("\n")
+           << _T("epsilon_ = ")  << epsilon_ << _T("\n");
+#endif
+  try
+  {
+    Real currentLnLikelihood = p_model_->lnLikelihood();
+    for (int iter = 0; iter < this->nbIterMax_; ++iter)
+    {
+      p_model_->pStep();
+      p_model_->samplingStep();
+      p_model_->mStep();
+      if (p_model_->eStep()<threshold_)
+      {
+        msg_error_ = STKERROR_NO_ARG(SemiSEMAlgo::run,Not enough individuals in a class);
+        return false;
+      }
+      Real lnLikelihood = p_model_->lnLikelihood();
+      // the likelihood can increase
+      if ( std::abs(lnLikelihood - currentLnLikelihood) < epsilon_)
+      {
+#ifdef STK_MIXTURE_VERY_VERBOSE
+        stk_cout << _T("Terminating SemiSEMAlgo::run() with:\n")
+                 << _T("iter = ") << iter << _T("\n")
+                 << _T("delta = ") << std::abs(lnLikelihood - currentLnLikelihood)
+                 << _T("\n");
+#endif
+        break;
+      }
+      currentLnLikelihood = lnLikelihood;
+    }
+  }
+  catch (Clust::exceptions const& error)
+  {
+    msg_error_ = Clust::exceptionToString(error);
+#ifdef STK_MIXTURE_VERBOSE
+  stk_cout << _T("An error occur in SemiSEM algorithm: ") << msg_error_ << _T("\n");
 #endif
     return false;
   }

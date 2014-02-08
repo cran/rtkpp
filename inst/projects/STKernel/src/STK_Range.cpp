@@ -82,14 +82,4 @@ istream& operator>> (istream& is, Range& I)
   return is;
 }
 
-Range stringToRange( String const& str)
-{
-  Range  x;
-  istringstream is(str);
-  is >> Proxy< Range >(x);
-  return x;
-}
-
-
-
 } // namespace STK

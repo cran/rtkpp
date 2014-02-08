@@ -123,8 +123,8 @@ void Gamma_ajk_bjk<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand(mean*mean/variance);
-      p_param(k)->scale_[j] = Law::Exponential::rand(variance/mean);
+      p_param(k)->shape_[j] = Law::Exponential::rand((mean*mean/variance));
+      p_param(k)->scale_[j] = Law::Exponential::rand((variance/mean));
     }
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE

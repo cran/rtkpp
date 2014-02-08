@@ -34,7 +34,7 @@
 #' for statistics, clustering, linear algebra, arrays (with an Eigen-like API),
 #' regression, dimension reduction, etc. Some functionalities provided by the
 #' library are available in the R environment as R functions.
-#' 
+#'
 #' The available functionalities are:
 #' \enumerate{
 #'    \item the clusterDiagGaussian method allowing to discover, group structures in
@@ -103,7 +103,7 @@ NULL
 NULL
 
 #' Qualitative data: Survival of passengers on the Titanic
-#' 
+#'
 #' For each person on board the fatal maiden voyage of the ocean liner Titanic,
 #' this dataset records: sex, age [adult/child], economic status [first/second/third class, or crew]
 #' and whether or not that person survived. There are no missing values.
@@ -129,10 +129,10 @@ NULL
 #'   \item{\code{Class}}{0 = crew, 1 = first, 2 = second, 3 = third, which denote the economic status of the subject}
 #'   \item{\code{Age}}{1 = adult, 0 = child, which denote if the subject is an adult or a child}
 #'   \item{\code{Sex}}{1 = male, 0 = female, which denote the sex of the subject}
-#'   \item{\code{Survived}}{1 = yes, 0 = no, which denote if the subject lived through the fatal maiden voyage of the ocean liner Titanic} 
+#'   \item{\code{Survived}}{1 = yes, 0 = no, which denote if the subject lived through the fatal maiden voyage of the ocean liner Titanic}
 #' }
 #'
-#' @source 
+#' @source
 #' The source provides a data set recording class, sex, age, and survival status
 #' for each person on board of the Titanic, and is based on data originally
 #' collected by the British Board of Trade and reprinted in:
@@ -142,13 +142,13 @@ NULL
 #' @name titanic
 #' @docType data
 #' @keywords datasets
-#' 
+#'
 #' @examples
 #'   data(titanic)
 NULL
 
 #' Qualitative data : morphological description of birds
-#' 
+#'
 #' The dataset contains details on the morphology of birds (puffins). Each
 #' individual (bird) is described by 6 qualitative variables. One variable for
 #' the gender and 5 variables giving a morphological description of the birds.
@@ -170,14 +170,14 @@ NULL
 #' @name birds
 #' @docType data
 #' @keywords datasets
-#' 
+#'
 #' @examples
 #'   data(birds)
 NULL
 
 
 #' Qualitative data : Car Evaluation
-#' 
+#'
 #' Car Evaluation Database was derived from a simple hierarchical decision model
 #' originally developed for the demonstration of DEX, M. Bohanec, V. Rajkovic:
 #' Expert system for decision making.
@@ -185,25 +185,161 @@ NULL
 #' @format A data frame with 1728 observations on the following 6 variables.
 #'
 #' \describe{
-#'   \item{\code{buying}}{the buying price (4 modalities: vhigh, high, med, low).}
-#'   \item{\code{maint}}{the price of the maintenance (4 modalities: vhigh, high, med, low).}
-#'   \item{\code{doors}}{the number of doors (4 modalities: 2, 3, 4, 5more).}
-#'   \item{\code{persons}}{the capacity in terms of persons to carry (3 modalities: 2, 4, more).}
-#'   \item{\code{lug_boot}}{the size of luggage boot  (3 modalities: small, med, big).}
-#'   \item{\code{safety}}{the estimated safety of the car (3 modalities: low, med, high).}
-#'   \item{\code{acceptability}}{the car acceptability (4 modalities: unacc, acc, good, vgood).}
+#'   \item{\code{buying}}{the buying price (4 modalities: vhigh, high, med, low)}
+#'   \item{\code{maint}}{the price of the maintenance (4 modalities: vhigh, high, med, low)}
+#'   \item{\code{doors}}{the number of doors (4 modalities: 2, 3, 4, 5more)}
+#'   \item{\code{persons}}{the capacity in terms of persons to carry (3 modalities: 2, 4, more)}
+#'   \item{\code{lug_boot}}{the size of luggage boot  (3 modalities: small, med, big)}
+#'   \item{\code{safety}}{the estimated safety of the car (3 modalities: low, med, high)}
+#'   \item{\code{acceptability}}{the car acceptability (4 modalities: unacc, acc, good, vgood)}
 #' }
 #'
 #' @source
-#' Creator: Marko Bohanec 
+#' Creator: Marko Bohanec
 #' Donors: Marko Bohanec & Blaz Zupan
 #' http://archive.ics.uci.edu/ml/datasets/Car+Evaluation
 #'
 #' @name car
 #' @docType data
 #' @keywords datasets
-#' 
+#'
 #' @examples
 #'   data(car)
 NULL
+
+#' Mixed data : Cleveland Heart Disease Data
+#'
+#' The Cleveland Heart Disease Data found in the UCI machine learning
+#' repository consists of 14 variables measured on 303 individuals who have
+#' heart disease. The individuals had been grouped into five levels of heart
+#' disease. The information about the disease status is in the
+#' \code{HeartDisease.target} data set.
+#'
+#' The variables consist of five continuous and eight discrete attributes, the
+#' former in the \code{HeartDisease.cont} data set and the later in the
+#' \code{HeartDisease.cat} data set. Three of the discrete attributes have two levels,
+#' three have three levels and two have four levels. There are six missing
+#' values in the data set.
+#'
+#' @format Three data frames with 303 observations on the following 14 variables.
+#'
+#' \describe{
+#'  \item{\code{age}}{age in years}
+#'  \item{\code{sex}}{sex (1 = male; 0 = female)}
+#'  \item{\code{cp}}{chest pain type. 1: typical angina, 2: atypical angina,
+#'                                    3: non-anginal pain, 4: asymptomatic }
+#' \item{\code{trestbps}}{resting blood pressure (in mm Hg on admission to the  hospital)}
+#' \item{\code{chol}}{serum cholestoral in mg/dl }
+#' \item{\code{fbs}}{(fasting blood sugar > 120 mg/dl)  (1 = true; 0 = false)}
+#' \item{\code{restecg}}{ resting electrocardiographic results.
+#'    0: normal,
+#'    1: having ST-T wave abnormality (T wave inversions and/or ST,
+#'    elevation or depression of > 0.05 mV)
+#'    2: showing probable or definite left ventricular hypertrophy by Estes\' criteria}
+#' \item{\code{thalach}}{ maximum heart rate achieved}
+#' \item{\code{exang}}{exercise induced angina (1 = yes; 0 = no)}
+#' \item{\code{oldpeak}}{ST depression induced by exercise relative to rest}
+#' \item{\code{slope}}{the slope of the peak exercise ST segment
+#'        1: upsloping,
+#'        2: flat,
+#'        3: downsloping}
+#' \item{\code{ca}}{number of major vessels (0-3) colored by flourosopy}
+#' \item{\code{thal}}{3 = normal; 6 = fixed defect; 7 = reversable defect}
+#' \item{\code{ num}}{diagnosis of heart disease (angiographic disease status).
+#'               0: < 50% diameter narrowing
+#'               1: > 50% diameter narrowing
+#'     (in any major vessel: attributes 59 through 68 are vessels)}
+#' }
+#'
+#' @source
+#' Author: David W. Aha (aha 'AT' ics.uci.edu) (714) 856-8779
+#'
+#' Donors: The data was collected from the Cleveland Clinic Foundation (cleveland.data)
+#'
+#' https://archive.ics.uci.edu/ml/datasets/Heart+Disease
+#'
+#' Detrano, R., Janosi, A., Steinbrunn, W., Pfisterer, M., Schmid, J., Sandhu, S., Guppy, K., Lee, S., & Froelicher, V. (1989). International application of a new probability algorithm for the diagnosis of coronary artery disease. American Journal of Cardiology, 64,304--310.
+#'
+#' David W. Aha & Dennis Kibler. "Instance-based prediction of heart-disease presence with the Cleveland database."
+#'
+#' Gennari, J.H., Langley, P, & Fisher, D. (1989). Models of incremental concept formation. Artificial Intelligence, 40, 11--61.
+#'
+#'
+#' @name HeartDisease.cat
+#' @name HeartDisease.cont
+#' @name HeartDisease.target
+#' @aliases HeartDisease HeartDisease.cat HeartDisease.cont HeartDisease.target
+#' @rdname HeartDisease
+#' @docType data
+#' @keywords datasets
+#'
+#' @examples
+#'summary(data(HeartDisease.cat))
+#'summary(data(HeartDisease.cont))
+#'summary(data(HeartDisease.target))
+NULL
+
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterCategoricalComponent-method
+setMethod(
+    "missingValues",
+    c("ClusterCategoricalComponent"),
+    function(x){ return(cbind(x@missing, x@data[x@missing]));}
+)
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterCategorical-method
+setMethod(
+    "missingValues",
+    c("ClusterCategorical"),
+    function(x){ return(missingValues(x@component));}
+)
+
+
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterGammaComponent-method
+setMethod(
+    "missingValues",
+    c("ClusterGammaComponent"),
+    function(x){ return(cbind(x@missing, x@data[x@missing]));}
+)
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterGamma-method
+setMethod(
+  "missingValues",
+  c("ClusterGamma"),
+  function(x){ return(missingValues(x@component));}
+)
+
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterDiagGaussianComponent-method
+setMethod(
+  "missingValues",
+  c("ClusterDiagGaussianComponent"),
+  function(x){ return(cbind(x@missing, x@data[x@missing]));}
+)
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterDiagGaussian-method
+setMethod(
+  "missingValues",
+  c("ClusterDiagGaussian"),
+  function(x){ return(missingValues(x@component));}
+)
+
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterDiagGaussian-method
+setMethod(
+  "missingValues",
+  c("ClusterHeterogeneous"),
+  function(x)
+  {
+    res <- list();
+    nbData <- length(x@ldata)
+    if(nbData>0)
+    {
+      for (l in 1:nbData)
+      { res  <- c(x@ldata[[nbData-l+1]]@data, res);}
+    }
+    return(res)
+  }
+)
 

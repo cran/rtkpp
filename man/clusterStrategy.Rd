@@ -17,17 +17,18 @@ clusterFastStrategy()
 
 \item{nbInit}{Integer defining the number of initialization to try. Default value: 3.}
 
-\item{initMethod}{Character string with the initialization method. Default is "random".}
+\item{initMethod}{Character string with the initialization method, see [\code{\link{clusterInit}}]$
+for possible values. Default is "random".}
 
-\item{initAlgo}{Character string with the algorithm to use in the initialization stage.
-Default value: "SEM"}
+\item{initAlgo}{Character string with the algorithm to use in the initialization stage,
+[\code{\link{clusterAlgo}}] for possible values. Default value: "SEM".}
 
 \item{nbInitIteration}{Integer defining the maximal number of iterations in initialization algorithm
-if \code{initAlgo} = "EM or "CEM. This is the number of iterations if \code{initAlgo} = "SEM".
+if \code{initAlgo} = "EM", "CEM" or "SemiSEM". This is the number of iterations if \code{initAlgo} = "SEM".
 Default value: 20.}
 
 \item{initEpsilon}{Real defining the epsilon value for the algorithm.
-epsilon is not used by the \code{SEM} algorithm. Default value: 0.01.}
+\code{initEpsilon} is not used by the \code{SEM} algorithm. Default value: 0.01.}
 
 \item{nbShortRun}{Integer defining the number of short run to try
 (the strategy launch an initialization before each short run). Default value: 5.}
@@ -36,7 +37,7 @@ epsilon is not used by the \code{SEM} algorithm. Default value: 0.01.}
 Default value: "EM".}
 
 \item{nbShortIteration}{Integer defining the maximal number of iterations in the short runs
-if \code{shortRunAlgo} = "EM or "CEM, or the number of iterations if \code{shortRunAlgo} = "SEM".
+if \code{shortRunAlgo} = "EM", "CEM" or "semiSEM", or the number of iterations if \code{shortRunAlgo} = "SEM".
 Default value: 100.}
 
 \item{shortEpsilon}{Real defining the epsilon value for the algorithm.
@@ -46,7 +47,7 @@ epsilon is not used by the \code{SEM} algorithm. Default value: 1e-04.}
 Default value: "EM".}
 
 \item{nbLongIteration}{Integer defining the maximal number of iterations in the short runs
-if \code{shortRunAlgo} = "EM or "CEM, or the number of iterations if \code{shortRunAlgo} = "SEM".
+if \code{shortRunAlgo} = "EM", "CEM" or "SemiSEM", or the number of iterations if \code{shortRunAlgo} = "SEM".
 Default value: 1000.}
 
 \item{longEpsilon}{Real defining the epsilon value for the algorithm.
@@ -66,10 +67,10 @@ A strategy is a way to find a good estimate of the parameters of a mixture model
 when using an EM algorithm. A ``try'' is composed of three stages
 \itemize{
   \item \code{nbShortRun} short iterations of the initialization step and
-   of the \code{EM}, \code{CEM} or \code{SEM} algorithm.
-  \item \code{nbInit} initializations using the \code{\link{clusterInit}}]
+   of the \code{EM}, \code{CEM}, \code{SEM} or \code{SemiSEM} algorithm.
+  \item \code{nbInit} initializations using the [\code{\link{clusterInit}}]
   method.
-  \item A long run of the \code{EM}, \code{CEM} or \code{SEM} algorithm.
+  \item A long run of the \code{EM}, \code{CEM}, \code{SEM} or \code{SemiSEM} algorithm.
 }
 For exemple if \code{nbInit} is 5 and \code{nbShortRun} is also 5, there will be
 5 packets of 5 models initialized. In each packet, the best model will be ameliorated using

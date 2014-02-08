@@ -37,14 +37,10 @@
  * @brief define the main interface for linking specific mixture model to the
  * composer.
  */
-#include "../include/STK_MixtureComposer.h"
+#include "../include/STK_IMixtureComposer.h"
 
 namespace STK
 {
-
-template<class Type, int SizeCols_, bool Orient_ > class CArrayPoint;
-template<class Type> class Array2D;
-template<class Type, int SizeCols_, bool Orient_ > class CArrayVector;
 
 class IMixture
 {
@@ -62,15 +58,15 @@ class IMixture
     /** Virtual destructor. */
     virtual ~IMixture();
 
-    /** return the Id of the mixture */
+    /** @return the Idname of the mixture */
     inline std::string const& idName() const { return idName_;}
     /** @return Number of cluster. */
     inline int nbCluster() const  { return nbCluster_;}
-    /** @return Number of cluster. */
-    inline MixtureComposer const* const p_composer() const { return p_composer_;}
+    /** @return A constant pointer on the composer. */
+    inline IMixtureComposer const* const p_composer() const { return p_composer_;}
 
     /** set the mixture composer to the mixture */
-    void setMixtureComposer( MixtureComposer const* p_model);
+    void setMixtureComposer( IMixtureComposer const* p_model);
 
     /**This is a standard clone function in usual sense. It must be defined to
      * provide new object of your class with values of various parameters equal
@@ -166,6 +162,7 @@ class IMixture
      *  @return Pointer to tik.
      */
     Real const** posteriorProbabilities() const;
+
     /** This function can be used in derived classes to get proportions from the framework.
      *  @return Pointer to proportions.
      */
@@ -179,9 +176,27 @@ class IMixture
      */
     CArrayVector<int> const* p_zi() const;
 
+    /** This function can be used in derived classes to get proportions from the framework.
+     *  @return Pointer to proportions.
+     */
+    CArrayPoint<Real> const& pk() const;
+    /** This function can be used in derived classes to get estimated proportions
+     *  of individuals from the framework.
+     *  @return Pointer to proportions.
+     */
+    CArrayPoint<Real> const& tk() const;
+    /** This function can be used in derived classes to get posterior probabilities from the framework.
+     *  @return Pointer to tik.
+     */
+    Array2D<Real> const& tik() const;
+    /** This function can be used in derived classes to get class labels from the framework.
+     *  @return Pointer to zi.
+     */
+    CArrayVector<int> const& zi() const;
+
   private:
     /** pointer on the main composer model */
-    const MixtureComposer* p_composer_;
+    const IMixtureComposer* p_composer_;
     /** Id name of the mixture */
     std::string idName_;
     /** number of cluster */

@@ -53,37 +53,49 @@ IMixture::IMixture( IMixture const& mixture)
 IMixture::~IMixture(){}
 
 /* set the mixture composer to the mixture */
-void IMixture::setMixtureComposer( MixtureComposer const* p_composer)
-{ p_composer_ = p_composer;}
+void IMixture::setMixtureComposer( IMixtureComposer const* p_composer) { p_composer_ = p_composer;}
 
 /* @return the class labels of the composer */
-int const* IMixture::classLabels() const
-{ return p_composer_->p_zi()->p_data();}
+int const* IMixture::classLabels() const { return p_composer_->p_zi()->p_data();}
 
 /* @return the proportions of the composer */
-double const* IMixture::proportions() const
-{ return p_composer_->p_pk()->p_data();}
+double const* IMixture::proportions() const { return p_composer_->p_pk()->p_data();}
 
 /* @return the number of sample */
-int IMixture::nbSample() const
-{ return p_composer_->nbSample();}
+int IMixture::nbSample() const { return p_composer_->nbSample();}
+
+/* This function can be used in derived classes to get proportions from the framework.
+ *  @return Pointer to proportions.
+ */
+CArrayPoint<Real> const& IMixture::pk() const { return p_composer_->pk();}
+
+/* This function can be used in derived classes to get estimated proportions
+ *  of individuals from the framework.
+ *  @return Pointer to proportions.
+ */
+CArrayPoint<Real> const& IMixture::tk() const { return p_composer_->tk();}
+/* This function can be used in derived classes to get posterior probabilities from the framework.
+ *  @return Pointer to tik.
+ */
+Array2D<Real> const& IMixture::tik() const { return p_composer_->tik();}
+/* This function can be used in derived classes to get class labels from the framework.
+ *  @return Pointer to zi.
+ */
+CArrayVector<int> const& IMixture::zi() const { return p_composer_->zi();}
 
 /* This function can be used in derived classes to get proportions from the framework.
  * @return Pointer to proportions.
  */
-CArrayPoint<STK::Real> const* IMixture::p_pk() const
-{ return p_composer_->p_pk(); }
+CArrayPoint<STK::Real> const* IMixture::p_pk() const { return p_composer_->p_pk();}
 
 /* This function can be used in derived classes to get proportions from the framework.
  * @return Pointer to proportions.
  */
-Array2D<STK::Real> const* IMixture::p_tik() const
-{ return p_composer_->p_tik(); }
+Array2D<STK::Real> const* IMixture::p_tik() const { return p_composer_->p_tik();}
 
 /* This function can be used in derived classes to get proportions from the framework.
  * @return Pointer to proportions.
  */
-CArrayVector<int> const* IMixture::p_zi() const
-{ return p_composer_->p_zi(); }
+CArrayVector<int> const* IMixture::p_zi() const { return p_composer_->p_zi();}
 
 } // namespace STK

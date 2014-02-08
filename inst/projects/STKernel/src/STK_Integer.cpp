@@ -37,21 +37,6 @@
 namespace STK
 {
 
-
-/* @ingroup Base
- *  Convert a String to a Integer.
- *  @param str the String we want to convert
- *  @return the Integer represented by the String @c str. if the string
- *  does not match any known name, the @c unknown_ type is returned.
- **/
-Integer stringToInt( String const& str)
-{
-  Integer x;
-  istringstream is(str);
-  is >> Proxy<Integer>(x);
-  return x;
-}
-
 /* @ingroup Base
  *  Convert a String to a Integer using a map.
  *  @param str the String we want to convert
@@ -63,19 +48,6 @@ Integer stringToInt( String const& str, std::map<String, Integer> const& mapping
 {
   std::map<String, Integer>::const_iterator it=mapping.find(str);
   return (it == mapping.end()) ? Arithmetic<Integer>::NA() : it->second;
-}
-
-/* @ingroup Base
- *  Convert a TypeRegression to a String.
- *  @param str the str of Integer we want to convert
- *  @return the string associated to this str.
- **/
-String intToString( Integer const& value, std::ios_base& (*f)(std::ios_base&))
-{
-  if (Arithmetic<Integer>::isNA(value)) return stringNa;
-  ostringstream os;
-  os << f << value;
-  return os.str();
 }
 
 /* @ingroup Base

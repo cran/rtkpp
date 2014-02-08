@@ -34,11 +34,8 @@
  **/
  
 #include "../include/STK_Qr.h"
-
-#include "Arrays/include/STK_Array2DPoint.h"
-
-#include "../include/STK_Householder.h"
 #include "../include/STK_Givens.h"
+#include "Arrays/include/STK_Array2DPoint.h"
 
 #ifdef STK_ALGEBRA_DEBUG
 #include "../../Arrays/include/STK_Display.h"
@@ -61,30 +58,10 @@ void print(Container2D const& A, STK::String const& name)
 namespace STK
 {
 
-/* Constructor */
-Qr::Qr( Matrix const& A, bool ref):  IQr(A, ref) {}
-
-Qr::Qr( Qr const& decomp): IQr(decomp) {}
-
-/* Computing the QR decomposition of the matrix Q_. */
-bool Qr::run()
-{
-  if (Q_.empty())     // if the container is empty
-  {
-    compq_ = true;
-    return true;
-  }
-  // start qr iterations
-  qr();
-  return true;
-}
-
-
 /* Computation of the QR decomposition */
 void Qr::qr()
 {
   R_.resize(Q_.rows(), Q_.cols());
-  //R_ = 0.0;
   // start left householder reflections
   Range r(Q_.rows()), c(Q_.cols());
   for(int j = R_.beginRows(); (j < R_.endRows()) && (j < R_.endCols()) ; ++j)
@@ -92,21 +69,11 @@ void Qr::qr()
     Vector u(Q_, r, j);    // get a reference on the j-th column in the range r
     R_(j, j) = house(u);   // compute the housolder vector
     leftHouseholder(Q_(r, c.incFirst(1)), u); // apply-it to the remaining part of Q_
-    r.incFirst(1);
     R_.row(j, c).copy(Q_.row(j, c)); // copy current row of Q_ in the range c in R_
+    r.incFirst(1);  // decrease the range
   }
 }
 
-
-/* Destructor */
-Qr::~Qr() {}
-
-/* Operator = : overwrite the Qr with S. */
-Qr& Qr::operator=(Qr const& decomp)
-{
-  IQr::operator =(decomp);
-  return *this;
-}
 
 } // namespace STK
 

@@ -71,29 +71,34 @@ void StrategyFacade::createFullStrategy( Clust::initType init, int nbTryInInit, 
 bool StrategyFacade::run()
 {
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("-----------------------------------------------\n")
+  stk_cout << _T("------------------------------\n")
            << _T("Entering StrategyFacade::run()\n");
 #endif
   bool flag = false;
   if (p_strategy_)
   {
-    if (p_strategy_->run())
-    { flag = true;
-#ifdef STK_MIXTURE_VERBOSE
-      stk_cout << _T("StrategyFacade:run() terminated with success. p_model->lnLikelihood() =")
-               << p_model_->lnLikelihood() << _T("\n")
-               << _T("-----------------------------------------------\n");
-#endif
-    }
-#ifdef STK_MIXTURE_VERBOSE
+    // just check if the model is fresh or is already
+    if (p_strategy_->run()) { flag = true;}
     else
     {
+      msg_error_ = p_strategy_->error();
+#ifdef STK_MIXTURE_VERBOSE
       stk_cout << _T("StrategyFacade:run() terminated without success.\n")
+               << _T("error = ") << msg_error_ << _T("\n")
                << _T("------------------------------------------------\n");
-    }
 #endif
+    }
+    p_model_->imputationStep();
     p_model_->finalizeStep();
   }
+  else
+  { msg_error_ = STKERROR_NO_ARG(MixtureFacade::run(),strategy is not set);}
+#ifdef STK_MIXTURE_VERBOSE
+  stk_cout << _T("StrategyFacade:run() terminated.\n"
+                 "p_model->lnLikelihood() =")
+           << p_model_->lnLikelihood() << _T("\n")
+           << _T("--------------------------------\n");
+#endif
   return flag;
 }
 

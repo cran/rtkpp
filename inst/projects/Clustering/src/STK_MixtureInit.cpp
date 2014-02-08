@@ -60,25 +60,21 @@ bool IMixtureInit::runInitAlgo()
  * @return @c true if no error occur, @c false otherwise*/
 bool RandomInit::run()
 {
-#ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("-------------------------------\n")
-           << _T("Entering RandomInit::run()\n");
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("--------------------------\n")
+           << _T("Entering RandomInit::run()\n")
+           << _T("nbTry = ") << nbTry_ << _T("\n");
 #endif
   bool result = false;
-  for (int iTry= 0; iTry < nbTry_; ++iTry)
+  int iTry;
+  for (iTry= 0; iTry < nbTry_; ++iTry)
   {
      try
      {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("p_model_->randomInit() starting.\n");
-#endif
        p_model_->randomInit();
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("p_model_->randomInit() terminated.\n");
-#endif
        if (runInitAlgo()) { result = true; break;}
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("runInitAlgo() failed\n");
+       stk_cout << _T("In RandomInit::run(), try number") << iTry << " runInitAlgo() failed.\n";
 #endif
      }
      catch (Clust::exceptions const& error)
@@ -88,9 +84,9 @@ bool RandomInit::run()
 #endif
      }
   } // iTry
-#ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("Exiting RandomInit::run()\n")
-           << _T("-------------------------------\n");
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("RandomInit::run() done\n")
+           << _T("----------------------\n");
 #endif
   if (result) return true;
   msg_error_ = _T("All initialization failed.");
@@ -101,20 +97,22 @@ bool RandomInit::run()
  * @return @c true if no error occur, @c false otherwise*/
 bool ClassInit::run()
 {
-#ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("-------------------------------\n")
-           << _T("Entering ClassInit::run()\n");
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("-------------------------\n")
+           << _T("Entering ClassInit::run()\n")
+           << _T("nbTry = ") << nbTry_ << _T("\n");
 #endif
   bool result = false;
-  for (int iTry= 0; iTry < nbTry_; ++iTry)
+  int iTry;
+  for (iTry= 0; iTry < nbTry_; ++iTry)
   {
-#ifdef STK_MIXTURE_VERBOSE
-    stk_cout << _T("iTry = ") << iTry << "\n";
-#endif
     try
     {
       p_model_->randomClassInit();
       if (runInitAlgo()) { result = true; break;}
+#ifdef STK_MIXTURE_VERBOSE
+      stk_cout << _T("In ClassInit::run(), try number") << iTry << " runInitAlgo() failed.\n";
+#endif
     }
     catch (Clust::exceptions const& error)
     {
@@ -125,7 +123,7 @@ bool ClassInit::run()
   } // iTry
 #ifdef STK_MIXTURE_VERBOSE
   stk_cout << _T("Exiting ClassInit::run()\n")
-           << _T("-------------------------------\n");
+           << _T("------------------------\n");
 #endif
   if (result) return true;
   // otherwise return false
@@ -137,28 +135,33 @@ bool ClassInit::run()
  * @return @c true if no error occur, @c false otherwise*/
 bool FuzzyInit::run()
 {
-#ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("-------------------------------\n")
-           << _T("Entering FuzzyInit::run()\n");
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("-------------------------\n")
+           << _T("Entering FuzzyInit::run()\n")
+           << _T("nbTry = ") << nbTry_ << _T("\n");
 #endif
   bool result = false;
-  for (int iTry= 0; iTry < nbTry_; ++iTry)
+  int iTry;
+  for (iTry= 0; iTry < nbTry_; ++iTry)
   {
     try
     {
       p_model_->randomFuzzyInit();
       if (runInitAlgo()) { result = true; break;}
+#ifdef STK_MIXTURE_VERBOSE
+      stk_cout << _T("In FuzzyInit::run(), try number") << iTry << " runInitAlgo() failed.\n";
+#endif
     }
     catch (Clust::exceptions const& error)
     {/* do nothing and retry*/
-#ifdef STK_MIXTURE_VERY_VERBOSE
-      stk_cout << _T("In FuzzyInit::run try:") << iTry << " failed.\n";
+#ifdef STK_MIXTURE_VERBOSE
+  stk_cout << _T("In FuzzyInit::run(), try number") << iTry << " generate an exception.\n";
 #endif
     }
   } // iTry
 #ifdef STK_MIXTURE_VERBOSE
   stk_cout << _T("Exiting FuzzyInit::run()\n")
-           << _T("-------------------------------\n");
+           << _T("------------------------\n");
 #endif
   if (result) return true;
   // otherwise return false

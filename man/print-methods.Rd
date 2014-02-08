@@ -4,11 +4,16 @@
 \alias{print}
 \alias{print,ClusterAlgo-method}
 \alias{print,ClusterCategorical-method}
+\alias{print,ClusterCategoricalComponent-method}
 \alias{print,ClusterDiagGaussian-method}
+\alias{print,ClusterDiagGaussianComponent-method}
 \alias{print,ClusterGamma-method}
+\alias{print,ClusterGammaComponent-method}
+\alias{print,ClusterHeterogeneous-method}
 \alias{print,ClusterInit-method}
 \alias{print,ClusterStrategy-method}
-\alias{print,IClusterModel-method}
+\alias{print,IClusterComponent-method}
+\alias{print,IClusterModelBase-method}
 \alias{print-algo,ClusterAlgo-method}
 \alias{print-init,ClusterInit,ClusterInit-method}
 \alias{print-strategy,ClusterStrategy-method}
@@ -16,23 +21,35 @@
 \usage{
 \S4method{print}{ClusterAlgo}(x, ...)
 
+\S4method{print}{ClusterCategoricalComponent}(x, k, ...)
+
 \S4method{print}{ClusterCategorical}(x, ...)
+
+\S4method{print}{ClusterDiagGaussianComponent}(x, k, ...)
 
 \S4method{print}{ClusterDiagGaussian}(x, ...)
 
+\S4method{print}{ClusterGammaComponent}(x, k, ...)
+
 \S4method{print}{ClusterGamma}(x, ...)
+
+\S4method{print}{ClusterHeterogeneous}(x, ...)
 
 \S4method{print}{ClusterInit}(x, ...)
 
 \S4method{print}{ClusterStrategy}(x, ...)
 
-\S4method{print}{IClusterModel}(x, ...)
+\S4method{print}{IClusterModelBase}(x, ...)
+
+\S4method{print}{IClusterComponent}(x, ...)
 }
 \arguments{
 \item{x}{a rtkpp object: a \code{\linkS4class{ClusterStrategy}},
 a \code{\linkS4class{ClusterInit}} or a \code{\linkS4class{ClusterAlgo}}.}
 
 \item{...}{further arguments passed to or from other methods}
+
+\item{k}{the number of the cluster to print}
 }
 \value{
 NULL. Prints to standard out.

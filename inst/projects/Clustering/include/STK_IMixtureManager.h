@@ -36,13 +36,14 @@
 #ifndef STK_IMIXTUREMANAGER_H
 #define STK_IMIXTUREMANAGER_H
 
-#include "DManager/include/STK_IDataHandler.h"
+//#include "DManager/include/STK_IDataHandler.h"
 
 namespace STK
 {
 class MixtureComposer;
-class IDataManager;
+class IMixtureData;
 class IMixture;
+class IDataHandler;
 
 /** @ingroup Clustering
  *  @brief A mixture manager is a factory class for injection dependency in the
@@ -54,11 +55,8 @@ class IMixture;
 class IMixtureManager
 {
   public:
-    typedef std::vector<IDataManager*>::const_iterator ConstDataIterator;
-    typedef std::vector<IDataManager*>::iterator DataIterator;
-
-    /** InfoMap is a map of pairs (idName, idModel) */
-    typedef IDataHandler::InfoMap InfoMap;
+    typedef std::vector<IMixtureData*>::const_iterator ConstDataIterator;
+    typedef std::vector<IMixtureData*>::iterator DataIterator;
 
     /** Default constructor, need an instance of a DataHandler.  */
     IMixtureManager(IDataHandler const* const p_handler);
@@ -88,11 +86,11 @@ class IMixtureManager
      *  deleted.
      *  @param p_data a pointer on the data manager
      **/
-    void registerDataManager(IDataManager* p_data);
+    void registerMixtureData(IMixtureData* p_data);
     /** release a data manager from v_data_.
      *  @param idData name of the data set to release
      **/
-    void releaseDataManager(String const& idData);
+    void releaseMixtureData(String const& idData);
     /** get the parameters from an IMixture.
      *  @param p_mixture pointer on the mixture
      *  @param idData Id name of the data set attached to the mixture
@@ -101,11 +99,11 @@ class IMixtureManager
     virtual void getParameters(IMixture* p_mixture, std::string idData, Array2D<Real>& data) const =0;
 
   protected:
-    /** Utility lookup function allowing to find a DataManager from its idData
+    /** Utility lookup function allowing to find a MixtureData from its idData
      *  @param idData the id name of the mixture we want to get
-     *  @return a pointer on the DataManager
+     *  @return a pointer on the MixtureData
      **/
-    IDataManager* getDataManager( String const& idData) const;
+    IMixtureData* getMixtureData( String const& idData) const;
 
   private:
     /** create a concrete mixture and initialize it.
@@ -117,7 +115,7 @@ class IMixtureManager
     /** A pointer on the concrete instance of the data handler */
     IDataHandler const* const p_handler_;
     /** vector of pointers to the data components */
-    std::vector<IDataManager*> v_data_;
+    std::vector<IMixtureData*> v_data_;
 };
 
 } // namespace STK

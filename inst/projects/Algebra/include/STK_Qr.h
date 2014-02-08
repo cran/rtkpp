@@ -49,31 +49,36 @@ namespace STK
  *    -# Q  matrix (nrow,ncol) with the Housholder vectors in the min(nrow, ncol) first columns.
  *    -# R  matrix (nrow,ncol) upper triangular.
  */
-class Qr: public IQr
+class Qr: public IQr<Qr>
 {
   public :
+    typedef IQr<Qr> Base;
     /** Default constructor.
      *  @param A the matrix to decompose
      *  @param ref true if we overwrite A
      **/
-    Qr( Matrix const&  A =Matrix(), bool ref = false);
+    inline Qr( Matrix const&  A =Matrix(), bool ref = false):  Base(A, ref) {}
     /** @brief Constructor
      *  @param data reference on a matrix expression
      */
     template<class Derived>
-    Qr( ExprBase<Derived> const& data) : IQr(data) {}
+    inline Qr( ExprBase<Derived> const& data) : Base(data) {}
     /** Copy constructor.
      *  @param decomp the decomposition  to copy
      **/
-    Qr( Qr const& decomp);
+    inline Qr( Qr const& decomp) : Base(decomp) {}
     /** virtual destructor */
-    virtual ~Qr();
+    inline virtual ~Qr() {}
     /** clone pattern */
     inline virtual Qr* clone() const { return new Qr(*this);}
     /** Operator = : overwrite the Qr with decomp. */
-    Qr& operator=(Qr const& decomp);
+    inline Qr& operator=(Qr const& decomp)
+    { Base::operator=(decomp);
+      return *this;
+    }
     /** Compute the QR decomposition. **/
-    virtual bool run();
+    inline bool runImpl()
+    { qr(); return true;}
 
   private:
   /** Compute the qr decoposition of the matrix Q_ */

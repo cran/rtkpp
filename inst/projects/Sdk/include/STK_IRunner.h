@@ -79,8 +79,6 @@ class IRunnerBase
      * @return the last error message
      **/
     inline String const& error() const { return msg_error_;}
-    /** clone pattern */
-    virtual IRunnerBase* clone() const =0;
     /** run the computations.
      * @return @c true if no error occur during the running process, @c false
      * otherwise

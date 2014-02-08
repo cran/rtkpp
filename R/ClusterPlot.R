@@ -22,7 +22,7 @@
 #    Contact : S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
 #
 #-----------------------------------------------------------------------
-# Plotting of a class  deriving from[\code{\linkS4class{IClusterModel}}]
+# Plotting of a class  deriving from[\code{\linkS4class{IClusterModelBase}}]
 ##############################
 # Adapted from Rmixmod package
 ##############################
@@ -32,7 +32,7 @@
 .clusterPlot <- function(model, y, ddensity,...)
 {
   # total number of variable in the data set
-  nbVariable = ncol(model@data);
+  nbVariable = ncol(model@component@data);
   # no y => display all variables
   if (missing(y)) { y=1:nbVariable; }
   else # perform some check
@@ -44,8 +44,8 @@
     }
     else # names of the variables to plot are given
     {
-      if ( sum(y %in% colnames(model@data))!= length(y) )
-      { stop(cat("unknown variable: ", paste(y[which(!(y %in% colnames(model@data)))]),"\n"))}
+      if ( sum(y %in% colnames(model@component@data))!= length(y) )
+      { stop(cat("unknown variable: ", paste(y[which(!(y %in% colnames(model@component@data)))]),"\n"))}
     }
   }
   # get old par
@@ -56,23 +56,23 @@
   split.screen(c(nbCol, nbCol))           # create layout matrix screens
   col = model@zi+2;                       # color for each group
   pch = rep(1, length.out = length(col)); # circles
-  pch[model@missings[,1]] = 3;            # + for missing values
+  pch[model@component@missing[,1]] = 3;            # + for missing values
   # create histograms on the diagonal
   for ( i in 1:nbCol )
   {
     screen(i+((i-1)*nbCol))   # sreen(i,i)
-    xValues<-seq( min(model@data[,y[i]]), max(model@data[,y[i]]), length.out = 200)
+    xValues<-seq( min(model@component@data[,y[i]]), max(model@component@data[,y[i]]), length.out = 200)
     density<-matrix(nrow=model@nbCluster, ncol=length(xValues))
     # loop over the clusters to generate densities
     for( k in 1:model@nbCluster )
     {  density[k,]<- ddensity(xValues, y[i], k, model);}
     # generate mixture density
     mixture<-apply(density,2,sum)
-    if (is.numeric(y)) { xlab=colnames(model@data)[y[i]];}
+    if (is.numeric(y)) { xlab=colnames(model@component@data)[y[i]];}
     else               { xlab= y[i];}
     # TODO: check if xlab is empty
     main=paste("Histogram of",xlab)
-    h<-hist(model@data[,y[i]], xlab=xlab, main=main, ...)
+    h<-hist(model@component@data[,y[i]], xlab=xlab, main=main, ...)
     # add on the histogram the estimated densities
     ratio<-max(h$counts)/max(mixture)
     density<-density*ratio
@@ -86,18 +86,18 @@
   {
     for ( i in 2:nbCol )
     {
-      if (is.numeric(y)) { xlab=colnames(model@data)[y[i]];}
+      if (is.numeric(y)) { xlab=colnames(model@component@data)[y[i]];}
       else               { xlab= y[i];}
       for( j in 1:(i-1) )
       {
         screen(j+((i-1)*nbCol)) # screen(i,j)
-        if (is.numeric(y)) {ylab=colnames(model@data)[y[j]];}
+        if (is.numeric(y)) {ylab=colnames(model@component@data)[y[j]];}
         else {ylab= y[j];}
-        plot(model@data[,y[j]], model@data[,y[i]], col=col, pch=pch, xlab=xlab, ylab=ylab, ...)
+        plot(model@component@data[,y[j]], model@component@data[,y[i]], col=col, pch=pch, xlab=xlab, ylab=ylab, ...)
       }
     }
   }
-  mtext("Visualisation using latent logistic representation", outer = TRUE, cex = 1.5)
+#  mtext("Visualisation using latent logistic representation", outer = TRUE, cex = 1.5)
   close.screen(all.screens = TRUE)
   # restore plotting parameters
   par(op)

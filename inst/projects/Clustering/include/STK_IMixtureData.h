@@ -28,12 +28,12 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_IDataManager.h
- *  @brief In this file we define the interface class IDataManager.
+/** @file STK_IMixtureData.h
+ *  @brief In this file we define the interface class IMixtureData.
  **/
 
-#ifndef STK_IDATAMANAGER_H
-#define STK_IDATAMANAGER_H
+#ifndef STK_IMIXTUREDATA_H
+#define STK_IMIXTUREDATA_H
 
 #include <vector>
 #include <string>
@@ -41,28 +41,27 @@
 namespace STK
 {
 /** @ingroup Clustering
- *  @brief Interface class for handling a data set.
- *
+ *  @brief Interface class wrapping a data set.
+ *  Every data set are wrapped and the end-user have to furnish an Id.
  *  Derived classes will encapsulate the data, provide access to the data set
- *  and implement in some way the pure virtual methods
+ *  and implement the pure virtual method
  *  @code
  *  virtual void findMissing() 0;
- *  virtual void removeMissing() = 0;
  *  @endcode
  **/
-class IDataManager
+class IMixtureData
 {
   protected:
-    /** default constructor. */
-    IDataManager(std::string const& idData);
+    /** default constructor. User must provide with the data set an Id */
+    IMixtureData(std::string const& idData);
     /** copy constructor
-     *  @param manager the IDataManager to copy
+     *  @param manager the IMixtureData to copy
      **/
-    IDataManager( IDataManager const& manager);
+    IMixtureData( IMixtureData const& manager);
 
   public:
     /** destructor */
-    inline virtual ~IDataManager() {}
+    inline virtual ~IMixtureData() {}
     /** return the Id of the mixture */
     inline std::string const& idData() const { return idData_;}
     /** getter. @return the number of variables (the number of columns of the data)  */
@@ -70,14 +69,14 @@ class IDataManager
     /** getter. @return the coordinates of the missing values in the data set */
     inline std::vector<std::pair<int,int> > const& v_missing() const { return v_missing_;}
     /** Convenient function to use in order to initialize v_missing_ and the data set. */
-    inline void initialize() { findMissing(); removeMissing(); }
+    inline void initialize() { findMissing(); }
 
     /** number of variables in the data set */
     int nbVariable_;
 
   protected:
     /** vector with the coordinates of the missing values */
-    std::vector<std::pair<int,int> > v_missing_;
+    std::vector< std::pair<int,int> > v_missing_;
 
   private:
     /** Id data of the mixture */
@@ -85,10 +84,8 @@ class IDataManager
     /** utility function for lookup the data set and find missing values
      *  coordinates. Store the result in v_missing_ */
     virtual void findMissing() =0;
-    /** utility function for lookup the data set and remove the missing values.*/
-    virtual void removeMissing() =0;
 };
 
 } // namespace STK
 
-#endif /* STK_IDATAMANAGER_H */
+#endif /* STK_IMIXTUREDATA_H */

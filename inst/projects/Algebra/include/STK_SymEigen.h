@@ -58,40 +58,55 @@ namespace STK
  *  Thus the user can be faced with a deficient rank matrix and with a norm and
  *  a determinant very small (but not exactly 0.0).
  **/
-class SymEigen : public ISymEigen
+class SymEigen : public ISymEigen<SymEigen>
 {
   public:
+    typedef ISymEigen<SymEigen> Base;
     /** @brief Constructor
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    SymEigen( CArraySquareXX const& data, bool ref =false);
+    inline SymEigen( CArraySquareXX const& data, bool ref =false)
+                   : Base(data, ref)
+                   , begin_(data.begin())
+                   , last_(data.lastIdx())
+    {}
     /** constructor.
      *  @param data A reference on the symmetric matrix to decompose.
      **/
     template<class Derived>
     SymEigen( ExprBase<Derived> const& data)
-            : ISymEigen(data)
+            : Base(data)
             , begin_(data.begin()), last_(data.lastIdx())
     {}
     /** Copy constructor.
      *  @param S the EigenValue to copy
      **/
-    SymEigen(const SymEigen& S);
+    SymEigen(SymEigen const& S)
+            : Base(S)
+            , begin_(S.begin_)
+            , last_(S.last_)
+    {}
     /** virtual destructor */
-    virtual ~SymEigen();
+    inline virtual ~SymEigen() {}
     /** clone pattern */
     inline virtual SymEigen* clone() const { return new SymEigen(*this);}
 
     /** @brief Diagonalization of eigenVectors_
      *  @return @c true if no error occur, @c false otherwise
      * */
-    virtual bool run();
+    bool runImpl();
     /** Operator = : overwrite the SymEigen with S.
      *  @param S SymEigen to copy
      *  @return a reference on this
      **/
-    SymEigen& operator=(const SymEigen &S);
+    inline SymEigen& operator=(const SymEigen &S)
+    {
+      Base::operator=(S);
+      begin_ = S.begin_;    // first value
+      last_  = S.last_;     // last value
+      return *this;
+    }
     /** get rotation matrix
      *  @return the rotation matrix
      **/

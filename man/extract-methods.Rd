@@ -4,9 +4,11 @@
 \alias{Extract}
 \alias{[}
 \alias{[,ClusterAlgo-method}
+\alias{[,ClusterCategoricalComponent-method}
+\alias{[,ClusterDiagGaussianComponent-method}
+\alias{[,ClusterGammaComponent-method}
 \alias{[,ClusterInit-method}
 \alias{[,ClusterStrategy-method}
-\alias{[,IClusterModel-method}
 \alias{[<-,ClusterAlgo-method}
 \alias{[<-,ClusterInit-method}
 \alias{[<-,ClusterStrategy-method}
@@ -16,6 +18,12 @@
 
 \S4method{[}{ClusterAlgo}(x, i, j) <- value
 
+\S4method{[}{ClusterCategoricalComponent}(x, i, j, drop)
+
+\S4method{[}{ClusterDiagGaussianComponent}(x, i, j, drop)
+
+\S4method{[}{ClusterGammaComponent}(x, i, j, drop)
+
 \S4method{[}{ClusterInit}(x, i, j, drop)
 
 \S4method{[}{ClusterInit}(x, i, j) <- value
@@ -23,8 +31,6 @@
 \S4method{[}{ClusterStrategy}(x, i, j, drop)
 
 \S4method{[}{ClusterStrategy}(x, i, j) <- value
-
-\S4method{[}{IClusterModel}(x, i, j, drop)
 }
 \arguments{
 \item{x}{object from which to extract element(s) or in which to replace element(s).}

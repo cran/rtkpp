@@ -65,7 +65,7 @@ LdFlags <- function() { cat(.rtkppLdFlags()) }
   path2 <- .rtkpp.system.file( "projects" )
   if (.Platform$OS.type=="windows") { path1 <- .asBuildPath(path1) }
   if (.Platform$OS.type=="windows") { path2 <- .asBuildPath(path2) }
-  paste("-I", path1, " -I", path2, if (cpp11) " -std=c++11 " else "", sep="")
+  paste("-DIS_RTKPP_LIB -DSTKUSELAPACK -I", path1, " -I", path2, if (cpp11) " -std=c++11 " else "", sep="")
 }
 
 # Provide linker flags -- i.e. /path/to/rtkpp.so
@@ -78,13 +78,10 @@ LdFlags <- function() { cat(.rtkppLdFlags()) }
 {
   if (nzchar(.Platform$r_arch))
   {	## eg amd64, ia64, mips
-    path <- .rtkpp.system.file("libs",.Platform$r_arch)
+    path <- .rtkpp.system.file("lib",.Platform$r_arch)
   }
-  else { path <- .rtkpp.system.file("libs") }
-  if (.Platform$OS.type == "windows")
-  { paste("-L", path, " -l:rtkpp.dll", sep="") }
-  else
-  { paste("-L", path, " -l:rtkpp.so", sep="")}
+  else { path <- .rtkpp.system.file("lib") }
+  paste( path, "/libSTKpp.a", sep="") 
 }
 
 # Transform a path for passing to the build system on the command line.

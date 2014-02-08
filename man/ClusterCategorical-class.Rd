@@ -5,7 +5,7 @@
 \title{Definition of the [\code{\linkS4class{ClusterCategorical}}] class}
 \description{
 This class defines a categorical mixture Model. Inherits from the
-[\code{\linkS4class{IClusterModel}}] class. A categorical mixture model is
+[\code{\linkS4class{IClusterModelBase}}] class. A categorical mixture model is
 a mixture model of the form
 }
 \details{
@@ -18,11 +18,8 @@ a mixture model of the form
 \section{Slots}{
 
 \describe{
-\item{\code{plkj}}{Array with the probability of the jth variable in the kth cluster
-to be l.}
-
-\item{\code{nbModalities}}{Integer with the (maximal) number of modalities of the categorical
-data.}
+\item{\code{component}}{A [\code{\linkS4class{ClusterCategoricalComponent}}] with the
+probabilities of the categorical component}
 }}
 \examples{
 getSlots("ClusterCategorical")

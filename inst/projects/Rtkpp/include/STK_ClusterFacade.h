@@ -48,7 +48,7 @@ class IMixtureStrategy;
  * The ClusterFacade allow to create the strategy for estimating a mixture model
  * with less effort
  **/
-class ClusterFacade
+class ClusterFacade : public IRunnerBase
 {
   public:
     /** constructor.
@@ -56,10 +56,17 @@ class ClusterFacade
      * @param R_strategy the strategy defined in R
      **/
     inline ClusterFacade( IMixtureComposer*& p_model)
-                        : p_model_(p_model), p_strategy_(0)
+                        : IRunnerBase(), p_model_(p_model), p_strategy_(0)
+    {}
+    /** constructor.
+     * @param p_model a reference on the current model
+     * @param R_strategy the strategy defined in R
+     **/
+    inline ClusterFacade( ClusterFacade const& facade)
+                        : IRunnerBase(), p_model_(facade.p_model_), p_strategy_(facade.p_strategy_)
     {}
     /** destructor. */
-    ~ClusterFacade();
+    virtual ~ClusterFacade();
     /** set model in case it is needed after construction */
     inline void setModel(IMixtureComposer*& p_model) {p_model_ = p_model;};
     /** create a FullStrategy

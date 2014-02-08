@@ -75,6 +75,28 @@ TypeRegression stringToTypeRegression( String const& type);
  **/
 String TypeRegressionToString( TypeRegression const& type);
 
+/** Method to use for positioning the knots. */
+enum KnotsPosition
+{
+  uniform_  ///< uniform knots
+, periodic_ ///< periodic knots
+, density_  ///< knots using density of the data
+, unknownKnotsPosition_  ///< unknown method
+};
+
+/** convert a String to a KnotsPosition.
+ *  @param type the type of KnotsPosition in a string
+ *  @return the KnotsPosition represented by the String @c type. If the string
+ *  does not match any known name, the @c unknown_ type is returned.
+ **/
+KnotsPosition stringToKnotsPosition( String const& type);
+
+/** convert a KnotsPosition to a String.
+ *  @param type the KnotsPosition we want to convert to a string
+ *  @return the string associated to this KnotsPosition
+ **/
+String knotsPositionToString( KnotsPosition const& type);
+
 } // namespace Regress
 
 } //namespace STK

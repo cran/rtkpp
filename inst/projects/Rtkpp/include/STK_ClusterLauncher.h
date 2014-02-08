@@ -42,35 +42,30 @@
 namespace STK
 {
 
-/** facade design pattern.
- * The ClusterLauncher allow to create the strategy for estimating a mixture model
+/**The ClusterLauncher allow to create the strategy for estimating a mixture model
  * with less effort
  **/
-class ClusterLauncher
+class ClusterLauncher : public IRunnerBase
 {
   public:
     /** constructor.
-     * @param p_model a reference on the current model
-     * @param R_strategy the strategy defined in R
+     * @param model a reference on the current model
+     * @param strategy the strategy defined in R
      **/
-    ClusterLauncher( SEXP model, SEXP nbCluster, SEXP modelNames, SEXP strategy, SEXP r_critName );
+    ClusterLauncher( SEXP model, SEXP nbCluster, SEXP modelNames, SEXP strategy, SEXP critName );
+    /** constructor with a list of component.
+     * @param model a reference on the current model
+     * @param strategy the strategy defined in R
+     **/
+    ClusterLauncher( SEXP model, SEXP nbCluster, SEXP strategy, SEXP critName );
     /** destructor. */
-    ~ClusterLauncher();
+    virtual ~ClusterLauncher();
     /** run the estimation */
     bool run();
     /** @return the model */
     inline Rcpp::S4 const& s4_model() const { return s4_model_;}
 
   protected:
-    /** get the parameters */
-    void getParameters();
-    /** get the diagonal Gaussian parameters */
-    void getDiagGaussianParameters();
-    /** get the gamma parameters */
-    void getGammaParameters();
-    /** get the gamma parameters */
-    void getCategoricalParameters();
-
     /** strategy from the R side */
     Rcpp::S4              s4_model_;
     /** strategy from the R side */
@@ -83,23 +78,31 @@ class ClusterLauncher
     std::string           critName_;
 
   private:
+    /** get the parameters */
+    void getParameters(Rcpp::S4& s4_component, std::string const& idData);
+    /** get the diagonal Gaussian parameters */
+    void getDiagGaussianParameters(Rcpp::S4& s4_component, std::string const& idData);
+    /** get the gamma parameters */
+    void getGammaParameters(Rcpp::S4& s4_component, std::string const& idData);
+    /** get the gamma parameters */
+    void getCategoricalParameters(Rcpp::S4& s4_component, std::string const& idData);
+
     /** data handler */
     RDataHandler handler_;
     /** manager */
     MixtureManager<RDataHandler> manager_;
     /** pointer on the main composer */
     IMixtureComposer* p_composer_;
-    /** Id of the best model */
-    std::string idData_;
-    /** Id of the best model */
-    Clust::Mixture idMixtureModel_;
-    /** Is the best model with free proportions ? */
-    bool isFreeProp_;
-    /** For Quantitative variables.
-     *  Select the best model among the modelNames and nbCluster given.
+    /** Is the model with heterogeneous data ? */
+    bool isHeterogeneous_;
+    /** Select the best model among the modelNames and nbCluster given.
      *  @return the value of the best criteria.
      **/
-    Real selectBestModel();
+    Real selectSingleBestModel();
+    /** Select the best model among the modelNames and nbCluster given.
+     *  @return the value of the best criteria.
+     **/
+    Real selectHeteroBestModel();
 };
 
 

@@ -146,7 +146,7 @@ void Gamma_ajk_b<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand(mean*mean/variance);
+      p_param(k)->shape_[j] = Law::Exponential::rand((mean*mean/variance));
       value += p_param(k)->tk_ * variance/mean;
     }
   }

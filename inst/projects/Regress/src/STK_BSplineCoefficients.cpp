@@ -44,36 +44,11 @@
 
 namespace STK
 {
-/* convert a String to a TypeReduction.
- *  @param type the type of reduction we want to define
- *  @return the TypeReduction represented by the String @c type. if the string
- *  does not match any known name, the @c unknown_ type is returned.
- **/
-BSplineCoefficients::KnotsPosition BSplineCoefficients::StringToKnotsPosition( String const& type)
-{
-  if (toUpperString(type) == toUpperString(_T("uniform")))  return uniform_;
-  if (toUpperString(type) == toUpperString(_T("periodic"))) return periodic_;
-  if (toUpperString(type) == toUpperString(_T("density"))) return density_;
-  return unknown_;
-}
-
-/* convert a TypeReduction to a String.
- *  @param type the type of reduction we want to convert
- *  @return the string associated to this type.
- **/
-String BSplineCoefficients::KnotsPositionToString( KnotsPosition const& type)
-{
-  if (type == uniform_)  return String(_T("uniform"));
-  if (type == periodic_) return String(_T("periodic"));
-  if (type == density_) return String(_T("density"));
-  return String(_T("unknown"));
-}
-
 /* constructor */
 BSplineCoefficients::BSplineCoefficients( Vector const* p_data
-                                        , int const& nbControlPoints
-                                        , int const& degree
-                                        , const KnotsPosition& position
+                                        , int nbControlPoints
+                                        , int degree
+                                        , const Regress::KnotsPosition& position
                                         )
                                         : IRunnerBase()
                                         , p_data_(p_data)
@@ -91,9 +66,9 @@ BSplineCoefficients::BSplineCoefficients( Vector const* p_data
 
 /* constructor */
 BSplineCoefficients::BSplineCoefficients( Vector const& data
-                                        , int const& nbControlPoints
-                                        , int const& degree
-                                        , const KnotsPosition& position
+                                        , int nbControlPoints
+                                        , int degree
+                                        , const Regress::KnotsPosition& position
                                         )
                                         : IRunnerBase()
                                         , p_data_(&data)
@@ -164,9 +139,9 @@ bool BSplineCoefficients::run()
  *  @param p_data the input data values
  **/
 void BSplineCoefficients::setData( Vector const& data
-                                 , int const& nbControlPoints
-                                 , int const& degree
-                                 , KnotsPosition const& position
+                                 , int nbControlPoints
+                                 , int degree
+                                 , Regress::KnotsPosition const& position
                                  )
 { // set data
   p_data_ = &data;
@@ -250,28 +225,28 @@ bool BSplineCoefficients::computeKnots()
   if (minValue_ == maxValue_)
   {
     knots_ = minValue_;
+    msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots(),All values are equal);
     return false;
   }
   // set knots values
   switch (position_)
   {
     // uniform position
-    case uniform_:
+    case Regress::uniform_:
       computeUniformKnots();
       break;
     // periodic position
-    case periodic_:
+    case Regress::periodic_:
       computePeriodicKnots();
       break;
     // density position
-    case density_:
+    case Regress::density_:
       computeDensityKnots();
       break;
       // periodic position
-    case unknown_:
-      // check if there exists data
-      throw runtime_error("Error In BSplineCoefficients::computeKnots():"
-                               " unknowns positions");
+    case Regress::unknownKnotsPosition_:
+      msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots(),unknownKnotsPosition reached);
+      return false;
       break;
   }
   // shift knots
@@ -349,7 +324,7 @@ void BSplineCoefficients::computeCoefficients()
 /* Compute a row of the coefficients
  * @param irow index of the row
  **/
-void BSplineCoefficients::computeCoefficientsRow(int const& irow, Real const& value)
+void BSplineCoefficients::computeCoefficientsRow(int irow, Real const& value)
 {
   // value outside the range of the knots case
   if (value <= minValue_)

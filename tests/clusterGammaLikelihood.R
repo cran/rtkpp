@@ -5,16 +5,16 @@
 library(rtkpp)
 data(iris)
 
-gamma_model <- clusterGamma( iris[1:4], nbCluster = 2:8, modelNames = gammaNames(shapeBetweenCluster = "all")
+gamma_model <- clusterGamma( iris[1:4], nbCluster = 1:10, modelNames = clusterGammaNames(shapeBetweenCluster = "all")
                            , strategy = clusterStrategy(nbTry = 3, nbInit = 5))
 
-data<-gamma_model@data
+data<-gamma_model@component@data
 nbSample <- nrow(data)
 nbVariable <- ncol(data)
 nbCluster <- gamma_model@nbCluster
 prop <- gamma_model@pk
-shape <- gamma_model@shape
-scale <- gamma_model@scale
+shape <- gamma_model@component@shape
+scale <- gamma_model@component@scale
 
 f <-vector(length=nbSample)
 lnComp <- vector(length=nbCluster)

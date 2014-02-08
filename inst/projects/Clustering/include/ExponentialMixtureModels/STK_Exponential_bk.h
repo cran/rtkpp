@@ -40,9 +40,6 @@
 
 #include "../../../STatistiK/include/STK_Law_Exponential.h"
 
-#define MAXITER 400
-#define TOL 1e-8
-
 namespace STK
 {
 template<class Array>class Exponential_bk;
@@ -85,8 +82,6 @@ class Exponential_bk : public ExponentialBase< Exponential_bk<Array> >
     using Base::p_data;
     using Base::p_param;
     using Base::components;
-    using Base::meanjk;
-    using Base::variancejk;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -110,7 +105,7 @@ class Exponential_bk : public ExponentialBase< Exponential_bk<Array> >
     bool mStep();
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
-    { return this->nbCluster()*this->nbVariable()+this->nbCluster();}
+    { return this->nbCluster();}
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers
@@ -120,17 +115,12 @@ class Exponential_bk : public ExponentialBase< Exponential_bk<Array> >
 template<class Array>
 void Exponential_bk<Array>::randomInit()
 {
-    // compute moments
-    this->moments();
+  // compute moments
   for (int k= baseIdx; k < components().end(); ++k)
   {
-    Real value =0;
+    Real value = 0.;
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
-    {
-      Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand(mean*mean/variance);
-      value += variance/mean;
-    }
+    {  value += p_data()->col(j).wmean(p_tik()->col(k));}
     p_param(k)->scale_ = Law::Exponential::rand(value/this->nbVariable());
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
@@ -143,67 +133,12 @@ void Exponential_bk<Array>::randomInit()
 template<class Array>
 bool Exponential_bk<Array>::mStep()
 {
-  if (!this->moments()) { return false;}
-  // start estimations of the ajk and bj
-  Real qvalue = this->qValue();
-  // enter iterative algorithm
-  int iter;
-  for(iter = 0; iter<MAXITER; ++iter)
-  {
-    // compute ajk
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
-    {
-      for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
-      {
-        // moment estimate and oldest value
-        Real x0 = meanjk(j,k)*meanjk(j,k)/variancejk(j,k);
-        Real x1 = p_param(k)->shape_[j];
-        if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
-        // compute shape
-        hidden::invPsi f(p_param(k)->meanLog_[j] - std::log(p_param(k)->scale_));
-        Real a =  Algo::findZero(f, x0, x1, TOL);
-
-        if (!Arithmetic<Real>::isFinite(a))
-        {
-           p_param(k)->shape_[j] = x0; // use moment estimate
-#ifdef STK_MIXTURE_DEBUG
-          stk_cout << _T("ML estimation failed in Exponential_bj::mStep()\n");
-          stk_cout << "x0 =" << x0 << _T("\n";);
-          stk_cout << "f(x0) =" << f(x0) << _T("\n";);
-          stk_cout << "x1 =" << x1 << _T("\n";);
-          stk_cout << "f(x1) =" << f(x1) << _T("\n";);
-#endif
-        }
-        else { p_param(k)->shape_[j] = a;}
-      }
-      // compute bk
-      p_param(k)->scale_ = p_param(k)->mean_.sum()/p_param(k)->shape_.sum();
-    } // end ajk
-    // check convergence
-    Real value = this->qValue();
-#ifdef STK_MIXTURE_VERBOSE
-  if (value < qvalue)
-  {
-    stk_cout << _T("In Exponential_bk::mStep(): mStep diverge\n");
-    stk_cout << _T("New value =") << value << _T(", qvalue =") << qvalue << _T("\n");
-  }
-#endif
-    if ((value - qvalue) < TOL) break;
-    qvalue = value;
-  }
-#ifdef STK_MIXTURE_VERBOSE
-  if (iter == MAXITER)
-  {
-    stk_cout << _T("In Exponential_bk::mStep(): mStep did not converge\n");
-    stk_cout << _T("qvalue =") << qvalue << _T("\n");
-  }
-#endif
-  return true;
+    Real value = 0.;
+    for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
+    {  value += p_data()->col(j).wmean(p_tik()->col(k));}
+    p_param(k)->scale_ = value;
 }
 
 }  // namespace STK
-
-#undef MAXITER
-#undef TOL
 
 #endif /* STK_EXPONENTIAL_BK_H */

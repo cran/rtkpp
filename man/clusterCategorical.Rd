@@ -4,7 +4,7 @@
 \title{Create an instance of the [\code{\linkS4class{ClusterCategorical}}] class}
 \usage{
 clusterCategorical(data, nbCluster = 2, modelNames = c("categorical_pk_pjk",
-  "categorical_p_pjk"), strategy = clusterStrategy(), criterion = "ICL")
+  "categorical_p_pjk"), strategy = clusterFastStrategy(), criterion = "ICL")
 }
 \arguments{
 \item{data}{frame or matrix containing the data. Rows correspond to observations
@@ -52,7 +52,7 @@ summary(model)
 ## print model
 print(model)
 ## get estimated missing values
-model["data"][model["missings"]]
+missingValues(model)
 }
 \author{
 Serge Iovleff

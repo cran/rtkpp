@@ -23,27 +23,32 @@
 LIB_STKPP_A = libSTKpp.a
 
 STKPP_DIR = ../inst
-STKPP_LIB = $(STKPP_DIR)/lib/$(LIB_STKPP_A)
+STKPP_LIB_DIR = $(STKPP_DIR)/lib
+STKPP_LIB = $(STKPP_LIB_DIR)/$(R_ARCH)/$(LIB_STKPP_A)
+
+# no more specific flags
+STK_FLAGS =
 
 ## Use the R_HOME indirection to support installations of multiple R version
 PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` $(STK_FLAGS)
-PKG_CPPFLAGS = -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB -DSTKUSELAPACK
+PKG_CPPFLAGS = -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB
 PKG_LIBS     = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(STKPP_LIB)
 
 ## Define STK flags here
 STK_CXXFLAGS = $(PKG_CXXFLAGS) -DIS_RTKPP_LIB -DSTKUSELAPACK
 
-## export: every makefile in a project will used these default flags (STK_CXXFLAGS).
+## And export
 export
-
-.PHONY: all pkglib
 
 ## $(SHLIB) is the usual default target that is built automatically from all source
 ## files in this directory. pkglib is an additional target for the library
 ## that will be installed in inst/ and which users can link against.
+.PHONY: all pkglib
+
 all: $(SHLIB)
 $(SHLIB): pkglib
 
 pkglib:
-	($(MAKE) -j -l2 -C $(STKPP_DIR))
+	-@if test ! -e $(STKPP_LIB__DIR)/$(R_ARCH); then mkdir -p $(STKPP_LIB_DIR)/$(R_ARCH); fi
+	($(MAKE) -C $(STKPP_DIR))
 	(cd $(STKPP_DIR) && $(MAKE) clean_obj)

@@ -39,6 +39,7 @@
 #include "Sdk/include/STK_IRunner.h"
 #include "Arrays/include/STK_Array2D.h"
 #include "Arrays/include/STK_Array2DVector.h"
+#include "STK_Regress_Util.h"
 
 namespace STK
 {
@@ -55,28 +56,6 @@ namespace STK
 class BSplineCoefficients : public IRunnerBase
 {
   public:
-    /** Method to use for positioning the knots. */
-    enum KnotsPosition
-    {
-      uniform_  ///< uniform knots
-    , periodic_ ///< periodic knots
-    , density_  ///< knots using density of the data
-    , unknown_  ///< unknown method
-    };
-
-    /** convert a String to a KnotsPosition.
-     *  @param type the type of KnotsPosition in a string
-     *  @return the KnotsPosition represented by the String @c type. If the string
-     *  does not match any known name, the @c unknown_ type is returned.
-     **/
-    static KnotsPosition StringToKnotsPosition( String const& type);
-
-    /** convert a KnotsPosition to a String.
-     *  @param type the KnotsPosition we want to convert to a string
-     *  @return the string associated to this KnotsPosition
-     **/
-    static String KnotsPositionToString( KnotsPosition const& type);
-
     /** @brief Default constructor : initialize the data members with default
      *  values.
      *  The number of knots is given by the formula
@@ -87,9 +66,9 @@ class BSplineCoefficients : public IRunnerBase
      *  @param position method to use for positioning the knots
      **/
     BSplineCoefficients( Vector const* p_data =0
-                       , int const& nbControlPoints =1
-                       , int const& degree = 3
-                       , KnotsPosition const& position = uniform_
+                       , int nbControlPoints =1
+                       , int degree = 3
+                       , Regress::KnotsPosition const& position = Regress::uniform_
                        );
     /** Constructor : initialize the data members. The number of knots is given
      *  by the formula nbKnots = nbControlPoints + degree +1.
@@ -99,9 +78,9 @@ class BSplineCoefficients : public IRunnerBase
      *  @param position method to use for positioning the knots
      **/
     BSplineCoefficients( Vector const& data
-                       , int const& nbControlPoints
-                       , int const& degree = 3
-                       , KnotsPosition const& position = uniform_
+                       , int nbControlPoints
+                       , int degree = 3
+                       , Regress::KnotsPosition const& position = Regress::uniform_
                        );
     /** copy constructor.
      *  @param coefs the coefficients to copy
@@ -122,9 +101,9 @@ class BSplineCoefficients : public IRunnerBase
      *  @param position method to use for positioning the knots (default is uniform)
      **/
     void setData( Vector const& data
-                , int const& nbControlPoints
-                , int const& degree = 3
-                , KnotsPosition const& position = uniform_
+                , int nbControlPoints
+                , int degree = 3
+                , Regress::KnotsPosition const& position = Regress::uniform_
                 );
 
     /** give the degree of the B-Spline curves.
@@ -161,7 +140,7 @@ class BSplineCoefficients : public IRunnerBase
     /** degree of the B-splines curves. */
     int degree_;
     /** Method used in order to position the knots. */
-    KnotsPosition position_;
+    Regress::KnotsPosition position_;
     /** number of knots of the B-Spline curves.*/
     int nbKnots_;
     /** Index of the last knots of the B-Spline curves. This is nbKnots_ - 1.*/
@@ -194,7 +173,7 @@ class BSplineCoefficients : public IRunnerBase
      * @param irow index of the row
      * @param value the value to which we want to compute the row
      **/
-    void computeCoefficientsRow(int const& irow, Real const& value);
+    void computeCoefficientsRow(int irow, Real const& value);
 };
 
 }

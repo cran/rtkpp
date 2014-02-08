@@ -43,19 +43,9 @@ namespace STK
 
 namespace lapack
 {
-/* Constructor */
-Qr::Qr( Matrix const& data, bool ref):  IQr(data, ref) {}
-/* copy constructor */
-Qr::Qr( Qr const& decomp): IQr(decomp) {}
-
 /* Computing the QR decomposition of the matrix Q_. */
-bool Qr::run()
+bool Qr::runImpl()
 {
-  if (Q_.empty())     // if the container is empty
-  {
-    compq_ = true;
-    return true;
-  }
   // start qr iterations
   int lwork =-1, m = Q_.sizeRows(), n= Q_.sizeCols();
   int info, size = std::min(m, n);
@@ -71,10 +61,10 @@ bool Qr::run()
   {
     delete[] p_tau;
     if (info>0)
-    { this->msg_error_ = STKERROR_NO_ARG(SymEigen::run,internal error);
+    { msg_error_ = STKERROR_NO_ARG(lapack::Qr::runImpl,internal error);
       return false;
     }
-    this->msg_error_= STKERROR_1ARG(SymEigen::run,-info,error parameter);
+    msg_error_= STKERROR_1ARG(lapack::Qr::runImpl get,-info,error parameter);
     return false;
   }
   // create
@@ -87,10 +77,10 @@ bool Qr::run()
     delete[] p_tau;
     delete[] p_work;
     if (info>0)
-    { this->msg_error_ = STKERROR_NO_ARG(SymEigen::run,internal error);
+    { msg_error_ = STKERROR_NO_ARG(lapack::Qr::runImpl,internal error);
       return false;
     }
-    this->msg_error_= STKERROR_1ARG(SymEigen::run,-info,error parameter);
+    msg_error_= STKERROR_1ARG(lapack::Qr::runImpl get,-info,error parameter);
     return false;
   }
   // get results
@@ -110,16 +100,6 @@ bool Qr::run()
   return true;
 }
 
-/* Destructor */
-Qr::~Qr() {}
-
-/* Operator = : overwrite the Qr with S. */
-Qr& Qr::operator=(Qr const& decomp)
-{
-  IQr::operator =(decomp);
-  return *this;
-}
-
 int Qr::geqrf(int m, int n, double* a, int lda, double* tau, double *work, int lwork)
 {
   int info = 1;
@@ -130,7 +110,6 @@ int Qr::geqrf(int m, int n, double* a, int lda, double* tau, double *work, int l
 #else
   dgeqrf_(&m, &n, a, &lda, tau, work, &lwork, &info);
 #endif
-
 #endif
 
   return info;

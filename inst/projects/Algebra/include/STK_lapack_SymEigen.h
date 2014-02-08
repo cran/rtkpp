@@ -68,14 +68,20 @@ namespace lapack
  *    @brief  SymEigen computes the eigenvalues and optionally the
  *    eigenvectors of a symmetric real matrix using the syevr Lapack routine.
  */
-class SymEigen : public ISymEigen
+class SymEigen : public ISymEigen<SymEigen>
 {
   public:
+    typedef ISymEigen<SymEigen> Base;
     /** @brief Constructor
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    SymEigen( CArraySquareXX const& data, bool ref =false);
+    inline SymEigen( CArraySquareXX const& data, bool ref =false)
+                   : Base(data, ref), range_(data.range())
+                   , JOBZ_('V'), RANGE_('A'), UPLO_('U')
+                   , VL_(0.0), VU_(0.0), IL_(0), IU_(0)
+                   , data_(data)
+    { data_.shift(0);}
     /** @brief Constructor
      *  @param data reference on a symmetric square expression
      */
@@ -85,12 +91,15 @@ class SymEigen : public ISymEigen
             , JOBZ_('V'), RANGE_('A'), UPLO_('U')
             , VL_(0.0), VU_(0.0), IL_(0), IU_(0)
             , data_(data)
-
-    {data_.shift(0);}
+    { data_.shift(0);}
     /** @brief copy constructor
      *  @param eigen the SymEigen to copy
      */
-    SymEigen( SymEigen const& eigen);
+    inline SymEigen( SymEigen const& eigen)
+                   : Base(eigen)
+                   , JOBZ_(eigen.JOBZ_), RANGE_(eigen.RANGE_), UPLO_(eigen.UPLO_)
+                   , VL_(eigen.VL_), VU_(eigen.VU_), IL_(eigen.IL_), IU_(eigen.IU_)
+     {}
     /** Destructor. */
     inline virtual ~SymEigen() {}
     /** @param jobz If jobz ='N': Compute eigenvalues only; If jobz = 'V': Compute
@@ -126,7 +135,7 @@ class SymEigen : public ISymEigen
      *  Launch SYEVR LAPACK routine to perform the eigenvalues decomposition.
      *  @return @c true if no error occur, @c false otherwise
      */
-    bool run();
+    bool runImpl();
 
   protected:
     /** range of the original data set. The data_ array is shifted in order

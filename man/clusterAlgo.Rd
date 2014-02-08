@@ -7,7 +7,7 @@ clusterAlgo(algo = "EM", nbIteration = 200, epsilon = 1e-08)
 }
 \arguments{
 \item{algo}{character string with the estimation algorithm.
-Possible values are "EM", "SEM", "CEM". Default value is "EM".}
+Possible values are "EM", "SEM", "CEM", "SemiSEM". Default value is "EM".}
 
 \item{nbIteration}{Integer defining the maximal number of iterations. Default value is 200.}
 
@@ -25,6 +25,7 @@ There is three algorithms and two stopping rules possibles for an algorithm.
               \item \code{EM}  {The Expectation Maximisation algorithm.}
               \item \code{CEM} {The Classification EM algorithm.}
               \item \code{SEM} {The Stochastic EM algorithm.}
+              \item \code{SemiSEM} {The Semi-Stochastic EM algorithm.}
           }
        \item Stopping rules:
           \itemize{

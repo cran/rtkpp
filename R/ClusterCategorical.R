@@ -22,7 +22,7 @@
 #    Contact : S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
 #
 #-----------------------------------------------------------------------
-#' @include IClusterModel.R
+#' @include ClusterModelNames.R IClusterModel.R global.R
 NULL
 
 #-----------------------------------------------------------------------
@@ -65,13 +65,13 @@ NULL
 #' ## print model
 #' print(model)
 #' ## get estimated missing values
-#' model["data"][model["missings"]]
+#' missingValues(model)
 #'
 #' @return An instance of the [\code{\linkS4class{ClusterCategorical}}] class.
 #' @author Serge Iovleff
 #' @export
 #'
-clusterCategorical <- function(data, nbCluster=2, modelNames=c( "categorical_pk_pjk", "categorical_p_pjk"), strategy=clusterStrategy(), criterion="ICL")
+clusterCategorical <- function(data, nbCluster=2, modelNames=c( "categorical_pk_pjk", "categorical_p_pjk"), strategy=clusterFastStrategy(), criterion="ICL")
 {
   # check nbCluster
   nbClusterModel = length(nbCluster);
@@ -90,33 +90,156 @@ clusterCategorical <- function(data, nbCluster=2, modelNames=c( "categorical_pk_
 
   # check modelNames
   if (is.null(modelNames)) { modelNames = c( "categorical_pk_pjk", "categorical_p_pjk")}
-  if (!validCategoricalNames(modelNames))
+  if (!clusterValidCategoricalNames(modelNames))
   { stop("modelNames is not valid. See ?CategoricalNames for the list of valid model names\n")}
 
   # check strategy
   if(class(strategy)[1] != "ClusterStrategy")
-  {stop("strategy is not a Cluster Stategy class (must be an instance of the class ClusterStrategy).\n")}
+  {stop("strategy is not a Cluster Strategy class (must be an instance of the class ClusterStrategy).\n")}
   validObject(strategy);
 
   # Create model
   model = new("ClusterCategorical", data)
-  model@missings = which(is.na(data), arr.ind=TRUE);
   model@strategy = strategy;
 
   # start estimation of the models
   resFlag = .Call("clusterMixture", model, nbCluster, modelNames, strategy, criterion, PACKAGE="rtkpp")
   # set names
-  # dimnames(model@plkj) <- list(NULL, colnames(model@data), NULL)
-  if (resFlag != 1) {cat("WARNING: An error occur during the clustering process\n")}
-  else { dim(model@plkj) <- c(model@nbModalities, model@nbCluster, ncol(data)) } # should be done on the C++ side
+  # dimnames(model@plkj) <- list(NULL, colnames(model@component@data), NULL) # not working
+  # should be done on the C++ side
+  if (resFlag != 1) {cat("WARNING: An error occur during the clustering process\n");}
+  dim(model@component@plkj) <- c(model@component@nbModalities, model@nbCluster, ncol(data));
   model
 }
+
+#-----------------------------------------------------------------------
+#' Definition of the [\code{\linkS4class{ClusterCategoricalComponent}}] class
+#'
+#' This class defines a categorical component of a mixture Model.
+#'
+#' @slot plkj Array with the probability of the jth variable in the kth cluster to be l.
+#' @slot nbModalities Integer with the (maximal) number of modalities of the categorical  data.
+#' @seealso [\code{\linkS4class{IClusterComponent}}] class
+#'
+#' @examples
+#' getSlots("ClusterCategoricalComponent")
+#'
+#' @author Serge Iovleff
+#'
+#' @name ClusterCategoricalComponent
+#' @rdname IClusterComponent-class
+#' @aliases ClusterCategoricalComponent-class
+#' @exportClass ClusterCategoricalComponent
+#'
+setClass(
+  Class="ClusterCategoricalComponent",
+  representation( plkj = "array", nbModalities = "numeric"),
+  contains=c("IClusterComponent"),
+  validity=function(object)
+  {
+    dims <- dim(object@plkj)
+
+    if (round(object@nbModalities)!=object@nbModalities)
+    {stop("nbModalities must be an integer.")}
+    if (dims[1]!=object@nbModalities)
+    {stop("First dimension in plkj must be nbModalities.")}
+    if (!clusterValidCategoricalNames(object@modelName))
+    {stop("Invalid Categorical model name.")}
+    return(TRUE)
+  }
+)
+#' Initialize an instance of a rtkpp class.
+#'
+#' Initialization method of the [\code{\linkS4class{ClusterCategoricalComponent}}] class.
+#' Used internally in the `rtkpp' package.
+#'
+#' @rdname initialize-methods
+#' @keywords internal
+setMethod(
+    f="initialize",
+    signature=c("ClusterCategoricalComponent"),
+    definition=function(.Object, data=matrix(nrow=0, ncol=0), nbCluster=2, modelName="categorical_pk_pjk")
+    {
+      # for data
+      if(missing(data)) {stop("data is mandatory in ClusterCategoricalComponent.")}
+      # check model name
+      if (!clusterValidCategoricalNames(modelName)) { stop("modelName is invalid");}
+      # prepare data and compute number of modalities
+      data = as.data.frame(data)
+      nbModalities = 0;
+      for ( j in 1:ncol(data) )
+      {
+        nbModalities <- max(nbModalities, nlevels(factor(data[,j])))
+        data[,j] <- as.integer(factor(data[,j]))
+      }
+      # initialize base class
+      .Object <- callNextMethod(.Object, data, modelName);
+      .Object@nbModalities = nbModalities;
+      # create slots
+      nbVariable = ncol(.Object@data);
+      .Object@plkj <- array(data = 1/nbModalities, dim=c(nbModalities,nbCluster,nbVariable))
+      # validate
+      validObject(.Object)
+      return(.Object)
+    }
+)
+
+#' @rdname extract-methods
+#' @aliases [,ClusterCategoricalComponent-method
+setMethod(
+    f="[",
+    signature(x = "ClusterCategoricalComponent"),
+    definition=function(x, i, j, drop)
+    {
+      if ( missing(j) )
+      {
+        switch(EXPR=i,
+            "plkj"={return(x@plkj)},
+            stop("This attribute doesn't exist !")
+        )
+      }
+      else
+      {
+        if (!is.numeric(j)) {stop("j must be an integer.")}
+        if (round(j)!=j)    {stop("j must be an integer.")}
+        switch(EXPR=i,
+            "plkj"={return(x@plkj[,j,])},
+            stop("This attribute doesn't exist !")
+        )
+      }
+    }
+)
+
+#' @param k the number of the cluster to print
+#' @rdname print-methods
+#' @aliases print print,ClusterCategoricalComponent-method
+setMethod(
+    f="print",
+    signature=c("ClusterCategoricalComponent"),
+    function(x,k,...)
+    {
+      cat("* probabilities = \n");
+      print(format(x@plkj[,k,]), quote=FALSE);
+    }
+)
+
+#' @rdname show-methods
+#' @aliases show-ClusterCategoricalComponent,ClusterCategoricalComponent,ClusterCategoricalComponent-method
+setMethod(
+    f="show",
+    signature=c("ClusterCategoricalComponent"),
+    function(object)
+    {
+      cat("* probabilities = \n");
+      print(format(object@plkj), quote=FALSE);
+    }
+)
 
 #-----------------------------------------------------------------------
 #' Definition of the [\code{\linkS4class{ClusterCategorical}}] class
 #'
 #' This class defines a categorical mixture Model. Inherits from the
-#'[\code{\linkS4class{IClusterModel}}] class. A categorical mixture model is
+#'[\code{\linkS4class{IClusterModelBase}}] class. A categorical mixture model is
 #' a mixture model of the form
 #'
 #' \deqn{
@@ -125,10 +248,8 @@ clusterCategorical <- function(data, nbCluster=2, modelNames=c( "categorical_pk_
 #'    \quad {x} \in \{1,\ldots,L\}^d.
 #' }
 #'
-#' @slot plkj  Array with the probability of the jth variable in the kth cluster
-#' to be l.
-#' @slot nbModalities Integer with the (maximal) number of modalities of the categorical
-#' data.
+#' @slot component  A [\code{\linkS4class{ClusterCategoricalComponent}}] with the
+#' probabilities of the categorical component
 #'
 #' @examples
 #'   getSlots("ClusterCategorical")
@@ -141,31 +262,28 @@ clusterCategorical <- function(data, nbCluster=2, modelNames=c( "categorical_pk_
 #' @rdname ClusterCategorical-class
 #' @aliases ClusterCategorical-class
 #' @exportClass ClusterCategorical
-#'
 setClass(
-    Class="ClusterCategorical",
-    representation( plkj = "array", nbModalities = "numeric"),
-    contains=c("IClusterModel"),
-    prototype=list( plkj = array(dim=c(0,0,0)), nbModalities = 0),
-    validity=function(object)
-    {
-      dims <- dim(object@plkj)
+  Class="ClusterCategorical",
+  representation( component = "ClusterCategoricalComponent"),
+  contains=c("IClusterModelBase"),
+  validity=function(object)
+  {
+    dims <- dim(object@component@plkj)
 
-      if (round(object@nbModalities)!=object@nbModalities)
-      {stop("nbModalities must be an integer.")}
-      if (dims[1]!=object@nbModalities)
-      {stop("First dimension in plkj must be nbModalities.")}
-      if (dims[2]!=object@nbCluster)
-      {stop("Second dimension in plkj must be nbCluster.")}
-      if (dims[3]!=ncol(object@data))
-      {stop("Second dimension in plkj must be nbCluster.")}
-      if (!validCategoricalNames(object@modelName))
-      {stop("Invalid Categorical model name.")}
-      return(TRUE)
-    }
+    if (round(object@component@nbModalities)!=object@component@nbModalities)
+    {stop("nbModalities must be an integer.")}
+    if (dims[1]!=object@component@nbModalities)
+    {stop("First dimension in plkj must be nbModalities.")}
+    if (dims[2]!=object@nbCluster)
+    {stop("Second dimension in plkj must be nbCluster.")}
+    if (dims[3]!=ncol(object@component@data))
+    {stop("Third dimension in plkj must be nbCluster.")}
+    if (!clusterValidCategoricalNames(object@component@modelName))
+    {stop("Invalid Categorical model name.")}
+    return(TRUE)
+  }
 )
 
-#-----------------------------------------------------------------------
 #' Initialize an instance of a rtkpp class.
 #'
 #' Initialization method of the [\code{\linkS4class{ClusterCategorical}}] class.
@@ -176,26 +294,12 @@ setClass(
 setMethod(
     f="initialize",
     signature=c("ClusterCategorical"),
-    definition=function(.Object, data, nbCluster=2, modelName="categorical_pk_pjk")
+    definition=function(.Object, data=matrix(nrow=0, ncol=0), nbCluster=2, modelName="categorical_pk_pjk")
     {
-      # prepare data and compute number of modalities
-      data = as.data.frame(data)
-      nbModalities = 0;
-      for ( j in 1:ncol(data) )
-      {
-        nbModalities <- max(nbModalities, nlevels(factor(data[,j])))
-        data[,j] <- as.integer(factor(data[,j]))
-      }
-      .Object@nbModalities = nbModalities;
-      # initialize base class
-      .Object <- callNextMethod(.Object, data, nbCluster, modelName)
-      # for modelName
-      if(missing(modelName)) {.Object@modelName<-"categorical_pk_pjk"}
-      else                   {.Object@modelName<-modelName}
-      # resize
-      nbVariable <- ncol(.Object@data)
-      nbCluster  <- .Object@nbCluster
-      .Object@plkj <- array(data = 1/nbModalities, dim=c(nbModalities,nbCluster,nbVariable))
+      # for data
+      if(missing(data)) {stop("data is mandatory in ClusterCategorical.")}
+      .Object@component = new("ClusterCategoricalComponent", data, nbCluster, modelName);
+      .Object <- callNextMethod(.Object, nrow(.Object@component@data), nbCluster);
       # validate
       validObject(.Object)
       return(.Object)
@@ -206,55 +310,58 @@ setMethod(
 #' @aliases print print,ClusterCategorical-method
 #'
 setMethod(
-    f="print",
-    signature=c("ClusterCategorical"),
-    function(x,...){
+  f="print",
+  signature=c("ClusterCategorical"),
+  function(x,...)
+  {
+    cat("****************************************\n")
+    callNextMethod();
+    cat("****************************************\n")
+    for(k in 1:length(x@pk))
+    {
+      cat("*** Cluster: ",k,"\n")
+      cat("* Proportion = ", format(x@pk[k]), "\n");
+      print(x@component,k);
+      cat("* probabilities = \n"); print(format(x@component@plkj[,k,]), quote=FALSE)
       cat("****************************************\n")
-      callNextMethod()
-      cat("****************************************\n")
-      for(k in 1:length(x@pk))
-      {
-        cat("*** Cluster: ",k,"\n")
-        cat("* Proportion = ", format(x@pk[k]), "\n")
-        cat("* probabilities = \n"); print(x@plkj[,k,])
-        cat("****************************************\n")
-      }
     }
+  }
 )
 
 #' @rdname show-methods
 #' @aliases show-ClusterCategorical,ClusterCategorical,ClusterCategorical-method
 setMethod(
-    f="show",
-    signature=c("ClusterCategorical"),
-    function(object)
+  f="show",
+  signature=c("ClusterCategorical"),
+  function(object)
+  {
+    cat("****************************************\n")
+    callNextMethod();
+    show(object@component);
+    cat("****************************************\n")
+    for(k in 1:length(object@pk))
     {
+      cat("*** Cluster: ",k,"\n")
+      cat("* Proportion = ", format(object@pk[k]), "\n")
+      print(object@component,k);
       cat("****************************************\n")
-      callNextMethod()
-      cat("****************************************\n")
-      for(k in 1:length(object@pk))
-      {
-        cat("*** Cluster: ",k,"\n")
-        cat("* Proportion = ", format(object@pk[k]), "\n")
-        cat("* probabilities = \n"); print(object@plkj[,k,]);
-        cat("****************************************\n")
-      }
     }
+  }
 )
 
 #' @rdname summary-methods
 #' @aliases summary summary,ClusterCategorical-method
-#'
 setMethod(
-    f="summary",
-    signature=c("ClusterCategorical"),
-    function(object, ...)
-    {
-      cat("**************************************************************\n")
-      callNextMethod()
-      cat("* nbModalities   = ", format(object@nbModalities), "\n")
-      cat("**************************************************************\n")
-    }
+  f="summary",
+  signature=c("ClusterCategorical"),
+  function(object, ...)
+  {
+    cat("**************************************************************\n")
+    callNextMethod()
+    summary(object@component);
+    cat("* nbModalities   = ", format(object@component@nbModalities), "\n")
+    cat("**************************************************************\n")
+  }
 )
 
 #' Plotting of a class [\code{\linkS4class{ClusterCategorical}}]
@@ -296,29 +403,30 @@ setMethod(
         stop("y should not be greater than K-1")
         y <- 1:y
       }
-      print(y)
       # get representation
       Y=.visut(x@tik, nbCluster);
+      if (nbCluster == 2) { ndim = 1;}
+      else { ndim = ncol(Y);}
       # Compute gaussian statistics
-      mean <- matrix(0, nrow = x@nbCluster, ncol =ncol(Y))
-      sigma <- matrix(1, nrow = x@nbCluster, ncol =ncol(Y))
+      mean  <- matrix(0, nrow = nbCluster, ncol =ndim)
+      sigma <- matrix(1, nrow = nbCluster, ncol =ndim)
       for (k in 1:nbCluster)
       {
-        wcov = cov.wt(Y, x@tik[,k], method = "ML");
+        wcov = cov.wt(as.matrix(Y), x@tik[,k], method = "ML");
         mean[k,]  = wcov$center;
         sigma[k,] = sqrt(diag(wcov$cov))
       }
       # create gaussian model
       gauss<-new("ClusterDiagGaussian", Y, nbCluster = x@nbCluster)
-      gauss@mean = mean
-      gauss@sigma= sigma
+      gauss@component@mean  = mean
+      gauss@component@sigma = sigma
       gauss@pk   = x@pk
       gauss@tik  = x@tik
       gauss@lnFi = x@lnFi
       gauss@zi   = x@zi
-      gauss@missings     = x@missings
-      gauss@lnLikelihood = x@lnLikelihood
-      gauss@criterion    = x@criterion
+      gauss@component@missing = x@component@missing
+      gauss@lnLikelihood    = x@lnLikelihood
+      gauss@criterion       = x@criterion
       gauss@nbFreeParameter = x@nbFreeParameter
       gauss@strategy        = x@strategy
       .clusterPlot(gauss, y, .dGauss,...);

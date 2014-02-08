@@ -3,23 +3,41 @@
 \name{initialize,ClusterAlgo-method}
 \alias{initialize,ClusterAlgo-method}
 \alias{initialize,ClusterCategorical-method}
+\alias{initialize,ClusterCategoricalComponent-method}
 \alias{initialize,ClusterDiagGaussian-method}
+\alias{initialize,ClusterDiagGaussianComponent-method}
 \alias{initialize,ClusterGamma-method}
+\alias{initialize,ClusterGammaComponent-method}
+\alias{initialize,ClusterHeterogeneous-method}
 \alias{initialize,ClusterInit-method}
 \alias{initialize,ClusterStrategy-method}
-\alias{initialize,IClusterModel-method}
+\alias{initialize,IClusterComponent-method}
+\alias{initialize,IClusterModelBase-method}
 \title{Initialize an instance of a rtkpp class.}
 \usage{
 \S4method{initialize}{ClusterAlgo}(.Object, algo, nbIteration, epsilon)
 
-\S4method{initialize}{ClusterCategorical}(.Object, data, nbCluster = 2,
-  modelName = "categorical_pk_pjk")
+\S4method{initialize}{ClusterCategoricalComponent}(.Object, data = matrix(nrow
+  = 0, ncol = 0), nbCluster = 2, modelName = "categorical_pk_pjk")
 
-\S4method{initialize}{ClusterDiagGaussian}(.Object, data, nbCluster = 2,
+\S4method{initialize}{ClusterCategorical}(.Object, data = matrix(nrow = 0,
+  ncol = 0), nbCluster = 2, modelName = "categorical_pk_pjk")
+
+\S4method{initialize}{ClusterDiagGaussianComponent}(.Object,
+  data = matrix(nrow = 0, ncol = 0), nbCluster = 2,
   modelName = "gaussian_pk_sjk")
 
-\S4method{initialize}{ClusterGamma}(.Object, data, nbCluster = 2,
-  modelName = "gamma_pk_ajk_bjk")
+\S4method{initialize}{ClusterDiagGaussian}(.Object, data = matrix(nrow = 0,
+  ncol = 0), nbCluster = 2, modelName = "gaussian_pk_sjk")
+
+\S4method{initialize}{ClusterGammaComponent}(.Object, data = matrix(nrow = 0,
+  ncol = 0), nbCluster = 2, modelName = "gamma_pk_ajk_bjk")
+
+\S4method{initialize}{ClusterGamma}(.Object, data = matrix(nrow = 0, ncol =
+  0), nbCluster = 2, modelName = "gamma_pk_ajk_bjk")
+
+\S4method{initialize}{ClusterHeterogeneous}(.Object, ldata = list(),
+  nbCluster = 2)
 
 \S4method{initialize}{ClusterInit}(.Object, method = "random",
   nbInitRun = 5, algo = clusterAlgo("SEM", 20, 0))
@@ -27,19 +45,34 @@
 \S4method{initialize}{ClusterStrategy}(.Object, nbTry, nbShortRun, initMethod,
   shortAlgo, longAlgo)
 
-\S4method{initialize}{IClusterModel}(.Object, data, nbCluster, modelName)
+\S4method{initialize}{IClusterModelBase}(.Object, nbSample = 0,
+  nbCluster = 0)
+
+\S4method{initialize}{IClusterComponent}(.Object, data, modelName)
 }
 \description{
 Initialization method of the [\code{\linkS4class{ClusterAlgo}}] class.
 Used internally in the `rtkpp' package.
 
+Initialization method of the [\code{\linkS4class{ClusterCategoricalComponent}}] class.
+Used internally in the `rtkpp' package.
+
 Initialization method of the [\code{\linkS4class{ClusterCategorical}}] class.
+Used internally in the `rtkpp' package.
+
+Initialization method of the [\code{\linkS4class{ClusterDiagGaussianComponent}}] class.
 Used internally in the `rtkpp' package.
 
 Initialization method of the [\code{\linkS4class{ClusterDiagGaussian}}] class.
 Used internally in the `rtkpp' package.
 
+Initialization method of the [\code{\linkS4class{ClusterGammaComponent}}] class.
+Used internally in the `rtkpp' package.
+
 Initialization method of the [\code{\linkS4class{ClusterGamma}}] class.
+Used internally in the `rtkpp' package.
+
+Initialization method of the [\code{\linkS4class{ClusterHeterogeneous}}] class.
 Used internally in the `rtkpp' package.
 
 Initialization method of the [\code{\linkS4class{ClusterInit}}] class.
@@ -48,7 +81,10 @@ Used internally in the `rtkpp' package.
 Initialization method of the [\code{\linkS4class{ClusterStrategy}}] class.
 Used internally in the `rtkpp' package.
 
-Initialization method of the [\code{\linkS4class{IClusterModel}}] class.
+Initialization method of the [\code{\linkS4class{IClusterModelBase}}] class.
+Used internally in the `rtkpp' package.
+
+Initialization method of the [\code{\linkS4class{IClusterComponent}}] class.
 Used internally in the `rtkpp' package.
 }
 \keyword{internal}

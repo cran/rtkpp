@@ -2,12 +2,14 @@ export(clusterAlgo
       ,clusterInit
       ,clusterStrategy
       ,clusterFastStrategy
-      ,diagGaussianNames
-      ,validDiagGaussianNames
-      ,gammaNames
-      ,validGammaNames
-      ,validCategoricalNames
+      ,clusterDiagGaussianNames
+      ,clusterGammaNames
+      ,clusterCategoricalNames
+      ,clusterValidDiagGaussianNames
+      ,clusterValidGammaNames
+      ,clusterValidCategoricalNames
       ,clusterDiagGaussian
+      ,clusterHeterogeneous
       ,clusterGamma
       ,clusterCategorical
       )
@@ -19,16 +21,22 @@ export(CxxFlags,
 exportClasses(ClusterAlgo
              ,ClusterInit
              ,ClusterStrategy
-             ,IClusterModel
-             ,ClusterCategorical
+             ,IClusterModelBase
              ,ClusterDiagGaussian
              ,ClusterGamma
+             ,ClusterCategorical
+             ,ClusterHeterogeneous
+             ,IClusterComponent
+             ,ClusterDiagGaussianComponent
+             ,ClusterGammaComponent
+             ,ClusterCategoricalComponent
              )
 
 exportMethods(print)
 exportMethods(plot)
 exportMethods(show)
 exportMethods(summary)
+exportMethods(missingValues)
 
 import(Rcpp)
 importFrom(methods,show)

@@ -3,8 +3,8 @@
 \alias{clusterGamma}
 \title{Create an instance of the [\code{\linkS4class{ClusterGamma}}] class}
 \usage{
-clusterGamma(data, nbCluster = 2, modelNames = gammaNames(),
-  strategy = clusterStrategy(), criterion = "ICL")
+clusterGamma(data, nbCluster = 2, modelNames = clusterGammaNames(),
+  strategy = clusterFastStrategy(), criterion = "ICL")
 }
 \arguments{
 \item{data}{frame or matrix containing the data. Rows correspond to observations
@@ -15,7 +15,7 @@ will be estimated during the estimation process.}
 
 \item{modelNames}{[\code{\link{vector}}] of model names to run. By default all
 gamma models with free shape are estimated.  All the model names are given by
-the method [\code{\link{gammaNames}}].}
+the method [\code{\link{clusterGammaNames}}].}
 
 \item{strategy}{a [\code{\linkS4class{ClusterStrategy}}] object containing
 the strategy to run. clusterStrategy() method by default.}
@@ -52,7 +52,7 @@ summary(model)
 ## print model
 print(model)
 ## get estimated missing values
-model["data"][model["missings"]]
+missingValues(model)
 }
 \author{
 Serge Iovleff

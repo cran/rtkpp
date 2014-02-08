@@ -29,8 +29,7 @@
  **/
 
 /** @file STK_ISymEigen.h
- *  @brief In this file we define the ISymEigen class (for a
- * symmetric matrix).
+ *  @brief In this file we define the ISymEigen class (for a symmetric matrix).
  **/
  
 #ifndef STK_ISYMEIGEN_H
@@ -62,7 +61,8 @@ namespace STK
  *  Thus the user can be faced with a deficient rank matrix and with a norm
  *  very small (i.e. not exactly 0.0).
  **/
-class ISymEigen : public IRunnerBase
+template<class Derived>
+class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
 {
   public:
     typedef IRunnerBase Base;
@@ -73,24 +73,36 @@ class ISymEigen : public IRunnerBase
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    ISymEigen( CArraySquareXX const& data, bool ref =false);
+    ISymEigen( CArraySquareXX const& data, bool ref =false)
+             : Base()
+             , norm_(0.), rank_(0), det_(0.)
+             , eigenVectors_(data, ref)
+             , eigenValues_(data.size(), 0.)
+             , SupportEigenVectors_(2*data.size(), 0)
+    {}
     /** @brief Templated constructor
      *  @param data reference on a symmetric square expression
      */
-    template<class Derived>
-    ISymEigen( ExprBase<Derived> const& data)
+    template<class OtherDerived>
+    ISymEigen( ExprBase<OtherDerived> const& data)
              : Base()
              , norm_(0.), rank_(0), det_(0.)
              , eigenVectors_(data.asDerived())
              , eigenValues_(data.size(), 0.)
              , SupportEigenVectors_(2*data.size(), 0)
     {
-      STK_STATICASSERT(Derived::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
+      STK_STATICASSERT(OtherDerived::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
     }
     /** Copy constructor.
      *  @param eigen the EigenValue to copy
      **/
-    ISymEigen( ISymEigen const& eigen);
+    ISymEigen( ISymEigen const& eigen)
+             : Base(eigen)
+             , norm_(eigen.norm_), rank_(eigen.rank_), det_(eigen.det_)
+             , eigenVectors_(eigen.eigenVectors_)
+             , eigenValues_(eigen.eigenValues_)
+             , SupportEigenVectors_(eigen.SupportEigenVectors_)
+    {}
 
     /** virtual destructor */
     inline virtual ~ISymEigen() {}
@@ -98,7 +110,16 @@ class ISymEigen : public IRunnerBase
      *  @param eigen ISymEigen to copy
      *  @return a reference on this
      **/
-    ISymEigen& operator=( ISymEigen const& eigen);
+    ISymEigen& operator=( ISymEigen const& eigen)
+    {
+      norm_   = eigen.norm_;     // norm of the matrix
+      rank_   = eigen.rank_;     // rank of the matrix
+      det_    = eigen.det_;      // determinant of the matrix
+      eigenVectors_ = eigen.eigenVectors_;
+      eigenValues_  = eigen.eigenValues_;
+      SupportEigenVectors_ = eigen.SupportEigenVectors_;
+      return *this;
+    }
     /** @return the trace norm of the matrix */
     inline Real norm()  const { return norm_;}
     /** @return the rank of the matrix */
@@ -137,13 +158,18 @@ class ISymEigen : public IRunnerBase
     /** overloading of setData.
      * @param data the data set to set.
      **/
-    template<class Derived>
-    void setData( ExprBase<Derived> const& data)
+    template<class OtherDerived>
+    void setData( ExprBase<OtherDerived> const& data)
     {
       norm_ = 0.; rank_ = 0; det_ = 0.;
       eigenVectors_ = data;
       eigenValues_.resize(data.range());
       SupportEigenVectors_.resize(2*data.size());
+    }
+    virtual bool run()
+    {
+      if (eigenVectors_.empty()) { return true;}
+      return this->asDerived().runImpl();
     }
 
   protected:
@@ -165,6 +191,34 @@ class ISymEigen : public IRunnerBase
    void finalizeStep();
 };
 
+
+/* finalize the computation by computing the rank, the trace norm and the
+ * determinant of the matrix.
+ **/
+template<class Derived>
+void ISymEigen<Derived>::finalizeStep()
+{
+  norm_ = 0;
+  rank_ = eigenValues_.size();
+  det_  = 0;
+  // compute trace norm sign of the determinant
+  int s = 1;
+  for (int i=eigenValues_.begin(); i< eigenValues_.end(); ++i )
+  {
+    Real value = eigenValues_.elt(i);
+    norm_ += value;
+    s     *= sign(value);
+    if (std::abs(value) < Arithmetic<Real>::epsilon()) { rank_--;}
+  }
+  // compute the determinant for full rank matrices
+  if (rank_ == eigenValues_.size())
+  {
+    Real sum = 0.;
+    for (int i=eigenValues_.begin(); i< eigenValues_.end(); ++i )
+    { sum += std::log(std::abs(eigenValues_.elt(i)));}
+    det_ = s* std::exp(sum);
+  }
+}
 
 } // namespace STK
 

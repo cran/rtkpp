@@ -113,16 +113,15 @@ class Exponential_bjk : public ExponentialBase< Exponential_bjk<Array> >
 template<class Array>
 void Exponential_bjk<Array>::randomInit()
 {
-    // estimate b
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  // estimate b
+  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  {
+    for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
-      for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
-      {
-         Real mean = p_data()->col(j).wmean(p_tik()->col(k));
-         p_param(k)->scale_[j] = Law::Exponential::rand(mean);
-      }
+       Real mean = p_data()->col(j).wmean(p_tik()->col(k));
+       p_param(k)->scale_[j] = Law::Exponential::rand(mean);
     }
-  mStep();
+  }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Exponential_bjk<Array>::randomInit done\n");
   this->writeParameters(stk_cout);

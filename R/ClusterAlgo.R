@@ -31,6 +31,7 @@
 #'               \item \code{EM}  {The Expectation Maximisation algorithm.}
 #'               \item \code{CEM} {The Classification EM algorithm.}
 #'               \item \code{SEM} {The Stochastic EM algorithm.}
+#'               \item \code{SemiSEM} {The Semi-Stochastic EM algorithm.}
 #'           }
 #'        \item Stopping rules:
 #'           \itemize{
@@ -42,7 +43,7 @@
 #' }
 #'
 #' @param algo character string with the estimation algorithm.
-#' Possible values are "EM", "SEM", "CEM". Default value is "EM".
+#' Possible values are "EM", "SEM", "CEM", "SemiSEM". Default value is "EM".
 #' @param nbIteration Integer defining the maximal number of iterations. Default value is 200.
 #' @param epsilon Real defining the epsilon value for the algorithm. Note that
 #' epsilon is not used by the SEM algorithm. Default value is 1.e-8.
@@ -66,7 +67,7 @@ clusterAlgo <- function( algo="EM", nbIteration=200, epsilon=1e-08)
 #' This class encapsulate the parameters of estimation algorithms of the rtkpp Cluster
 #' methods.
 #'
-#' @slot algo A character string with the algorithm. Possible values: "SEM", "CEM", "EM". Default value: "EM".
+#' @slot algo A character string with the algorithm. Possible values: "SEM", "CEM", "EM", "SemiSEM". Default value: "EM".
 #' @slot nbIteration Integer defining the maximal number of iterations. Default value: 200.
 #' @slot epsilon real defining the epsilon value for the algorithm. epsilon is note used if \code{algo} is sem.
 #' Default value: 1e-07.
@@ -88,7 +89,7 @@ setClass (
   validity = function(object)
   {
     # for algo
-    if ( sum(object@algo %in% c("EM","SEM","CEM")) != 1 )
+    if ( sum(object@algo %in% c("EM","SEM","CEM","SemiSEM")) != 1 )
     {  stop("Algorithm is not valid. See ?ClusterAlgo for the list of available algorithms.")}
     # for nbIteration
     if (!is.numeric(object@nbIteration))
@@ -137,9 +138,6 @@ setMethod(
     }
 )
 
-#-----------------------------------------------------------------------
-# @name print
-# @docType methods
 #' @rdname print-methods
 #' @aliases print print-algo,ClusterAlgo-method
 setMethod(
@@ -155,9 +153,6 @@ setMethod(
     }
 )
 
-#-----------------------------------------------------------------------
-# @name show
-# @docType methods
 #' @rdname show-methods
 #' @aliases show show-algo,ClusterAlgo-method
 setMethod(
@@ -173,26 +168,23 @@ setMethod(
     }
 )
 
-#-----------------------------------------------------------------------
-# @name [
-# @docType methods
 #' @rdname extract-methods
 #' @aliases [,ClusterAlgo-method
 setMethod(
-    f="[",
-    signature(x = "ClusterAlgo"),
-    definition=function(x, i, j, drop){
-      if ( missing(j) ){
-        switch(EXPR=i,
-            "algo"={return(x@algo)},
-            "nbIteration"={return(x@nbIteration)},
-            "epsilon"={return(x@epsilon)},
-            stop("This attribute doesn't exist !")
-        )
-      }else{
-        stop("This attribute is not a list !")
-      }
+  f="[",
+  signature(x = "ClusterAlgo"),
+  definition=function(x, i, j, drop){
+    if ( missing(j) ){
+      switch(EXPR=i,
+          "algo"={return(x@algo)},
+          "nbIteration"={return(x@nbIteration)},
+          "epsilon"={return(x@epsilon)},
+          stop("This attribute doesn't exist !")
+      )
+    }else{
+      stop("This attribute is not a list !")
     }
+  }
 )
 
 #-----------------------------------------------------------------------

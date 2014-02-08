@@ -81,7 +81,7 @@ class AdditiveBSplineRegressionPage: public IPage
     /** get the method for positioning the knots.
      *  @return the method for positioning the knots
      */
-    inline BSplineCoefficients::KnotsPosition const& knotsPositions() const
+    inline Regress::KnotsPosition const& knotsPositions() const
     { return position_;}
 
     /** validate the options. Check if the values are coherent. */
@@ -99,7 +99,7 @@ class AdditiveBSplineRegressionPage: public IPage
     /** degree of the splines */
     int degree_;
     /** positions of the knots. */
-    BSplineCoefficients::KnotsPosition position_;
+    Regress::KnotsPosition position_;
 };
 
 } // namespace STK

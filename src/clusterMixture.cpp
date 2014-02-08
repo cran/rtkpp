@@ -40,11 +40,25 @@ using namespace STK;
 /** @param model ClusterDiagModel S4 class
  *  @param nbCluster a vector with the number of clusters to test
  */
-RcppExport SEXP clusterMixture( SEXP model, SEXP nbCluster, SEXP modelNames, SEXP strategy, SEXP r_critName )
+RcppExport SEXP clusterMixture( SEXP model, SEXP nbCluster, SEXP modelNames, SEXP strategy, SEXP critName )
 {
   BEGIN_RCPP
   // create a launcher
-  ClusterLauncher launcher(model, nbCluster, modelNames, strategy, r_critName);
+  ClusterLauncher launcher(model, nbCluster, modelNames, strategy, critName);
+  // return result
+  return Rcpp::wrap(launcher.run());
+
+  END_RCPP
+}
+
+/** @param model ClusterDiagModel S4 class
+ *  @param nbCluster a vector with the number of clusters to test
+ */
+RcppExport SEXP clusterMixtureHeterogene( SEXP model, SEXP nbCluster, SEXP strategy, SEXP critName )
+{
+  BEGIN_RCPP
+  // create a launcher
+  ClusterLauncher launcher(model, nbCluster, strategy, critName);
   // return result
   return Rcpp::wrap(launcher.run());
 

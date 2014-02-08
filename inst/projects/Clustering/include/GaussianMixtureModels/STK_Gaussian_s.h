@@ -137,6 +137,9 @@ void Gaussian_s<Array>::randomInit()
   sigma_ = ((variance<=0) || !Arithmetic<Real>::isFinite(variance))
            ? 1.
            : std::sqrt(variance/(this->nbSample()*this->nbVariable()));
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Gaussian_s<Array>::randomInit() done\n");
+#endif
 }
 
 /* Compute the weighted mean and the common standard deviation. */

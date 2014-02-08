@@ -179,9 +179,9 @@ Type stringToType( String const& s)
 template <class Type>
 String typeToString( Type const& t, std::ios_base& (*f)(std::ios_base&) = std::dec)
 {
+  if (Arithmetic<Type>::isNA(t)) return stringNa;
   ostringstream oss;
-  oss << f << Proxy<Type>(t);
-  return oss.str();
+  return static_cast<ostringstream&>(oss << f << Proxy<Type>(t)).str();
 }
 
 } // namespace STK

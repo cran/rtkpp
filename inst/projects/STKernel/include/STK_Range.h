@@ -449,7 +449,8 @@ ostream& operator<< (ostream& os, TRange<Size_> const& I)
  *  @return the Range represented by the String @c str. if the string
  *  does not match any known name, the NA value is returned.
  **/
-Range stringToRange( String const& str);
+inline Range stringToRange( String const& str)
+{ return stringToType<Range>(str);}
 
 /** @ingroup Base
  *  Convert a String to a Range using a map.
@@ -493,14 +494,6 @@ String rangeToString( TRange<Size_> const& value, std::map<TRange<Size_> , Strin
   if (it == mapping.end())  return stringNa;
   return it->second;
 }
-/** @ingroup Base
- *  @brief specialization for Range
- *  @param s the String to convert
- *  @return The Range to get from the String
- **/
-template<>
-inline Range stringToType<Range>( String const& s)
-{ return stringToRange(s);}
 
 /** @ingroup Base
  *  @brief Specialization for Range

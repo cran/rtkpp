@@ -57,7 +57,7 @@ class IMixtureAlgo : public IRunnerBase
 {
   protected:
     /** default constructor */
-    inline IMixtureAlgo() : IRunnerBase(), p_model_(0), nbIterMax_(0), epsilon_(0.), threshold_(1.) {}
+    inline IMixtureAlgo() : IRunnerBase(), p_model_(0), nbIterMax_(0), epsilon_(0.), threshold_(2.) {}
     /** Copy constructor.
      *  @param algo the algorithm to copy */
     inline IMixtureAlgo( IMixtureAlgo const& algo) : IRunnerBase(algo)
@@ -74,7 +74,7 @@ class IMixtureAlgo : public IRunnerBase
     inline int nbIterMax() const { return nbIterMax_; }
     /** @return the epsilon of the algorithm */
     inline int epsilon() const { return epsilon_; }
-    /** set a new model. Default threshold_ is 3 percent of the samples. */
+    /** set a new model. Default threshold_ is 2 samples. */
     void setModel(IMixtureComposer* p_model);
     /** set the maximal number of iterations */
     inline void setNbIterMax(int nbIterMax) { nbIterMax_ = nbIterMax; }
@@ -125,8 +125,8 @@ class EMAlgo: public IMixtureAlgo
 };
 
 /** @ingroup Clustering
- *  @brief Implementation of the CEM algorithm.
- *  The CEM algorithm call alternatively the steps:
+ *  @brief Implementation of the SEM algorithm.
+ *  The SEM algorithm call alternatively the steps:
  *  - cStep()
  *  - mStep()
  *  - eStep()
@@ -173,6 +173,33 @@ class SEMAlgo: public IMixtureAlgo
     inline virtual ~SEMAlgo(){}
     /** clone pattern */
     inline virtual SEMAlgo* clone() const { return new SEMAlgo(*this);}
+    /** run the algorithm on the model calling sStep, mStep and eStep of the
+     *  model until the maximal number of iteration is reached.
+     *  @return @c true if no error occur, @c false otherwise.
+     **/
+    virtual bool run();
+};
+
+/** @ingroup Clustering
+ *  @brief Implementation of the SemiSEM algorithm.
+ *  The SemiSEM algorithm call alternatively the steps:
+ *  - mStep()
+ *  - simulStep()
+ *  - eStep()
+ *  until the maximum number of iterations is reached.
+ **/
+class SemiSEMAlgo: public IMixtureAlgo
+{
+  public:
+    /** default constructor */
+    inline SemiSEMAlgo() : IMixtureAlgo() {}
+    /** Copy constructor.
+     *  @param algo the algorithm to copy */
+    inline SemiSEMAlgo( SemiSEMAlgo const& algo) : IMixtureAlgo(algo) {}
+    /** destructor */
+    inline virtual ~SemiSEMAlgo(){}
+    /** clone pattern */
+    inline virtual SemiSEMAlgo* clone() const { return new SemiSEMAlgo(*this);}
     /** run the algorithm on the model calling sStep, mStep and eStep of the
      *  model until the maximal number of iteration is reached.
      *  @return @c true if no error occur, @c false otherwise.

@@ -38,12 +38,31 @@
 #include "STKernel/include/STK_Real.h"
 #include "Sdk/include/STK_IRunner.h"
 
-#include "Arrays/include/STK_CArray.h"
+//#include "Arrays/include/STK_CArray.h"
 #include "Arrays/include/STK_Array2D.h"
 #include "Arrays/include/STK_Array2DVector.h"
 #include "Arrays/include/STK_Array2DUpperTriangular.h"
 
-#include "../include/STK_Givens.h"
+#include "STK_Householder.h"
+#include "STK_Givens.h"
+
+#ifdef STK_ALGEBRA_DEBUG
+#include "Arrays/include/STK_Display.h"
+
+template< class Container2D >
+void print(Container2D const& A, STK::String const& name)
+{
+  stk_cout << "print: " << name << _T("\n";);
+  stk_cout << name << _T(".isRef() =")        << A.isRef()  << _T("\n");
+  stk_cout << name << _T(".capacityHo() =")   << A.capacityHo()  << _T("\n");
+  stk_cout << name << _T(".cols() =")      << A.cols()  << _T("\n");
+  stk_cout << name << _T(".rows() =")      << A.rows()  << _T("\n\n");
+  stk_cout << name << _T(".rangeCols().isRef() =")  << A.rangeCols().isRef() << _T("\n");
+  stk_cout << name << _T(".rangeCols() =\n")  << A.rangeCols() << _T("\n");
+  stk_cout << name << _T(".capacityCols().isRef() =") << A.capacityCols().isRef()  << _T("\n");
+  stk_cout << name << _T(".capacityCols() =\n") << A.capacityCols()  << _T("\n");
+}
+#endif
 
 namespace STK
 {
@@ -58,7 +77,8 @@ namespace STK
  *     -# R Upper Triangular matrix of dimension min(M,N)-by-N
  *     -# \f$ A = QR \f$
  **/
-class IQr : public IRunnerBase
+template <class Derived>
+class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
 {
   protected:
     typedef IRunnerBase Base;
@@ -75,8 +95,8 @@ class IQr : public IRunnerBase
     /** @brief Constructor
      *  @param data reference on a matrix expression
      */
-    template<class Derived>
-    IQr( ExprBase<Derived> const& data) : Base(), compq_(false)
+    template<class DerivedExpr>
+    IQr( ExprBase<DerivedExpr> const& data) : Base(), compq_(false)
     {
       if (data.beginRows() != data.beginCols())
       { STKRUNTIME_ERROR_NO_ARG(IQR::IQR,Wrong data set: beginRows row must be equal to beginCols);}
@@ -85,13 +105,21 @@ class IQr : public IRunnerBase
     /** Copy constructor.
      *  @param decomp the decomposition  to copy
      **/
-    IQr( IQr const& decomp);
+    inline IQr( IQr const& decomp): Q_(decomp.Q_), R_(decomp.R_), compq_(decomp.compq_)
+    {}
 
   public :
     /** virtual destructor */
     inline virtual ~IQr() {}
     /** Operator = : overwrite the this with decomp. */
-    IQr& operator=(IQr const& decomp);
+    IQr& operator=(IQr const& decomp)
+    {
+      Q_ = decomp.Q_;
+      R_ = decomp.R_;
+      compq_ = decomp.compq_;
+      return *this;
+    }
+
     /** Is Q computed ?
      *  @return @c true if Q_ is computed, @c false otherwise
      */
@@ -100,6 +128,12 @@ class IQr : public IRunnerBase
      * @return the matrix Q of the QR decomposition
      **/
     inline Matrix const& Q() const  { return Q_;}
+    /** Compute the QR decomposition. **/
+    virtual bool run()
+    {
+      if (Q_.empty()) { compq_ = true; return true;}
+      return this->asDerived().runImpl();
+    }
     /** give the matrix R of the QR decomposition.
      * @return the matrix R of the QR decomposition
      **/
@@ -146,8 +180,8 @@ class IQr : public IRunnerBase
     /** overloading of setData.
      * @param data the data set to set.
      **/
-    template<class Derived>
-    void setData( ExprBase<Derived> const& data)
+    template<class DerivedExpr>
+    void setData( ExprBase<DerivedExpr> const& data)
     { Q_ = data.asDerived(); R_.clear(); compq_ = false;}
 
   protected :
@@ -159,9 +193,97 @@ class IQr : public IRunnerBase
     bool compq_;
 };
 
+template<class Derived>
+void IQr<Derived>::compQ()
+{
+#ifdef STK_ALGEBRA_VERBOSE
+  stk_cout << _T("Entering IQr::compQ()") << _T("\n");
+#endif
+  // if Q_ is computed yet
+  if (compq_) return;
+  // number of non zero cols of Q_
+  int ncol  = std::min(Q_.sizeRows(), Q_.sizeCols()), lastCol;
+  // add or remove the column
+  if (ncol < Q_.sizeCols())
+  {
+    Q_.popBackCols(Q_.sizeCols() - ncol);
+    lastCol = Q_.lastIdxCols();
+  }
+  else
+  {
+    lastCol = Q_.lastIdxCols();
+    if (ncol < Q_.sizeRows())
+    {
+      Q_.pushBackCols(Q_.sizeRows() -ncol);
+      // Initialize added columns
+      Q_.col( _R( lastCol+1, Q_.lastIdxCols()) ).setValue(0);
+      for (int i=lastCol+1; i< Q_.endCols(); ++i) { Q_(i, i) = 1.0;}
+    }
+  }
+  // compute other columns
+  for (int i=lastCol; i>=Q_.beginCols(); i--)
+  {
+    // get current householder vector
+    Vector u(Q_, _R(i, Q_.lastIdxRows()), i);
+    // Apply Householder vector to the right of the matrix
+    leftHouseholder( Q_( _R(i, Q_.lastIdxRows()), _R(i+1, Q_.lastIdxCols())), u);
+    // update the ith column
+    Q_( _R(Q_.beginRows(),i-1)   , i ) = 0.0;   //     0:(i-1)
+    Q_( _R(i+1, Q_.lastIdxRows()), i ) *= Q_(i,i); // (i+1):M
+    Q_( i                        , i ) += 1.0;  //     i:i
+    // update the column i
+  }
+  // Q_ is now computed
+  compq_ = true;
+#ifdef  STK_ALGEBRA_VERBOSE
+  stk_cout << _T("Terminating IQr::compQ().") << _T("\n");
+#endif
+}
+
+template<class Derived>
+void IQr<Derived>::popBackCols(int n) { R_.popBackCols(n);}
+
+/* Delete the jth column and update the QR decomposition
+ **/
+template<class Derived>
+void IQr<Derived>::eraseCol(int pos)
+{
+  if (pos < R_.beginCols())
+  { STKOUT_OF_RANGE_1ARG(Qr::eraseCol,pos,pos<R_.beginCols());}
+  if (R_.lastIdxCols() < pos)
+  { STKOUT_OF_RANGE_1ARG(Qr::eraseCol,pos,pos<R_.lastIdxCols()<pos);}
+  // if Q_ is not computed yet
+  if (!compq_) compQ();
+  // compute the number of iteration for updating to zeroed
+  int niter = std::min(R_.lastIdxCols(), R_.lastIdxRows());//R_.beginCols()-1+std::min(R_.sizeRows(), R_.sizeCols());
+  // Zeroed the remaining elements (z)
+  for (int iter = pos+1; iter<= niter; iter++)
+  {
+    Real sinus, cosinus;
+    // compute the Givens rotation
+    R_(iter-1, iter) = compGivens( R_(iter-1, iter), R_(iter, iter), cosinus, sinus);
+    R_(iter, iter)   = 0.0;
+    // if necessary update R_ and Q_
+    if (sinus)
+    {
+      // create a reference on the sub-Matrix
+      MatrixUpperTriangular Rsub(R_.col( _R(iter+1, R_.lastIdxCols()) ), true);
+      // Update the next rows (iter1:ncolr_) of R_
+      leftGivens(Rsub, iter-1, iter, cosinus, sinus);
+      // Update the cols of Q_
+      rightGivens(Q_, iter-1, iter, cosinus, sinus);
+    }
+  }
+  // erase the column pos
+  R_.eraseCols(pos);
+  // update the range of the remaining cols of the container
+  R_.update(Range(pos, std::min(R_.lastIdxRows(), R_.lastIdxCols()), 0));
+}
+
 /* Adding the last column and update the QR decomposition. */
+template<class Derived>
 template<class ColVector>
-void IQr::pushBackCol(ColVector const& T)
+void IQr<Derived>::pushBackCol(ColVector const& T)
 {
   STK_STATICASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
   // check conditions
@@ -194,8 +316,9 @@ void IQr::pushBackCol(ColVector const& T)
  *  @param T the column to insert
  *  @param pos the position of the column to insert
  **/
+template<class Derived>
 template<class ColVector>
-void IQr::insertCol(ColVector const& T, int pos)
+void IQr<Derived>::insertCol(ColVector const& T, int pos)
 {
   STK_STATICASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
   if (pos < R_.beginCols())

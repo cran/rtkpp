@@ -147,7 +147,7 @@ void Gamma_ak_bj<Array>::randomInit()
       Real mean = meanjk(j,k), variance = variancejk(j,k);
       value += mean*mean/variance;
     }
-    p_param(k)->shape_ = Law::Exponential::rand(value/this->nbVariable());
+    p_param(k)->shape_ = Law::Exponential::rand(value/(this->nbVariable()));
   }
   // simulate bj
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
@@ -158,7 +158,7 @@ void Gamma_ak_bj<Array>::randomInit()
       Real mean = meanjk(j,k), variance = variancejk(j,k);
       value += p_param(k)->tk_ * variance/mean;
     }
-    scale_[j] = Law::Exponential::rand(value/this->nbSample());
+    scale_[j] = Law::Exponential::rand(value/(this->nbSample()));
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_ak_bj<Array>::randomInit done\n");

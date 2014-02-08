@@ -92,9 +92,11 @@ algoType stringToAlgo( std::string const& type)
   if (toUpperString(type) == toUpperString(_T("emAlgo"))) return emAlgo_;
   if (toUpperString(type) == toUpperString(_T("cemAlgo"))) return cemAlgo_;
   if (toUpperString(type) == toUpperString(_T("semAlgo"))) return semAlgo_;
+  if (toUpperString(type) == toUpperString(_T("semiSemAlgo"))) return semiSemAlgo_;
   if (toUpperString(type) == toUpperString(_T("em"))) return emAlgo_;
   if (toUpperString(type) == toUpperString(_T("cem"))) return cemAlgo_;
   if (toUpperString(type) == toUpperString(_T("sem"))) return semAlgo_;
+  if (toUpperString(type) == toUpperString(_T("semiSem"))) return semiSemAlgo_;
   return emAlgo_;
 }
 
@@ -121,7 +123,7 @@ String exceptionToString( exceptions const& type)
  *  @param type the type of Mixture
  *  @return the MixtureClass associated to this Mixture.
  **/
-MixtureClass MixtureToMixtureClass( Mixture const& type)
+MixtureClass mixtureToMixtureClass( Mixture const& type)
 {
   if (type == Gamma_ajk_bjk_) return Gamma_;
   if (type == Gamma_ajk_bk_) return Gamma_;
@@ -311,11 +313,6 @@ std::string mixtureToString(Mixture type, bool freeProp)
  **/
 IMixtureAlgo* createAlgo(Clust::algoType algo, int nbIterMax, Real epsilon)
 {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("Entering createAlgo() with:\n")
-           << _T("nbIterMax = ") << nbIterMax << _T("\n")
-           << _T("epsilon = ") << epsilon << _T("\n");
-#endif
   IMixtureAlgo* p_algo = 0;
   switch (algo)
   {
@@ -328,11 +325,17 @@ IMixtureAlgo* createAlgo(Clust::algoType algo, int nbIterMax, Real epsilon)
   case semAlgo_:
     p_algo = new SEMAlgo();
     break;
+  case semiSemAlgo_:
+    p_algo = new SemiSEMAlgo();
+    break;
   default:
     break;
   }
-  p_algo->setNbIterMax(nbIterMax);
-  p_algo->setEpsilon(epsilon);
+  if (p_algo)
+  {
+    p_algo->setNbIterMax(nbIterMax);
+    p_algo->setEpsilon(epsilon);
+  }
   return p_algo;
 }
 
@@ -344,17 +347,10 @@ IMixtureAlgo* createAlgo(Clust::algoType algo, int nbIterMax, Real epsilon)
  **/
 IMixtureInit* createInit(Clust::initType init,  int nbInits, Clust::algoType algo, int nbIterMax, Real epsilon)
 {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("Entering createInit() with:\n")
-           << _T("nbInits = ") << nbInits << _T("\n")
-           << _T("nbIterMax = ") << nbIterMax << _T("\n")
-           << _T("epsilon = ") << epsilon << _T("\n");
-#endif
-
   IMixtureInit* p_init = 0;
   switch (init)
   {
-    case Clust::randomInit_:
+    case Clust::randomParamInit_:
       p_init = new RandomInit();
       break;
     case Clust::randomClassInit_:
@@ -366,8 +362,11 @@ IMixtureInit* createInit(Clust::initType init,  int nbInits, Clust::algoType alg
     default:
       break;
   }
-  p_init->setNbTry(nbInits);
-  p_init->setInitAlgo(Clust::createAlgo(algo, nbIterMax, epsilon));
+  if (p_init)
+  {
+    p_init->setNbTry(nbInits);
+    p_init->setInitAlgo(Clust::createAlgo(algo, nbIterMax, epsilon));
+  }
   return p_init;
 }
 
@@ -383,10 +382,6 @@ IMixtureStrategy* createSimpleStrategy( IMixtureComposer*& p_composer
                                       , IMixtureInit* const& p_init
                                       , IMixtureAlgo* const& algo)
 {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("Entering createSimpleStrategy() with:\n")
-           << _T("nbTry = ") << nbTry  << _T("\n");
-#endif
   SimpleStrategyParam* p_strategyParam = new SimpleStrategyParam();
   p_strategyParam->p_algo_ = algo;
   SimpleStrategy* p_strategy = new SimpleStrategy(p_composer);
@@ -412,10 +407,6 @@ IMixtureStrategy* createFullStrategy( IMixtureComposer*& p_composer
                                     , int nbShortRun, IMixtureAlgo* const& shortRunAlgo
                                     , IMixtureAlgo* const& longRunAlgo)
 {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("Entering createFullStrategy() with:\n")
-           << _T("nbTry = ") << nbTry  << _T("\n");
-#endif
   FullStrategyParam* p_strategyParam = new FullStrategyParam();
   p_strategyParam->nbInitRun_  = nbInitRun;
   p_strategyParam->nbShortRun_  = nbShortRun;

@@ -90,24 +90,27 @@ enum algoType
 {
   emAlgo_ = 0,
   cemAlgo_ = 1,
-  semAlgo_ = 2
+  semAlgo_ = 2,
+  semiSemAlgo_ = 3
 };
 
 /** @ingroup Clustering
  *  Convert a String to an algoType. The recognized strings are
  * <table>
- * <tr> <th> Algorithm   </th></tr>
- * <tr> <td> "emAlgo"    </td></tr>
- * <tr> <td> "cemAlgo"   </td></tr>
- * <tr> <td> "semAlgo"   </td></tr>
- * <tr> <td> "em"        </td></tr>
- * <tr> <td> "cem"       </td></tr>
- * <tr> <td> "sem"       </td></tr>
+ * <tr> <th> Algorithm     </th></tr>
+ * <tr> <td> "emAlgo"      </td></tr>
+ * <tr> <td> "cemAlgo"     </td></tr>
+ * <tr> <td> "semAlgo"     </td></tr>
+ * <tr> <td> "semiSemAlgo" </td></tr>
+ * <tr> <td> "em"          </td></tr>
+ * <tr> <td> "cem"         </td></tr>
+ * <tr> <td> "sem"         </td></tr>
+ * <tr> <td> "semiSem"         </td></tr>
  * </table>
  *  @param type the type of algorithm wanted
  *  @return the algoType corresponding (default is emAlgo)
- *  @note if the string is not found in the list above,the type Clust::emAlgo_
- *  is returned.
+ *  @note The capitalized letters have no effect and if the string is not found
+ *  in the list above,the type Clust::emAlgo_ is returned.
  **/
 algoType stringToAlgo( std::string const& type);
 
@@ -149,12 +152,12 @@ String exceptionToString( exceptions const& type);
  **/
 enum modelState
 {
-  modelCreated_, ///< the model has been created but is not initialized
-  modelInitialized_, ///< the model is initialized, but its parameters are not initialized
-  initialization_, ///< The parameters of the model have been initialized
-  shortRun_,      ///< A short run has been done
-  longRun_,   ///< a long run has been done
-  modelFinalized_ ///< the model is finalized
+  modelCreated_ =0,         ///< the model has been created but is not initialized
+  modelInitialized_ =1,     ///< the model is initialized, but its parameters are not initialized
+  modelParamInitialized_=2, ///< The parameters of the model have been initialized
+  shortRun_,                ///< A short run has been done
+  longRun_,                 ///< A long run has been done
+  modelFinalized_           ///< the model is finalized
 };
 
 /** @ingroup Clustering
@@ -199,7 +202,7 @@ enum Mixture
  *  @param type the type of Mixture
  *  @return the MixtureClass associated to this Mixture.
  **/
-MixtureClass MixtureToMixtureClass( Mixture const& type);
+MixtureClass mixtureToMixtureClass( Mixture const& type);
 
 /** @ingroup Clustering
  *  Convert a String to a Mixture. The recognized strings are

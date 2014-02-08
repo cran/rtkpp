@@ -11,7 +11,7 @@ methods.
 \section{Slots}{
 
 \describe{
-\item{\code{algo}}{A character string with the algorithm. Possible values: "SEM", "CEM", "EM". Default value: "EM".}
+\item{\code{algo}}{A character string with the algorithm. Possible values: "SEM", "CEM", "EM", "SemiSEM". Default value: "EM".}
 
 \item{\code{nbIteration}}{Integer defining the maximal number of iterations. Default value: 200.}
 

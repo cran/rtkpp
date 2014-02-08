@@ -155,7 +155,8 @@ struct IdTypeImpl<const Integer>
  *  @return the Integer represented by the String @c str. If the string
  *  does not match any known name, the NA value is returned.
  **/
-Integer stringToInt( String const& str);
+inline Integer stringToInt( String const& str)
+{ return stringToType<Integer>(str);}
 
 /** @ingroup Base
  *  Convert a String to an Integer using a map.
@@ -172,7 +173,8 @@ Integer stringToInt( String const& str, std::map<String, Integer> const& mapping
  *  @param f format, by default write every number in decimal
  *  @return the string associated to this value.
  **/
-String intToString( Integer const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
+inline String intToString( Integer const& value, std::ios_base& (*f)(std::ios_base&) = std::dec)
+{ return typeToString<Integer>(value,f);}
 
 /** @ingroup Base
  *  Convert an Integer to a String.
@@ -181,24 +183,6 @@ String intToString( Integer const& value, std::ios_base& (*f)(std::ios_base&) = 
  *  @return the String associated to this value.
  **/
 String intToString( Integer const& value, std::map<Integer, String> const& mapping);
-
-/** @ingroup Base
- *  @brief specialization for Integer
- *  @param s the String to convert
- *  @return The value to get from the String
- **/
-template<>
-inline Integer stringToType<Integer>( String const& s)
-{ return stringToInt(s);}
-
-/** @ingroup Base
- *  @brief specialization for Integer
- *  @param t The Int to convert to String
- *  @param f format, by default write every number in decimal
- **/
-template<>
-inline String typeToString<Integer>( Integer const& t, std::ios_base& (*f)(std::ios_base&))
-{ return intToString(t, f);}
 
 } // namespace STK
 

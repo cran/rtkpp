@@ -3,8 +3,9 @@
 \alias{clusterDiagGaussian}
 \title{Create an instance of the [\code{\linkS4class{ClusterDiagGaussian}}] class}
 \usage{
-clusterDiagGaussian(data, nbCluster = 2, modelNames = diagGaussianNames(),
-  strategy = clusterStrategy(), criterion = "ICL")
+clusterDiagGaussian(data, nbCluster = 2,
+  modelNames = clusterDiagGaussianNames(), strategy = clusterFastStrategy(),
+  criterion = "ICL")
 }
 \arguments{
 \item{data}{frame or matrix containing the data. Rows correspond to observations
@@ -15,7 +16,7 @@ will be estimated during the estimation process.}
 
 \item{modelNames}{[\code{\link{vector}}] of model names to run. By default all diagonal
 Gaussian models are estimated. All the model names are given by the method
-[\code{\link{diagGaussianNames}}].}
+[\code{\link{clusterDiagGaussianNames}}].}
 
 \item{strategy}{a [\code{\linkS4class{ClusterStrategy}}] object containing
 the strategy to run. clusterStrategy() method by default.}
@@ -52,7 +53,7 @@ summary(model)
 ## print model
 print(model)
 ## get estimated missing values
-model["data"][model["missings"]]
+missingValues(model)
 }
 \author{
 Serge Iovleff

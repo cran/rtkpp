@@ -97,7 +97,7 @@ NULL
 #-----------------------------------------------------------------------
 #' Produce summary of a rtkpp class. 
 #'
-#' @param object any cluster model deriving from a \code{\linkS4class{IClusterModel}} object.
+#' @param object any cluster model deriving from a \code{\linkS4class{IClusterModelBase}} object.
 #' @param ... further arguments passed to or from other methods
 #'
 #' @return NULL. Summaries to standard out.
@@ -114,4 +114,29 @@ NULL
 #'   summary(model)
 #'
 NULL
+
+#' Return the missing values of a component or a cluster class.
+#'
+#' The missing methods allow the user to get the extrapolated mssing
+#' values from a mixture model.
+#'
+#' @param x an object that can return the extrapolated missing values
+#'
+#' @return A matrix with three columns (row index, column index, value)
+#'
+#' @name missingValues
+#' @docType methods
+#' @rdname missingValues-methods
+#' @exportMethod missingValues
+#'
+#' @examples
+#'   data(geyser)
+#'   model <- clusterDiagGaussian(geyser,3)
+#'   missingValues(model)
+setGeneric(
+  name = "missingValues",
+  function(x)
+  { standardGeneric("missingValues")}
+)
+
 

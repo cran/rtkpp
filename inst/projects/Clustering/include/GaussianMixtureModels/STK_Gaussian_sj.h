@@ -139,6 +139,9 @@ void Gaussian_sj<Array>::randomInit()
   }
   // compute the standard deviation
   sigma_ = (variance /= this->nbSample()).sqrt();
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Gaussian_sj<Array>::randomInit() done\n");
+#endif
 }
 
 /* Compute the weighted mean and the common standard deviation. */

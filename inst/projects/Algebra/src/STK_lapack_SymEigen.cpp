@@ -43,30 +43,11 @@ namespace STK
 namespace lapack
 {
 
-/** @brief Constructor
- *  @param data reference on a symmetric square matrix
- *  @param ref @c true if we overwrite the data set, @c false otherwise
- */
-SymEigen::SymEigen( CArraySquareXX const& data, bool ref)
-                  : ISymEigen(data, ref), range_(data.range())
-                  , JOBZ_('V'), RANGE_('A'), UPLO_('U')
-                  , VL_(0.0), VU_(0.0), IL_(0), IU_(0)
-                  , data_(data)
-{ data_.shift(0);}
-/** @brief copy constructor
- *  @param eigen the SymEigen to copy
- */
-SymEigen::SymEigen( SymEigen const& eigen)
-                   : ISymEigen(eigen)
-                   , JOBZ_(eigen.JOBZ_), RANGE_(eigen.RANGE_), UPLO_(eigen.UPLO_)
-                   , VL_(eigen.VL_), VU_(eigen.VU_), IL_(eigen.IL_), IU_(eigen.IU_)
- {}
-
 /* @brief Run eigen decomposition
  *  Launch SYEVR LAPACK routine to perform the eigenvalues decomposition.
  *  @return @c true if no error occur, @c false otherwise
  */
-bool SymEigen::run()
+bool SymEigen::runImpl()
 {
 #ifdef STK_ALGEBRA_VERY_VERBOSE
   stk_cout << _T("Enter in SymEigen::run\n");

@@ -64,34 +64,39 @@ namespace lapack
  *    @brief Qr computes the QR decomposition of a real matrix using the
  *    Lapack routine dgeqrf.
  */
-class Qr : public IQr
+class Qr : public IQr<Qr>
 {
   public:
+    typedef IQr<Qr> Base;
     /** Default constructor.
      *  @param data the matrix to decompose
      *  @param ref true if we overwrite A
      **/
-    Qr( Matrix const&  data, bool ref = false);
+    inline Qr( Matrix const&  data, bool ref = false): Base(data, ref) {}
     /** @brief Constructor
      *  @param data reference on a matrix expression
      */
     template<class Derived>
-    Qr( ArrayBase<Derived> const& data) : IQr(data){}
+    Qr( ArrayBase<Derived> const& data): Base(data){}
     /** Copy constructor.
      *  @param decomp the decomposition  to copy
      **/
-    Qr( Qr const& decomp);
+    inline Qr( Qr const& decomp): Base(decomp) {}
     /** virtual destructor */
-    virtual ~Qr();
+    inline virtual ~Qr() {}
     /** @brief clone pattern */
     inline virtual Qr* clone() const { return new Qr(*this);}
     /** Operator = : overwrite the Qr with decomp. */
-    Qr& operator=(Qr const& decomp);
+    inline Qr& operator=(Qr const& decomp)
+    {
+      Base::operator =(decomp);
+      return *this;
+    }
     /** @brief Run qr decomposition
      *  Launch geqrf LAPACK routine to perform the qr decomposition.
      *  @return @c true if no error occur, @c false otherwise
      */
-    virtual bool run();
+    bool runImpl();
 
   protected:
     /** wrapper of the LAPACK DGEQRF routine. Compute the Qr decomposition

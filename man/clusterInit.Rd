@@ -13,7 +13,7 @@ Possible values: "random", "class", "fuzzy". Default value is "random".}
 \item{nbInitRun}{integer defining the number of initialization point to test. Default value is 5.}
 
 \item{algo}{Character string with the initialisation algorithm.
-Possible values: "EM", "CEM", "SEM". Default value is "SEM".}
+Possible values: "EM", "CEM", "SEM", "SemiSEM". Default value is "SEM".}
 
 \item{nbIteration}{Integer defining the number of iteration in \code{algo}.
 nbIteration must be a positive integer. Default values is 20. Not used if  \code{algo} = NULL.}

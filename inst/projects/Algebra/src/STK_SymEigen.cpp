@@ -47,40 +47,11 @@
 
 namespace STK
 {
-/* @brief Constructor
- *  @param data reference on a symmetric square matrix
- *  @param ref @c true if we overwrite the data set, @c false otherwise
- */
-SymEigen::SymEigen( CArraySquareXX const& data, bool ref)
-         : ISymEigen(data, ref)
-         , begin_(data.begin())
-         , last_(data.lastIdx())
-{}
-
-/* Copy constructor */
-SymEigen::SymEigen( SymEigen const& S)
-                  : ISymEigen(S)
-                  , begin_(S.begin_)
-                  , last_(S.last_)
-{}
-
-/* Operator = : overwrite the SymEigen with S.
-  **/
-SymEigen& SymEigen::operator=( SymEigen const& S)
-{
-  ISymEigen::operator=(S);
-  begin_ = S.begin_;    // first value
-  last_  = S.last_;     // last value
-  return *this;
-}
-
-/* destructor  */
-SymEigen::~SymEigen() {}
 
 
 /* Main methods.  */
 /* Compute diagonalization of the symmetric matrix */
-bool SymEigen::run()
+bool SymEigen::runImpl()
 {
 #ifdef STK_ALGEBRA_VERBOSE
     stk_cout << _T("Entering in SymEigen::run()\n");

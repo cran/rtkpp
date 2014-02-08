@@ -122,8 +122,8 @@ void Gamma_ak_bk<Array>::randomInit()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     Real mean = this->meank(k), variance = this->variancek(k);
-    p_param(k)->shape_ = Law::Exponential::rand(mean*mean/variance);
-    p_param(k)->scale_ = Law::Exponential::rand(variance/mean);
+    p_param(k)->shape_ = Law::Exponential::rand((mean*mean/variance));
+    p_param(k)->scale_ = Law::Exponential::rand((variance/mean));
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_ak_bk<Array>::randomInit done\n");

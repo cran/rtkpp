@@ -37,13 +37,12 @@
 #define STK_MIXTURECOMPOSER_H
 
 #include <vector>
-#include "STK_IMixtureComposer.h"
+// will include IMixtureComposer
+#include "STK_IMixture.h"
 #include "STK_IMixtureManager.h"
 
 namespace STK
 {
-
-class IMixture;
 /** @ingroup Clustering
  *  Main class for handling composed mixture models.
  *  A composed mixture model on some composed space
@@ -166,7 +165,6 @@ class MixtureComposer : public IMixtureComposer
      *  @param idData the id name of the data to modelize.
      **/
     void releaseMixture(IMixtureManager& manager, String const& idData);
-
     /** Utility method allowing to get the parameters of a specific mixture.
      *  @param manager the manager with the responsibility of the parameters
      *  @param idData the Id of the data we want the parameters
@@ -175,25 +173,6 @@ class MixtureComposer : public IMixtureComposer
     template<class ParametersManager, class Array>
     void getParameters(ParametersManager const& manager, String const& idData, Array& data) const
     { manager.getParameters(getMixture(idData), idData, data);}
-
-    /** Utility method allowing to get the data with a specific Id.
-     *  @param manager the manager with the responsibility of the data
-     *  @param idData the Id of the data we want the parameters
-     *  @param data the structure which will receive the data
-     **/
-    template<class DataManager, class Array>
-    void getData(DataManager const& manager, String const& idData, Array& data) const
-    { manager.getData(idData, data);}
-
-    /** Utility method allowing to get the missing values imputed by the
-     *  estimation process.
-     *  @param manager the manager with the responsibility of the missing values
-     *  @param idData the Id of the data we want the missing values
-     *  @param data the structure which will receive the data
-     **/
-    template<class MissingValuesManager, class Array>
-    void getMissingValues(MissingValuesManager const& manager, String const& idData, Array& data) const
-    { manager.getMissingValues(idData, data);}
 
   protected:
     /** @brief Create the composer using existing data handler and mixtures.

@@ -28,20 +28,20 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_IDataManager.cpp
- *  @brief In this file we implement the interface class IDataManager.
+/** @file STK_IMixtureData.cpp
+ *  @brief In this file we implement the interface class IMixtureData.
  **/
 
-#include "../include/STK_IDataManager.h"
+#include "../include/STK_IMixtureData.h"
 
 namespace STK
 {
 /* default constructor. */
-IDataManager::IDataManager(std::string const& idData): nbVariable_(0), v_missing_(), idData_(idData) {}
+IMixtureData::IMixtureData(std::string const& idData): nbVariable_(0), v_missing_(), idData_(idData) {}
 /* copy constructor
- *  @param manager the IDataManager to copy
+ *  @param manager the IMixtureData to copy
  **/
-IDataManager::IDataManager( IDataManager const& manager)
+IMixtureData::IMixtureData( IMixtureData const& manager)
             : nbVariable_(manager.nbVariable_)
             , v_missing_(manager.v_missing_)
             , idData_(manager.idData_)

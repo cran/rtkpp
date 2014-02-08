@@ -35,7 +35,7 @@ include $(RELATIVEMAKEVARS)
 # main directories
 RTKPP_PROJECTS_DIR  = projects/
 RTKPP_BIN_DIR = bin/
-RTKPP_LIB_DIR = lib/
+RTKPP_LIB_DIR = lib/$(R_ARCH)/
 
 # check if we are using symoblic paths
 ifneq ($(patsubst $(RTKPP_PROJECTS_DIR)STKernel/../%,%,$(wildcard $(RTKPP_PROJECTS_DIR)STKernel/../*)),$(patsubst $(RTKPP_PROJECTS_DIR)%,%,$(wildcard $(RTKPP_PROJECTS_DIR)*)))
@@ -60,14 +60,14 @@ STKPP_LIB = $(RTKPP_LIB_DIR)$(LIB_STKPP_A)
 #-----------------------------------------------------------------------
 # Create the library. Build the objects of each projects and then add them
 .PHONY: all lib obj
-all: lib
+all: lib echo
 lib: $(STKPP_LIB)
 
 # use to debug
 echo:
-	@echo $(MAKEVARS)
 	@echo $(BIN_DIR)
 	@echo $(PROJECTS_DIR)
+	@echo $(R_ARCH)
 	@echo $(patsubst $(RTKPP_PROJECTS_DIR)STKernel/../%,%,$(wildcard $(RTKPP_PROJECTS_DIR)STKernel/../*))
 	@echo $(patsubst $(RTKPP_PROJECTS_DIR)%,%,$(wildcard $(RTKPP_PROJECTS_DIR)*))
 	@echo $(CXXFLAGS)
@@ -120,7 +120,7 @@ AAMODELS_OBJS  = $(patsubst $(SRC_AAMODELS_DIR)%.cpp, $(RTKPP_BIN_DIR)%.o, $(wil
 #-----------------------------------------------------------------------
 # rules for compiling each projects
 .PHONY: stkernel arrays sdk dmanager algebra analysis statistik statmodel
-.PHONY: regress reduct aamodels  
+.PHONY: regress reduct aamodels
 
 stkernel:
 	$(MAKE) -C $(SRC_STKERNEL_DIR)
@@ -138,12 +138,12 @@ analysis:
 	$(MAKE) -C $(SRC_ANALYSIS_DIR)
 statistik:
 	$(MAKE) -C $(SRC_STATISTIK_DIR)
+statmodel:
+	$(MAKE) -C $(SRC_STATMODELS_DIR)
 regress:
 	$(MAKE) -C $(SRC_REGRESS_DIR)
 reduct:
 	$(MAKE) -C $(SRC_REDUCT_DIR)
-statmodel:
-	$(MAKE) -C $(SRC_STATMODELS_DIR)
 aamodels:
 	$(MAKE) -C $(SRC_AAMODELS_DIR)
 
@@ -151,17 +151,17 @@ aamodels:
 # COMMENT or UNCOMMENT the projects you need for your package
 # all binaries you need
 obj: stkernel \
-     arrays \
      sdk \
+     arrays \
      dmanager \
      clustering \
      algebra \
      analysis \
      statistik \
-     statmodel \
-     regress \
-     reduct \
-     aamodels
+ #    statmodel \
+ #    regress \
+ #    reduct \
+ #    aamodels
 
 CPP_OBJS = \
   $(STKERNEL_OBJS) \
@@ -172,10 +172,10 @@ CPP_OBJS = \
   $(ALGEBRA_OBJS) \
   $(ANALYSIS_OBJS) \
   $(STATISTIK_OBJS) \
-  $(STATMODELS_OBJS) \
-  $(REGRESS_OBJS) \
-  $(REDUCT_OBJS) \
-  $(AAMODELS_OBJS)
+#  $(STATMODELS_OBJS) \
+#  $(REGRESS_OBJS) \
+#  $(REDUCT_OBJS) \
+#  $(AAMODELS_OBJS)
 
 #-----------------------------------------------------------------------
 # create the library adding the objects
@@ -195,17 +195,17 @@ clean_lib:
 
 clean_obj: \
   clean_stkernel \
-  clean_arrays \
   clean_sdk \
+  clean_arrays \
   clean_dmanager \
+  clean_clustering \
   clean_algebra \
   clean_analysis \
   clean_statistik \
-  clean_statmodel \
-  clean_clustering \
-  clean_aamodels \
-  clean_regress \
-  clean_reduct
+#  clean_statmodel \
+#  clean_regress \
+#  clean_reduct \
+#  clean_aamodels \
 
 clean_stkernel:
 	$(RM) $(STKERNEL_OBJS)

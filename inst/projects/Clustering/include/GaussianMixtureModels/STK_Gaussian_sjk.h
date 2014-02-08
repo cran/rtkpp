@@ -124,7 +124,6 @@ void Gaussian_sjk<Array>::randomInit()
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gaussian_sjk<Array>::randomInit() done\n");
-  this->writeParameters(stk_cout);
 #endif
 }
 

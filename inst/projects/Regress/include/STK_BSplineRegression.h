@@ -51,7 +51,7 @@ namespace STK
 class BSplineRegression : public IRegression<Matrix, Vector, Vector>
 {
   private:
-    typedef BSplineCoefficients::KnotsPosition _Kposition;
+    typedef Regress::KnotsPosition _Kposition;
 
   public:
     /** Constructor.
@@ -65,7 +65,7 @@ class BSplineRegression : public IRegression<Matrix, Vector, Vector>
                      , Vector const* p_x
                      , int const& nbControlPoints
                      , int const& degree = 3
-                     , const _Kposition& position = BSplineCoefficients::uniform_
+                     , const _Kposition& position = Regress::uniform_
                      );
 
     /** virtual destructor. */

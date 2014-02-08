@@ -50,7 +50,7 @@ class AdditiveBSplineRegression : public IRegression<Matrix, Matrix, Vector>
 {
   public:
     //
-    typedef BSplineCoefficients::KnotsPosition KnotsPosition;
+    typedef Regress::KnotsPosition KnotsPosition;
 
     /** Constructor.
      * @param p_y p-dimensional array of output to fit
@@ -63,7 +63,7 @@ class AdditiveBSplineRegression : public IRegression<Matrix, Matrix, Vector>
                              , Matrix const* p_x
                              , int const& nbControlPoints
                              , int const& degree = 3
-                             , KnotsPosition const& position = BSplineCoefficients::uniform_
+                             , KnotsPosition const& position = Regress::uniform_
                              );
 
     /** virtual destructor. */
@@ -103,7 +103,7 @@ class AdditiveBSplineRegression : public IRegression<Matrix, Matrix, Vector>
     /** method of position of the knots of the B-Spline curve */
     KnotsPosition position_;
     /** Coefficients of the regression matrix */
-    AdditiveBSplineCoefficients coefs_;
+    AdditiveBSplineCoefficients<Matrix> coefs_;
     /** Estimated control points of the B-Spline curve */
     Matrix controlPoints_;
 
