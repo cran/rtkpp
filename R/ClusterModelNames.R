@@ -22,9 +22,9 @@
 #    Contact : S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
 #
 #-----------------------------------------------------------------------
-#' @title diagGaussianNames: Build a vector of Gaussian model names.
+#' Build a vector of Gaussian model names.
 #'
-#' In a Gaussian model, we assume that the variance
+#' In a diagonql Gaussian model, we assume that the variance
 #' matrices are diagonal in each cluster. This gives rise to 8 models:
 #' \enumerate{
 #'  \item {The proportions can be equal or free.}
@@ -49,7 +49,7 @@
 #' @param sdInCluster A character string equal to "equal", "free" or "all". Default is "all".
 #' @param sdBetweenCluster A character string equal to "equal", "free" or "all". Default is "all".
 #'
-#' @return A vector of character with the models names.
+#' @return A vector of character with the model names.
 #' @examples
 #' diagGaussianNames()
 #' diagGaussianNames("all", "equal", "free") # same as c("gaussian_p_sk", "gaussian_pk_sk")
@@ -102,7 +102,7 @@ validDiagGaussianNames <- function(names)
 }
 
 #-----------------------------------------------------------------------
-#' @title gammaNames: Build a vector of gamma model names.
+#' Build a vector of gamma model names.
 #'
 #' In a gamma model, we can assume that the shapes are equal in each/all
 #' cluster(s) or not. We can also assume that the scales are equal in each/all
@@ -137,7 +137,7 @@ validDiagGaussianNames <- function(names)
 #' @param scaleInCluster A character string equal to "equal", "free" or "all". Default is "all".
 #' @param scaleBetweenCluster A character string equal to "equal", "free" or "all". Default is "all".
 #'
-#' @return A vector of character with the models names.
+#' @return A vector of character with the model names.
 #' @examples
 #' gammaNames()
 #' gammaNames("all", "equal", "free", "free", "equal") # same as c("gamma_p_ak_bj", "gamma_pk_ak_bj")
@@ -279,7 +279,7 @@ validCategoricalNames <- function(names)
 
   all = c( "categorical_pk_pjk", "categorical_p_pjk",  "categorical_pk_pk", "categorical_p_pk")
   for (i in 1:nb)
-  {  if ( sum(names[i] %in% all) != 1 ) { return(FALSE);}}
+  {?  if ( sum(names[i] %in% all) != 1 ) { return(FALSE);}}
   return(TRUE)
 }
 

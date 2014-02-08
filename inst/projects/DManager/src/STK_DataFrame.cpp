@@ -38,12 +38,12 @@
 namespace STK
 {
 /* Default constructor . */
-DataFrame::DataFrame() : Base(), IContainer2D() {}
+DataFrame::DataFrame() : Base(), Base2D() {}
 
 /* Copy constructor */
 DataFrame::DataFrame( DataFrame const& T, bool ref)
                     : Base(T.range())
-                    , IContainer2D(T)
+                    , Base2D(T)
 {
   // we need to copy explicitly the data
   for (int j=begin(); j<=lastIdx(); j++) // for all columns
@@ -61,7 +61,7 @@ void DataFrame::clear()
   // set default range for list
   Base::setRange();
   // set default range for container2D
-  IContainer2D::setRanges(0, 0);
+  Base2D::setRanges(0, 0);
 }
 
 /* Operator = : overwrite the DataFrame with T. */

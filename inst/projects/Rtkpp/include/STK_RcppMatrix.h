@@ -139,7 +139,23 @@ class RcppMatrix : public ArrayBase< RcppMatrix<Type_> >
      *  @param i, j indexes of the row and of the column
      **/
     inline Type& elt2Impl(int i, int j) { return (matrix_(i,j));}
-
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param T the container to copy
+     **/
+    inline RcppMatrix& operator=( RcppMatrix const& T)
+    { matrix_ = T.matrix_; return *this;}
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param T the container to copy
+     **/
+    template<class OtherType>
+    inline RcppMatrix& operator=( RcppMatrix<OtherType> const& T)
+    { matrix_ = T.matrix_; return *this;}
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param T the container to copy
+     **/
+    template<int OtherRtype>
+    inline RcppMatrix& operator=( Rcpp::Matrix<OtherRtype> const& matrix)
+    { matrix_ = matrix; return *this;}
   private:
     Rcpp::Matrix<Rtype_> matrix_;
 };

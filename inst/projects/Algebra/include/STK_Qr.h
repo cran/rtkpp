@@ -56,7 +56,12 @@ class Qr: public IQr
      *  @param A the matrix to decompose
      *  @param ref true if we overwrite A
      **/
-    Qr( Matrix const&  A, bool ref = false);
+    Qr( Matrix const&  A =Matrix(), bool ref = false);
+    /** @brief Constructor
+     *  @param data reference on a matrix expression
+     */
+    template<class Derived>
+    Qr( ExprBase<Derived> const& data) : IQr(data) {}
     /** Copy constructor.
      *  @param decomp the decomposition  to copy
      **/

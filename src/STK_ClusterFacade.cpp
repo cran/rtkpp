@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Inria
+/*     Copyright (C) 2004-2013  Serge Iovleff, University Lille 1, Inria
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as

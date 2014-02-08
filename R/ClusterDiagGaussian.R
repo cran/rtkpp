@@ -36,8 +36,9 @@ NULL
 #' and columns correspond to variables. If the data set contains NA values, they
 #' will be estimated during the estimation process.
 #' @param nbCluster  [\code{\link{vector}}] listing the number of clusters to test.
-#' @param modelNames [\code{\link{vector}}] of models names to run. By default all diagonal
-#' Gaussian models are estimated.
+#' @param modelNames [\code{\link{vector}}] of model names to run. By default all diagonal
+#' Gaussian models are estimated. All the model names are given by the method
+#' [\code{\link{diagGaussianNames}}].
 #' @param strategy a [\code{\linkS4class{ClusterStrategy}}] object containing
 #' the strategy to run. clusterStrategy() method by default.
 #' @param criterion character defining the criterion to select the best model.
@@ -63,18 +64,20 @@ NULL
 #' summary(model)
 #' ## print model
 #' print(model)
+#' ## get estimated missing values
+#' model["data"][model["missings"]]
 #'
 #' @return An instance of the [\code{\linkS4class{ClusterDiagGaussian}}] class.
 #' @author Serge Iovleff
 #' @export
 #'
-clusterDiagGaussian <- function(data, nbCluster=2, modelNames=NULL, strategy=clusterStrategy(), criterion="ICL")
+clusterDiagGaussian <- function(data, nbCluster=2, modelNames=diagGaussianNames(), strategy=clusterStrategy(), criterion="ICL")
 {
   # check nbCluster
   nbClusterModel = length(nbCluster);
   nbClusterMin = min(nbCluster);
   nbClusterMax = max(nbCluster);
-  if (nbClusterMin < 2) { stop("The number of clusters must be greater or equal to 2")}
+  if (nbClusterMin < 1) { stop("The number of clusters must be greater or equal to 1")}
 
   # check criterion
   if(sum(criterion %in% c("BIC","AIC", "ICL")) != 1)
@@ -86,7 +89,6 @@ clusterDiagGaussian <- function(data, nbCluster=2, modelNames=NULL, strategy=clu
   if (ncol(data) < 1) {stop("Error: empty data set")}
 
   # check modelNames
-  if (is.null(modelNames)) { modelNames = diagGaussianNames()}
   if (!validDiagGaussianNames(modelNames))
   { stop("modelNames is not valid. See ?diagGaussianNames for the list of valid model names")}
 
@@ -99,14 +101,27 @@ clusterDiagGaussian <- function(data, nbCluster=2, modelNames=NULL, strategy=clu
   model = new("ClusterDiagGaussian", data)
   model@missings = which(is.na(data), arr.ind=TRUE);
   model@strategy = strategy;
-
   # start estimation of the models
-  resFlag = .Call("clusterMixture", model, nbCluster, modelNames, strategy, criterion, PACKAGE="rtkpp")
-
+  ResFlag <- FALSE;
+  res1Flag <- FALSE;
+  if (nbClusterMin == 1)
+  {
+    model = .diagGaussianNoCluster(model);
+    res1Flag <- TRUE;
+    ind <- which(nbCluster == 1, arr.ind = TRUE);
+    nbCluster <- nbCluster[-ind];
+  }
+  if (length(nbCluster) >0)
+  {
+    resFlag = .Call("clusterMixture", model, nbCluster, modelNames, strategy, criterion, PACKAGE="rtkpp");
+  }
   # set names
-  colnames(model@mean)   <- colnames(model@data)
-  colnames(model@sigma) <- colnames(model@data)
-  if (resFlag != 1) {cat("WARNING: An error occur during the clustering process")}
+  if (resFlag != TRUE && res1Flag != TRUE) {cat("WARNING: An error occur during the clustering process");}
+  else
+  {
+    colnames(model@mean)  <- colnames(model@data);
+    colnames(model@sigma) <- colnames(model@data);
+  }
   model
 }
 
@@ -200,8 +215,8 @@ setMethod(
     {
       cat("*** Cluster: ",k,"\n")
       cat("* Proportion = ", format(x@pk[k]), "\n")
-      cat("* Means      = ", format(x@mean[k,]), "\n")
-      cat("* Variances  = ", format(x@sigma[k,]), "\n")
+      cat("* Mean(s)    = ", format(x@mean[k,]), "\n")
+      cat("* Sd(s)      = ", format(x@sigma[k,]), "\n")
       cat("****************************************\n")
     }
   }
@@ -282,3 +297,23 @@ setMethod(
 # x a vector with the point
 .dGauss <- function(x, j, k, model)
 { dnorm(x, (model@mean)[k, j] , (model@sigma)[k, j])}
+
+# wrapper of dnorm
+# x a vector with the point
+.diagGaussianNoCluster <- function(model)
+{
+  nbSample   <- nrow(model@data);
+  nbVariable <- ncol(model@data);
+  model@mean  <- matrix(colMeans(model@data, na.rm = TRUE), nrow=1, ncol = nbVariable);
+  model@sigma <- matrix(apply(model@data, 2, na.rm = TRUE, sd), nrow=1, ncol = nbVariable);
+  model@nbCluster <- 1;
+  model@pk <- c(1);
+  model@tik <- matrix(1, nrow= nrow(model@data), ncol =1);
+  model@lnFi <- rowSums( t(apply(model@data, 1, mean=as.vector(model@mean), sd = as.vector(model@sigma), log = TRUE, dnorm)) );
+  model@zi <- as.integer(rep(1, nbVariable));
+  model@lnLikelihood <- sum(model@lnFi);
+  model@nbFreeParameter <- 2 * nbVariable;
+  model@criterion <- -2 * model@lnLikelihood + model@nbFreeParameter * log(nbSample);
+  model@modelName <- c("gaussian_pk_sjk");
+  model
+}

@@ -37,8 +37,9 @@ NULL
 #' and columns correspond to variables. If the data set contains NA values, they
 #' will be estimated during the estimation process.
 #' @param nbCluster  [\code{\link{vector}}] listing the number of clusters to test.
-#' @param modelNames [\code{\link{vector}}] of models names to run. By default all
-#' gamma models with free shape are estimated.
+#' @param modelNames [\code{\link{vector}}] of model names to run. By default all
+#' gamma models with free shape are estimated.  All the model names are given by
+#' the method [\code{\link{gammaNames}}].
 #' @param strategy a [\code{\linkS4class{ClusterStrategy}}] object containing
 #' the strategy to run. clusterStrategy() method by default.
 #' @param criterion character defining the criterion to select the best model.
@@ -64,6 +65,8 @@ NULL
 #' summary(model)
 #' ## print model
 #' print(model)
+#' ## get estimated missing values
+#' model["data"][model["missings"]]
 #'
 #' @return An instance of the [\code{\linkS4class{ClusterGamma}}] class.
 #' @author Serge Iovleff

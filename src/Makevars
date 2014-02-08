@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------
-#   Copyright (C) Inria 2014
+#   Copyright (C) 2014  Serge Iovleff, University Lille1, Inria
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
 #------------------------------------------------------------------------
 #   Project:    rtkpp
 #   Created on: Feb 17, 2014
-#   Authors:    Serge IOVLEFF <serge.iovleff@stkpp.org>
-#						    Vincent KUBICKI <vincent.kubicki@inria.fr>
+#   Authors:    Serge IOVLEFF <serge_DOT_iov..._AT_stkpp_DOT_org>
+#               Vincent KUBICKI <vincent_DOT_kub..._AT_inria_DOT_fr>
 #-----------------------------------------------------------------------
 # Name of the STK++ library
 LIB_STKPP_A = libSTKpp.a
@@ -25,18 +25,15 @@ LIB_STKPP_A = libSTKpp.a
 STKPP_DIR = ../inst
 STKPP_LIB = $(STKPP_DIR)/lib/$(LIB_STKPP_A)
 
-# STK_FLAGS = -Wno-long-long    ## remove warnings at compilation
-# -march=native -funroll-loops  ## optimisation does not work under window
-
 ## Use the R_HOME indirection to support installations of multiple R version
-PKG_CXXFLAGS += `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` $(STK_FLAGS)
-PKG_CPPFLAGS += -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB
+PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` $(STK_FLAGS)
+PKG_CPPFLAGS = -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB -DSTKUSELAPACK
+PKG_LIBS     = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(STKPP_LIB)
 
-PKG_LIBS     += `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(STKPP_LIB)
-
-## Define STK flags at this level
+## Define STK flags here
 STK_CXXFLAGS = $(PKG_CXXFLAGS) -DIS_RTKPP_LIB -DSTKUSELAPACK
 
+## export: every makefile in a project will used these default flags (STK_CXXFLAGS).
 export
 
 .PHONY: all pkglib
@@ -48,6 +45,5 @@ all: $(SHLIB)
 $(SHLIB): pkglib
 
 pkglib:
-	($(MAKE) -C $(STKPP_DIR))
+	($(MAKE) -j -l2 -C $(STKPP_DIR))
 	(cd $(STKPP_DIR) && $(MAKE) clean_obj)
-	

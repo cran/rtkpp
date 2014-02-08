@@ -82,9 +82,10 @@ class IMixtureCriterion : public IRunnerBase
 
 /** @ingroup Clustering
  *  @brief Derived class of Criterion for computing the AIC Criterion
- *  The AIC criteria is a penalization of the likelihood given by the formula
+ *  The AIC criteria of a given model M is a penalization of the likelihood
+ *  given by the formula
  *  \f[
- *  -2 \cdot \ln{p(x|k)} \approx \mathrm{AIC} = {-2 \cdot \ln{L} +2 D }
+ *  -2 \cdot \ln{p(x|M)} \approx \mathrm{AIC} = {-2 \cdot \ln{L} +2 D }
  *  \f]
  *  where \f$ L \f$ represents the likelihood of the observations and \f$ D \f$
  *  the number of free parameter of the model.
@@ -115,9 +116,10 @@ class AICMixtureCriterion : public IMixtureCriterion
 
 /** @ingroup Clustering
  *  @brief Derived class of Criterion for computing the BIC Criterion
- *  The Bic criteria is a penalization of the likelihood given by the formula
+ *  The Bic criteria of a model M is a penalization of the likelihood given by
+ *  the formula
  *  \f[
- *  -2 \cdot \ln{p(x|k)} \approx \mathrm{BIC} = {-2 \cdot \ln{L} + D \ln(n) }
+ *  -2 \cdot \ln{p(x|M)} \approx \mathrm{BIC} = {-2 \cdot \ln{L} + D \ln(n) }
  *  \f]
  *  where \f$ L \f$ represents the likelihood of the observations, \f$ D \f$ the
  *  number of free parameter of the model and \f$ n \f$ the number of sample.
@@ -147,11 +149,11 @@ class BICMixtureCriterion : public IMixtureCriterion
 
 /** @ingroup Clustering
  *  @brief Derived class of IMixtureCriterion for computing the ICL Criterion
- *  The ICL criteria is a penalization of the likelihood given by the formula
+ *  The ICL criteria of a model M is a penalization of the likelihood given by the formula
  *  \f[
- *  \ln{p(x|K)} \approx \mathrm{ICL} = { -2 \ln{L} + D_K \log(n) - 2 \sum_i\sum_k t_{ik}\log(t_{ik} }
+ *  -2 \ln{p(x|M)} \approx \mathrm{ICL} = { -2 \ln{L} + D \log(n) - 2 \sum_i\sum_k t_{ik}\log(t_{ik}) }
  *  \f]
- *  where \f$ L \f$ represents the likelihood of the observations and \f$ D_K \f$
+ *  where \f$ L \f$ represents the likelihood of the observations and \f$ D \f$
  *  the number of free parameters of the model.
  **/
 class ICLMixtureCriterion : public IMixtureCriterion

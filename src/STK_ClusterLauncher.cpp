@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Inria
+/*     Copyright (C) 2004-2014  Serge Iovleff, University Lille 1, Inria
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as
@@ -82,88 +82,23 @@ bool ClusterLauncher::run()
   s4_model_.slot("tik")          = wrap(p_composer_->tik());
   s4_model_.slot("zi")           = wrap(p_composer_->zi());
   NumericVector fi = s4_model_.slot("lnFi");
-  for (int i=0; i< fi.length(); ++i) { fi[i] = p_composer_->computeLnLikelihood(i);}
+  NumericVector zi = s4_model_.slot("zi");
+  for (int i=0; i< fi.length(); ++i)
+  {
+    fi[i] = p_composer_->computeLnLikelihood(i);
+    zi[i] += (1 - baseIdx);  // set base 1 for the class labels
+  }
   // get specific parameters
   getParameters();
   return true;
 }
 
 /* get the parameters */
-void ClusterLauncher::getParameters()
-{
-  Clust::MixtureClass mixtClass = Clust::MixtureToMixtureClass(idMixtureModel_);
-  switch (mixtClass)
-  {
-    case Clust::Gaussian_:
-      getDiagGaussianParameters();
-      break;
-    case Clust::Gamma_:
-      getGammaParameters();
-      break;
-    case Clust::Categorical_:
-      getCategoricalParameters();
-      break;
-    default:
-      break;
-  }
-}
-
-/* get the diagonal Gaussian parameters */
-void ClusterLauncher::getDiagGaussianParameters()
-{
-  // get parameters
-  Array2D<Real> params;
-  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
-  // get dimensions
-  int K = params.sizeRows()/2, nbVariable = params.sizeCols();
-  // get results
-  Array2D<Real> mean(K, nbVariable), sigma(K, nbVariable);
-  for (int k=0; k<K; ++k)
-  {
-    mean.row(k)   = params.row(2*k);
-    sigma.row(k) = params.row(2*k+1);
-  }
-  // save results in s4_model
-  s4_model_.slot("mean")   = wrap(mean);
-  s4_model_.slot("sigma") = wrap(sigma);
-}
-
-/* get the gamma parameters */
-void ClusterLauncher::getGammaParameters()
-{
-  // get parameters
-  Array2D<Real> params;
-  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
-  // get dimensions
-  int K = params.sizeRows()/2, nbVariable = params.sizeCols();
-  // get results
-  Array2D<Real> shape(K, nbVariable), scale(K, nbVariable);
-  for (int k=0; k<K; ++k)
-  {
-    shape.row(k) = params.row(2*k);
-    scale.row(k) = params.row(2*k+1);
-  }
-  // save results in s4_model
-  s4_model_.slot("shape") = wrap(shape);
-  s4_model_.slot("scale") = wrap(scale);
-}
-
-/* get the diagonal Categorical parameters */
-void ClusterLauncher::getCategoricalParameters()
-{
-  // get parameters
-  Array2D<Real> params;
-  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
-  params.shift(0,0);
-  // save results in s4_model
-  s4_model_.slot("plkj") = wrap(params);
-}
-
-/* select best model*/
 Real ClusterLauncher::selectBestModel()
 {
   // wrap data matrix with Rcpp and wrap Rcpp matrix with STK++ matrix
   NumericMatrix m_data = s4_model_.slot("data");
+  Real criter = s4_model_.slot("criterion");
   RcppMatrix<double> data(m_data);
 
   int nbSample   = m_data.rows();
@@ -178,7 +113,7 @@ Real ClusterLauncher::selectBestModel()
     {
       std::string idData = "model" + typeToString<int>(l);
       std::string idModel(as<std::string>(v_modelNames_[l]));
-      // transform R models names to STK++ models names
+      // transform R model names to STK++ model names
       // check have been done on the R side so.... Let's go
       bool freeProp;
       Clust::Mixture model = Clust::stringToMixture(idModel, freeProp);
@@ -193,7 +128,6 @@ Real ClusterLauncher::selectBestModel()
     // start the estimation process, should end with the best model according to
     // the criteria
     p_composer_ = 0;
-    Real criter = Arithmetic<Real>::max();
     for (int k=0; k <v_nbCluster_.length(); ++k)
     {
       int K = v_nbCluster_[k];
@@ -241,5 +175,88 @@ Real ClusterLauncher::selectBestModel()
   return Arithmetic<Real>::max();
 }
 
+void ClusterLauncher::getParameters()
+{
+  Clust::MixtureClass mixtClass = Clust::MixtureToMixtureClass(idMixtureModel_);
+  switch (mixtClass)
+  {
+    case Clust::Gaussian_:
+      getDiagGaussianParameters();
+      break;
+    case Clust::Gamma_:
+      getGammaParameters();
+      break;
+    case Clust::Categorical_:
+      getCategoricalParameters();
+      break;
+    default:
+      break;
+  }
+}
+
+/* get the diagonal Gaussian parameters */
+void ClusterLauncher::getDiagGaussianParameters()
+{
+  // get parameters
+  Array2D<Real> params;
+  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
+  // get dimensions
+  int K = params.sizeRows()/2, nbVariable = params.sizeCols();
+  // get results
+  Array2D<Real> mean(K, nbVariable), sigma(K, nbVariable);
+  for (int k=0; k<K; ++k)
+  {
+    mean.row(k)   = params.row(2*k);
+    sigma.row(k) = params.row(2*k+1);
+  }
+  // save results in s4_model
+  s4_model_.slot("mean")   = wrap(mean);
+  s4_model_.slot("sigma") = wrap(sigma);
+  // get data
+  RcppMatrix<double> m_data;
+  static_cast<MixtureComposer*>(p_composer_)->getData(manager_, idData_, m_data);
+  s4_model_.slot("data") = (Rcpp::Matrix< RcppMatrix<double>::Rtype_>)m_data;
+}
+
+/* get the gamma parameters */
+void ClusterLauncher::getGammaParameters()
+{
+  // get parameters
+  Array2D<Real> params;
+  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
+  // get dimensions
+  int K = params.sizeRows()/2, nbVariable = params.sizeCols();
+  // get results
+  Array2D<Real> shape(K, nbVariable), scale(K, nbVariable);
+  for (int k=0; k<K; ++k)
+  {
+    shape.row(k) = params.row(2*k);
+    scale.row(k) = params.row(2*k+1);
+  }
+  // save results in s4_model
+  s4_model_.slot("shape") = wrap(shape);
+  s4_model_.slot("scale") = wrap(scale);
+  // get data
+  RcppMatrix<double> m_data;
+  static_cast<MixtureComposer*>(p_composer_)->getData(manager_, idData_, m_data);
+  s4_model_.slot("data") = (Rcpp::Matrix< RcppMatrix<double>::Rtype_>)m_data;
+}
+
+/* get the diagonal Categorical parameters */
+void ClusterLauncher::getCategoricalParameters()
+{
+  // get parameters
+  Array2D<Real> params;
+  static_cast<MixtureComposer*>(p_composer_)->getParameters(manager_,idData_, params);
+  params.shift(0,0);
+  // save results in s4_model
+  s4_model_.slot("plkj") = wrap(params);
+  // get data
+  RcppMatrix<int> m_data;
+  static_cast<MixtureComposer*>(p_composer_)->getData(manager_, idData_, m_data);
+  s4_model_.slot("data") = (Rcpp::Matrix< RcppMatrix<int>::Rtype_>) m_data;
+}
+
+/* select best model*/
 }  // namespace STK
 

@@ -57,8 +57,11 @@ export PROJECTS_DIR
 # library name
 STKPP_LIB = $(RTKPP_LIB_DIR)$(LIB_STKPP_A)
 
-.PHONY: echo obj lib
-all: echo lib
+#-----------------------------------------------------------------------
+# Create the library. Build the objects of each projects and then add them
+.PHONY: all lib obj
+all: lib
+lib: $(STKPP_LIB)
 
 # use to debug
 echo:
@@ -145,11 +148,6 @@ aamodels:
 	$(MAKE) -C $(SRC_AAMODELS_DIR)
 
 #-----------------------------------------------------------------------
-# Create the library. Build the objects of each projects and then add them
-.PHONY: obj
-lib: obj $(STKPP_LIB)
-
-#-----------------------------------------------------------------------
 # COMMENT or UNCOMMENT the projects you need for your package
 # all binaries you need
 obj: stkernel \
@@ -181,7 +179,7 @@ CPP_OBJS = \
 
 #-----------------------------------------------------------------------
 # create the library adding the objects
-$(STKPP_LIB): $(CPP_OBJS)
+$(STKPP_LIB): obj
 	$(AR) $(ARFLAGS) $@ $(CPP_OBJS)
 
 #-----------------------------------------------------------------------

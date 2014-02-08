@@ -3,28 +3,7 @@
 \alias{diagGaussianNames}
 \alias{validDiagGaussianNames}
 \alias{validGammaNames}
-\title{diagGaussianNames: Build a vector of Gaussian model names.
-
-In a Gaussian model, we assume that the variance
-matrices are diagonal in each cluster. This gives rise to 8 models:
-\enumerate{
- \item {The proportions can be equal or free.}
- \item {The standard deviations can be equal or free for all the variables.}
- \item {The standard deviations can be equal or free for all the clusters.}
-}
-
-The model names are summarized in the following array:
-\tabular{llll}{
- Model Name      \tab Proportions \tab Variances in variables \tab Variances in clusters \cr
- gaussian_p_sjk  \tab Equal \tab Free                  \tab Free  \cr
- gaussian_p_sj   \tab Equal \tab Free                  \tab Equal \cr
- gaussian_p_sk   \tab Equal \tab Equal                 \tab Free  \cr
- gaussian_p_s    \tab Equal \tab Equal                \tab Equal \cr
- gaussian_pk_sjk \tab Free  \tab Free                 \tab Free  \cr
- gaussian_pk_sj  \tab Free  \tab Free                 \tab Equal \cr
- gaussian_pk_sk  \tab Free  \tab Equal                \tab Free  \cr
- gaussian_pk_s   \tab Free  \tab Equal                \tab Equal \cr
-}}
+\title{Build a vector of Gaussian model names.}
 \usage{
 diagGaussianNames(prop = "all", sdInCluster = "all",
   sdBetweenCluster = "all")
@@ -45,12 +24,10 @@ validGammaNames(names)
 \item{names}{a vector of character}
 }
 \value{
-A vector of character with the models names.
+A vector of character with the model names.
 }
 \description{
-diagGaussianNames: Build a vector of Gaussian model names.
-
-In a Gaussian model, we assume that the variance
+In a diagonql Gaussian model, we assume that the variance
 matrices are diagonal in each cluster. This gives rise to 8 models:
 \enumerate{
  \item {The proportions can be equal or free.}
@@ -58,6 +35,11 @@ matrices are diagonal in each cluster. This gives rise to 8 models:
  \item {The standard deviations can be equal or free for all the clusters.}
 }
 
+check if a vector of diagonal Gaussian model name is correct.
+
+check if a vector of gamma model name is correct.
+}
+\details{
 The model names are summarized in the following array:
 \tabular{llll}{
  Model Name      \tab Proportions \tab Variances in variables \tab Variances in clusters \cr
@@ -70,10 +52,6 @@ The model names are summarized in the following array:
  gaussian_pk_sk  \tab Free  \tab Equal                \tab Free  \cr
  gaussian_pk_s   \tab Free  \tab Equal                \tab Equal \cr
 }
-
-check if a vector of diagonal Gaussian model name is correct.
-
-check if a vector of gamma model name is correct.
 }
 \examples{
 diagGaussianNames()

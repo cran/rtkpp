@@ -3,8 +3,8 @@
 \alias{clusterCategorical}
 \title{Create an instance of the [\code{\linkS4class{ClusterCategorical}}] class}
 \usage{
-clusterCategorical(data, nbCluster = 2, modelNames = NULL,
-  strategy = clusterStrategy(), criterion = "ICL")
+clusterCategorical(data, nbCluster = 2, modelNames = c("categorical_pk_pjk",
+  "categorical_p_pjk"), strategy = clusterStrategy(), criterion = "ICL")
 }
 \arguments{
 \item{data}{frame or matrix containing the data. Rows correspond to observations
@@ -13,8 +13,8 @@ will be estimated during the estimation process.}
 
 \item{nbCluster}{[\code{\link{vector}}] listing the number of clusters to test.}
 
-\item{modelNames}{[\code{\link{vector}}] of models names to run. By default
-all categorical models are estimated.}
+\item{modelNames}{[\code{\link{vector}}] of model names to run. By default
+the categorical models "categorical_pk_pjk" and "categorical_p_pjk" are estimated.}
 
 \item{strategy}{a [\code{\linkS4class{ClusterStrategy}}] object containing
 the strategy to run. clusterStrategy() method by default.}
@@ -49,6 +49,10 @@ plot(model)
 
 ## get summary
 summary(model)
+## print model
+print(model)
+## get estimated missing values
+model["data"][model["missings"]]
 }
 \author{
 Serge Iovleff

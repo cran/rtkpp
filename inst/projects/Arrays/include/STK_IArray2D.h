@@ -643,7 +643,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       if (other.rows() != this->rows())
       { STKRUNTIME_ERROR_NO_ARG(TContainer2D::pushBackCols,range of the rows are different);}
       // if the container is not empty we add the column and copy other inside
-     int size = other.cols().size(), first = this->lastIdxCols()+1;
+     int size = other.sizeCols(), first = this->lastIdxCols()+1;
       pushBackCols(size);
       for (int j0= first, j1= other.beginCols(); j1 < other.endCols(); ++j0, ++j1)
       {
@@ -669,7 +669,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       if (other.rows() != this->rows())
       { STKRUNTIME_ERROR_NO_ARG(TContainer2D::pushBackCols(other),other.rows() != rows());}
       // if the container is not empty we add the column and copy other inside
-      int size = other.cols().size(), first = this->lastIdxCols()+1;
+      int size = other.sizeCols(), first = this->lastIdxCols()+1;
       pushBackCols(size);
       for (int i=other.begin(); i<other.end(); i++)
         (*this)(i, first) = other[i];

@@ -86,7 +86,7 @@ setClass(
                 , zi  = vector("integer")
                 , missings = matrix(nrow=0, ncol=2)
                 , lnLikelihood = -Inf
-                , criterion = -Inf
+                , criterion = Inf
                 , nbFreeParameter = 0
                 , modelName = character(1)
                 , strategy = clusterStrategy()
@@ -176,7 +176,7 @@ setMethod(
             "tik"={return(x@tik)},
             "lnFi"={return(x@lnFi)},
             "zi"={return(x@zi)},
-            "missing"={return(x@missing)},
+            "missings"={return(x@missings)},
             "lnLikelihood"={return(x@lnLikelihood)},
             "criterion"={return(x@criterion)},
             "modelName"={return(x@modelName)},

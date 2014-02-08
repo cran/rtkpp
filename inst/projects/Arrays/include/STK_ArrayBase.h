@@ -344,6 +344,10 @@ class ArrayBase :  public ExprBase<Derived>
     inline Type& front() { return elt(this->begin());}
     /** @return the last element */
     inline Type& back() { return elt(this->lastIdx());}
+    /** @return the first element */
+    inline Type const front() const { return elt(this->begin());}
+    /** @return the last element */
+    inline Type const back() const { return elt(this->lastIdx());}
    /** Convenient operator to set the coefficients of a matrix.
       *
       * The coefficients must be provided in the row/column order and exactly

@@ -23,9 +23,9 @@
 */
 
 /*
- * Project:  stkpp::Model
+ * Project:  stkpp::Clustering
  * created on: 22 juil. 2013
- * Purpose: define the gamma parameters.
+ * Purpose: define the gamma parameters structures.
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  *
  **/
@@ -49,7 +49,7 @@
 namespace STK
 {
 
-/** @ingroup StatModels
+/** @ingroup Clustering
  *  @brief Interface base class for the parameters of a multivariate model.
   */
 template<class Parameters>
@@ -69,7 +69,7 @@ class GammaParametersBase : public IMultiParameters<Parameters>
     inline GammaParametersBase( GammaParametersBase const& param)
                               : Base(param), tk_(param.tk_), mean_(param.mean_), meanLog_(param.meanLog_), variance_(param.variance_)
     {}
-    /** Declassor */
+    /** Destructor */
     inline ~GammaParametersBase() {}
   public:
     /** @return the j-th shape value */
@@ -91,7 +91,7 @@ class GammaParametersBase : public IMultiParameters<Parameters>
     Real computeLnLikelihood( RowVector const& rowData) const
     {
       Real sum =0.;
-      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
+      for (Integer j= rowData.begin(); j < rowData.end(); ++j)
       { sum += Law::Gamma::lpdf(rowData[j], shape(j), scale(j));}
       return sum;
     }

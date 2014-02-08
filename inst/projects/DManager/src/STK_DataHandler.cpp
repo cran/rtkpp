@@ -93,12 +93,12 @@ bool DataHandler::readDataFromCsvFile(std::string const& datafile, std::string d
     stk_cerr << _T("Data file and descriptor file does not have the same number of column.\n");
     return false;
   }
-  if (rwdata.rows().size() == 0)
+  if (rwdata.sizeRows() == 0)
   {
     stk_cerr << _T("No data.\n");
     return false;
   }
-  if (rwdesc.rows().size() < 2)
+  if (rwdesc.sizeRows() < 2)
   {
     stk_cerr << _T("No descriptor.\n");
     return false;

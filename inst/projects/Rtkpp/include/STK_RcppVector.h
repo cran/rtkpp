@@ -135,7 +135,23 @@ class RcppVector : public ArrayBase< RcppVector<Type_> >
      *  @param i index of the ith element
      **/
     inline Type const elt1Impl(int i) const { return (vector_[i]);}
-
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param T the container to copy
+     **/
+    inline RcppVector& operator=( RcppVector const& T)
+    { vector_ = T.vector_; return *this;}
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param T the container to transfer
+     **/
+    template<class OtherType>
+    inline RcppVector& operator=( RcppVector<OtherType> const& T)
+    { vector_ = T.vector_; return *this;}
+    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+     *  @param vector the container to copy
+     **/
+    template<int OtherRtype>
+    inline RcppVector& operator=( Rcpp::Vector<OtherRtype> const& vector)
+    { vector_ = vector; return *this;}
   private:
     Rcpp::Vector<Rtype_> vector_;
 };

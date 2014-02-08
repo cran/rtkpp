@@ -176,6 +176,15 @@ class MixtureComposer : public IMixtureComposer
     void getParameters(ParametersManager const& manager, String const& idData, Array& data) const
     { manager.getParameters(getMixture(idData), idData, data);}
 
+    /** Utility method allowing to get the data with a specific Id.
+     *  @param manager the manager with the responsibility of the data
+     *  @param idData the Id of the data we want the parameters
+     *  @param data the structure which will receive the data
+     **/
+    template<class DataManager, class Array>
+    void getData(DataManager const& manager, String const& idData, Array& data) const
+    { manager.getData(idData, data);}
+
     /** Utility method allowing to get the missing values imputed by the
      *  estimation process.
      *  @param manager the manager with the responsibility of the missing values

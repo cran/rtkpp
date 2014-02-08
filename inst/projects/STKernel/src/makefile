@@ -41,11 +41,11 @@ CXX_INCS	= $(wildcard $(INC_DIR)*.h)
 
 #-----------------------------------------------------------------------
 # source files
-CPP_SRCS = $(wildcard *.cpp)
+CXX_SRCS = $(wildcard *.cpp)
 
 #-----------------------------------------------------------------------
 # binary files
-CPP_OBJS = $(CPP_SRCS:%.cpp=$(BIN_DIR)%.o)
+CPP_OBJS = $(CXX_SRCS:%.cpp=$(BIN_DIR)%.o)
 
 #-----------------------------------------------------------------------
 # Compilation rules

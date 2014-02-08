@@ -197,6 +197,48 @@ class MixtureManager : public IMixtureManager
         break;
       }
     }
+    /** get the missing values of a data set.
+     *  @param idData Id name of the data set attached to the mixture
+     *  @param data the array to return with the missing values
+     **/
+    void getData( String const& idData, DataReal &data) const
+    {
+      Clust::Mixture idModel = getIdModel(idData);
+      if (idModel == Clust::unknown_mixture_) return;
+      Clust::MixtureClass idClass = Clust::MixtureToMixtureClass(idModel);
+      IDataManager* p_manager = getDataManager(idData);
+      // up-cast... (Yes it's bad....;)...)
+      switch (idClass)
+      {
+        // gamma models
+        case Clust::Gamma_:
+        { data = static_cast<DataManagerGamma const*>(p_manager)->m_dataij_;}
+        break;
+        // Gaussian_ models
+        case Clust::Gaussian_:
+        { data = static_cast<DataManagerGaussian const*>(p_manager)->m_dataij_;}
+        break;
+        default: // idClass is not implemented
+        break;
+      }
+    }
+    void getData( String const& idData, DataInt &data) const
+    {
+      Clust::Mixture idModel = getIdModel(idData);
+      if (idModel == Clust::unknown_mixture_) return;
+      Clust::MixtureClass idClass = Clust::MixtureToMixtureClass(idModel);
+      IDataManager* p_manager = getDataManager(idData);
+      // up-cast... (Yes it's bad....;)...)
+      switch (idClass)
+      {
+        // Categorical_ models
+        case Clust::Categorical_:
+        { data =  static_cast<DataManagerCategorical const*>(p_manager)->m_dataij_;}
+        break;
+        default: // idClass is not implemented
+        break;
+      }
+    }
 
   protected:
     /** create a concrete mixture and initialize it.

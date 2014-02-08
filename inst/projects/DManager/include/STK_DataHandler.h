@@ -77,7 +77,7 @@ class DataHandler : public IDataHandler
     inline virtual ~DataHandler() {}
 
     /** @return the number of sample (the number of rows of the data) */
-    inline virtual int nbSample() const { return data_.rows().size();}
+    inline virtual int nbSample() const { return data_.sizeRows();}
     /** @return the number of sample (the number of columns of the data) */
     inline virtual int nbVariable() const { return data_.size();}
     /** get the whole data set */

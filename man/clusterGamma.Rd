@@ -13,8 +13,9 @@ will be estimated during the estimation process.}
 
 \item{nbCluster}{[\code{\link{vector}}] listing the number of clusters to test.}
 
-\item{modelNames}{[\code{\link{vector}}] of models names to run. By default all
-gamma models with free shape are estimated.}
+\item{modelNames}{[\code{\link{vector}}] of model names to run. By default all
+gamma models with free shape are estimated.  All the model names are given by
+the method [\code{\link{gammaNames}}].}
 
 \item{strategy}{a [\code{\linkS4class{ClusterStrategy}}] object containing
 the strategy to run. clusterStrategy() method by default.}
@@ -50,6 +51,8 @@ plot(model)
 summary(model)
 ## print model
 print(model)
+## get estimated missing values
+model["data"][model["missings"]]
 }
 \author{
 Serge Iovleff
