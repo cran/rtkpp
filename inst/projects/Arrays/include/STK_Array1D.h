@@ -85,6 +85,12 @@ template<class Type >
 class Array1D : public IArray1D< Array1D<Type> >
 {
   public:
+    typedef typename hidden::Traits<Array1D<Type> >::Row Row;
+    typedef typename hidden::Traits<Array1D<Type> >::Col Col;
+    typedef typename hidden::Traits<Array1D<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array1D<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array1D<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array1D<Type> >::SubArray SubArray;
     /** Type for the Array1DBase Class. */
     typedef IArray1D< Array1D<Type> > Base;
     /** Default constructor. */

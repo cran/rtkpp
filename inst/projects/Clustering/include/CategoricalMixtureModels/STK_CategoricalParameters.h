@@ -40,9 +40,10 @@
 
 #include <cmath>
 
-#include "../../../Arrays/include/STK_Const_Arrays.h"
-#include "../../../Arrays/include/STK_Display.h"
-#include "../../../StatModels/include/STK_IMultiParameters.h"
+#include "Arrays/include/STK_Const_Arrays.h"
+#include "Arrays/include/STK_Display.h"
+
+#include "../STK_MixtureParamStat.h"
 
 namespace STK
 {
@@ -52,16 +53,16 @@ namespace STK
  *  multivariate model.
   */
 template<class Parameters>
-class CategoricalParametersBase : public IMultiParameters<Parameters>
+class CategoricalParametersBase : public IRecursiveTemplate<Parameters>
 {
   protected:
-    typedef IMultiParameters<Parameters> Base;
+    typedef IRecursiveTemplate<Parameters> Base;
     /** default constructor.*/
-    inline CategoricalParametersBase() : Base() {}
+    inline CategoricalParametersBase() {}
     /** constructor with specified range
      *  @param range the range of the variables
      **/
-    inline CategoricalParametersBase( Range const& range): Base(range) {}
+    inline CategoricalParametersBase( Range const& range) {}
     /** copy constructor.*/
     inline CategoricalParametersBase( CategoricalParametersBase const& param): Base(param) {}
     /** destructor */
@@ -102,7 +103,8 @@ class Categorical_pjkParameters: public CategoricalParametersBase<Categorical_pj
     /** constructor with specified range
      *  @param range the range of the variables
      **/
-    inline Categorical_pjkParameters( Range const& range): Base(range), proba_(range) {}
+    inline Categorical_pjkParameters( Range const& range): Base(range), proba_(range)
+    { stat_proba_.resize(range);}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
@@ -118,17 +120,11 @@ class Categorical_pjkParameters: public CategoricalParametersBase<Categorical_pj
     /** resize the set of parameter
      *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& range) { proba_.resize(range);}
-    /** print the parameters.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os)
+    inline void resize(Range const& range)
     {
-      for(int j=proba_.begin(); j< proba_.end(); j++)
-      { os << proba_[j] << _T("\n");}
+      proba_.resize(range);
+      stat_proba_.resize(range);
     }
-    /** Array of the probabilities */
-    Array1D< Array2DVector<Real> > proba_;
     /** utility function allowing to resize the probability vector with a
      *  given Range for the modalities.
      *  @param rangeMod the range of the modalities of the categorical distribution
@@ -136,8 +132,40 @@ class Categorical_pjkParameters: public CategoricalParametersBase<Categorical_pj
     inline void initializeParameters(Range const& rangeMod)
     {
       for(int j=proba_.begin(); j< proba_.end(); j++)
-      { proba_[j].resize(rangeMod); proba_[j] = 1./rangeMod.size();}
+      {
+        proba_[j].resize(rangeMod);
+        proba_[j] = 1./rangeMod.size();
+        stat_proba_[j].initialize(rangeMod);
+      }
     }
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResults(int iteration)
+    {
+      for(int j=proba_.begin(); j< proba_.end(); j++)
+      { stat_proba_[j].update(proba_[j]);}
+    }
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    {
+      for(int j=proba_.begin(); j< proba_.end(); j++)
+      { stat_proba_[j].release();}
+    }
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      for(int j=proba_.begin(); j< proba_.end(); j++)
+      { proba_[j] = stat_proba_[j].param_;
+        stat_proba_[j].release();
+      }
+    }
+    /** Array of the probabilities */
+    Array1D< VectorX > proba_;
+    /** Array of the statistics */
+    Array1D< MixtureStatVector > stat_proba_;
 };
 
 /** @ingroup Clustering
@@ -148,16 +176,12 @@ class Categorical_pkParameters: public CategoricalParametersBase<Categorical_pkP
   public:
     typedef CategoricalParametersBase<Categorical_pkParameters> Base;
     /** default constructor */
-    inline Categorical_pkParameters() : Base(), proba_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Categorical_pkParameters( Range const& range): Base(range), proba_(){}
+    inline Categorical_pkParameters() : Base(), proba_(),stat_proba_() {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Categorical_pkParameters( Categorical_pkParameters const& param)
-                                   : Base(param), proba_(param.proba_)
+                                   : Base(param), proba_(param.proba_), stat_proba_(param.stat_proba_)
     {}
     /** destructor */
     inline ~Categorical_pkParameters() {}
@@ -168,19 +192,37 @@ class Categorical_pkParameters: public CategoricalParametersBase<Categorical_pkP
     /** resize the set of parameter
      *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& range) {}
-    /** print the parameters.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os) { os << proba_ << _T("\n");}
+    inline void resize(Range const& range) {}
     /** utility function allowing to resize the probability vector with a
      *  given Range for the modalities.
      *  @param rangeMod the range of modalities of the categorical distribution
      **/
     inline void initializeParameters(Range const& rangeMod)
-    { proba_.resize(rangeMod); proba_ = 1./rangeMod.size();}
+    {
+      proba_.resize(rangeMod);
+      proba_ = 1./rangeMod.size();
+      stat_proba_.initialize(rangeMod);
+    }
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResults(int iteration)
+    { stat_proba_.update(proba_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_proba_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      proba_ = stat_proba_.param_;
+      stat_proba_.release();
+    }
     /** probabilities of each modalities */
     Array2DVector<Real> proba_;
+    /** Array of the statistics */
+    MixtureStatVector stat_proba_;
 };
 
 } // namespace STK

@@ -4,7 +4,7 @@
 \alias{clusterStrategy}
 \title{Create an instance of [\code{\linkS4class{ClusterStrategy}}] class}
 \usage{
-clusterStrategy(nbTry = 1, nbInit = 3, initMethod = "random",
+clusterStrategy(nbTry = 1, nbInit = 3, initMethod = "class",
   initAlgo = "SEM", nbInitIteration = 20, initEpsilon = 0.01,
   nbShortRun = 5, shortRunAlgo = "EM", nbShortIteration = 100,
   shortEpsilon = 1e-04, longRunAlgo = "EM", nbLongIteration = 1000,
@@ -64,7 +64,7 @@ good estimate in the clusering estimation process.
 }
 \details{
 A strategy is a way to find a good estimate of the parameters of a mixture model
-when using an EM algorithm. A ``try'' is composed of three stages
+when using an EM algorithm or its variants. A ``try'' is composed of three stages
 \itemize{
   \item \code{nbShortRun} short iterations of the initialization step and
    of the \code{EM}, \code{CEM}, \code{SEM} or \code{SemiSEM} algorithm.

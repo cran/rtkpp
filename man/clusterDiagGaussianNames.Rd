@@ -22,7 +22,7 @@ clusterValidDiagGaussianNames(names)
 A vector of character with the model names.
 }
 \description{
-In a diagonql Gaussian model, we assume that the variance
+In a diagonal Gaussian model, we assume that the variance
 matrices are diagonal in each cluster. This gives rise to 8 models:
 \enumerate{
  \item {The proportions can be equal or free.}
@@ -35,7 +35,7 @@ check if a vector of diagonal Gaussian model name is correct.
 \details{
 The model names are summarized in the following array:
 \tabular{llll}{
- Model Name      \tab Proportions \tab Variances in variables \tab Variances in clusters \cr
+ Model Name      \tab Proportions \tab s.d. in variables \tab s.d. in clusters \cr
  gaussian_p_sjk  \tab Equal \tab Free                  \tab Free  \cr
  gaussian_p_sj   \tab Equal \tab Free                  \tab Equal \cr
  gaussian_p_sk   \tab Equal \tab Equal                 \tab Free  \cr
@@ -48,7 +48,8 @@ The model names are summarized in the following array:
 }
 \examples{
 clusterDiagGaussianNames()
-clusterDiagGaussianNames("all", "equal", "free") # same as c("gaussian_p_sk", "gaussian_pk_sk")
+## same as c("gaussian_p_sk", "gaussian_pk_sk")
+clusterDiagGaussianNames(prop="all", sdInCluster="equal", sdBetweenCluster= "free")
 }
 \keyword{internal}
 

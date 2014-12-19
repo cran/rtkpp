@@ -43,12 +43,11 @@ namespace Law
 /* @return a @c Type random variate . */
 int Categorical::rand() const
 {
-  { Real u = Law::generator.randUnif();
-    int k;
-    for(k = cumProb_.begin(); k< cumProb_.lastIdx(); k++)
-    { if (u<=cumProb_[k]) return k;}
-    return k;
-  }
+  Real u = Law::generator.randUnif();
+  int k;
+  for(k = cumProb_.begin(); k< cumProb_.end(); k++)
+  { if (u<=cumProb_[k]) return k;}
+  return k;
 }
 
 /* @brief compute the probability distribution function (density)
@@ -93,7 +92,7 @@ void Categorical::computeCumProb()
 {
   cumProb_.resize(prob_.range());
   Real sum=0.;
-  for (int k=prob_.begin(); k<= prob_.lastIdx(); ++k)
+  for (int k=prob_.begin(); k< prob_.end(); ++k)
   { cumProb_[k] = (sum+=prob_[k]);}
   // normalize
   if (sum) {cumProb_/=sum; prob_ /=sum;}

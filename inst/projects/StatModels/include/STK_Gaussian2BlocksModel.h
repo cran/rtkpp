@@ -89,7 +89,7 @@ class Gaussian2BlocksModel : public GaussianModel
      * the maximal dimension of the data set (only one block).
      * @param p_data pointer on the data set
      */
-    Gaussian2BlocksModel( Matrix const* p_data);
+    Gaussian2BlocksModel( ArrayXX const* p_data);
 
     /** destructor. */
     virtual ~Gaussian2BlocksModel();

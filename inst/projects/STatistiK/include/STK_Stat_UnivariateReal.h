@@ -266,13 +266,11 @@ class Univariate<TContainer1D, Real>
                 , bool sorted = false
                 )
     {
-      // check weights size
+      // check range size
       if ((V.range() != W.range()))
-      {  throw runtime_error("Univariate<TContainer1D>::setData(V, W, sorted) "
-                                  "V and W have not the same range");
-      }
+      {  STKRUNTIME_ERROR_NO_ARG(setData(V, W, sorted),V and W have different range);}
       // initialize dimensions
-      nbSamples_     = V.size();
+      nbSamples_    = V.size();
       nbAvailable_  = V.size();
       nbMiss_ = 0;
       // set variable and weights
@@ -389,7 +387,7 @@ class Univariate<TContainer1D, Real>
       // discard missing values
       for (int i=V_.lastIdx(); i>=V_.begin(); i--)
       {
-        if ( Arithmetic<Real>::isNA(V_[i]) )
+        if ( isNA(V_[i]) )
         {
           // if NA
           nbAvailable_--;         // decrease nbAvailable_
@@ -429,7 +427,7 @@ class Univariate<TContainer1D, Real>
       // discard missing values or values without weights
       for (int i=V_.lastIdx(); i>=V_.begin(); i--)
       {
-        if ( Arithmetic<Real>::isNA(V_[i])||Arithmetic<Real>::isNA(W_[i]))
+        if ( isNA(V_[i])||isNA(W_[i]))
         {
           V_.erase(i); // Delete the current row
           W_.erase(i); // for the weights too
@@ -516,7 +514,7 @@ class Univariate<TContainer1D, Real>
       mad_  = 0.0;
       kurtosis_ = 0.0;
       skewness_ = 0.0;
-      for (int i=V_.begin(); i<=V_.lastIdx(); i++)
+      for (int i=V_.begin(); i<V_.end(); i++)
       {
         sum       += (dev1 = V_[i]-mean_); // deviation from the mean
         var_      += (dev2 = dev1*dev1);   // squared deviation
@@ -680,8 +678,8 @@ class Univariate<TContainer1D, Real>
     int    nbMiss_;      ///< Number of missing samples
 
     // containers
-    TContainer1D V_;      ///< local copy of the variable
-    TContainer1D W_;            ///< local copy of the weights
+    VectorX V_;      ///< local copy of the variable
+    VectorX W_;            ///< local copy of the weights
 
     // Some flag about the internal state of the object
     bool weighted_;       ///< Samples are weighted ?

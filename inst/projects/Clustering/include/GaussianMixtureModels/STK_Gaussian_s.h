@@ -53,7 +53,6 @@ struct MixtureTraits< Gaussian_s<_Array> >
   typedef _Array Array;
   typedef typename Array::Type Type;
   typedef Gaussian_s_Parameters Parameters;
-  typedef MixtureComponent<_Array, Parameters> Component;
   typedef Array2D<Real>        Param;
 };
 
@@ -71,13 +70,13 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
 {
   public:
     typedef DiagGaussianBase<Gaussian_s<Array> > Base;
-    typedef typename Clust::MixtureTraits< Gaussian_s<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gaussian_s<Array> >::Parameters Parameters;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -86,7 +85,10 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gaussian_s( Gaussian_s const& model): Base(model), sigma_(model.sigma_) {}
+    inline Gaussian_s( Gaussian_s const& model)
+                     : Base(model), sigma_(model.sigma_)
+                     , stat_sigma_(model.stat_sigma_)
+    {}
     /** destructor */
     inline ~Gaussian_s() {}
     /** Initialize the component of the model.
@@ -97,10 +99,24 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
     {
       sigma_ = 1.0;
       for (int k= baseIdx; k < components().end(); ++k)
-      { components()[k]->p_param()->p_sigma_ = &sigma_;}
+      { p_param(k)->p_sigma_ = &sigma_;}
     }
-    /** Compute the inital weighted mean and the initial common standard deviation. */
-    inline bool initializeStep() { return mStep();}
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResultsImpl(int iteration)
+    { stat_sigma_.update(sigma_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResultsImpl()
+    { stat_sigma_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParametersImpl()
+    {
+      sigma_ = stat_sigma_.param_;
+      stat_sigma_.release();
+    }
     /** Initialize randomly the parameters of the Gaussian mixture. The centers
      *  will be selected randomly among the data set and the standard-deviation
      *  will be set to 1.
@@ -115,6 +131,8 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
   protected:
     /** Common standard deviation */
     Real sigma_;
+    /** statistics */
+    MixtureStatReal stat_sigma_;
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers
@@ -127,7 +145,7 @@ void Gaussian_s<Array>::randomInit()
   this->randomMean();
   // compute the standard deviation
   Real variance = 0.0;
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     variance += ( p_tik()->col(k).transpose()
                  * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * p_param(k)->mean_)
@@ -150,7 +168,7 @@ bool Gaussian_s<Array>::mStep()
   if (!this->updateMean()) return false;
   // compute the standard deviation
   Real variance = 0.0;
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     variance += ( p_tik()->col(k).transpose()
                  * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * p_param(k)->mean_)

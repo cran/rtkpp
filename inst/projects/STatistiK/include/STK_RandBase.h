@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -22,10 +22,8 @@
     Contact : S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
 */
 
-/*
- * Project:  Laws
- * Purpose:  Main pseudo-random uniform, gaussian and exponentiel
- * generators.
+/* Project:  STatistiK::Law
+ * Purpose:  Main pseudo-random uniform, Gaussian and exponential generators.
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
@@ -40,7 +38,6 @@
 #define STK_RANDBASE_H
 
 #include "STKernel/include/STK_Misc.h"
-
 #include "Arrays/include/STK_ArrayBase.h"
 
 // MersenneTwister header.
@@ -61,12 +58,12 @@ namespace STK
  * - A pseudo normalized exponential random variate generator
  *
  * @author George Marsaglia andWai Wan Tsang,
- *      "The Ziggurat Method for Generating Random Variables",
- *      Journal of Statistical Software,  Volume 5, 2000, Issue 8.
+ *        "The Ziggurat Method for Generating Random Variables",
+ *         Journal of Statistical Software,  Volume 5, 2000, Issue 8.
  *
  * @author Jurgen A Doornik,
- *      "An improved Ziggurat Method to generate Normal Random Sample"
- *      http://www.doornik.com/research.html (2005).
+ *        "An improved Ziggurat Method to generate Normal Random Sample"
+ *        http://www.doornik.com/research.html (2005).
  *
  * For the exponential Law we remove the old method and use directly
  * the inverse pdf method.
@@ -79,13 +76,11 @@ class RandBase : protected MTRand
      * @param glimit maximal value of the boxes in the ziggourat method
      * @param gvol volume of each box in the ziggourat method
      * @param gsize number of boxes
-     *
      **/
-    RandBase( Real const& glimit = 3.442619855899
-  , Real const& gvol   = 9.91256303526217e-3
-  , int const& gsize  = 128
-  );
-
+      RandBase( Real const& glimit = 3.442619855899
+              , Real const& gvol   = 9.91256303526217e-3
+              , int const& gsize  = 128
+              );
     /** Initialize with a simple int seed.
      * @param oneSeed seed of the generator
      * @param glimit maximal value of the boxes in the ziggourat method
@@ -93,12 +88,12 @@ class RandBase : protected MTRand
      * @param gsize number of boxes
      **/
     RandBase( int const& oneSeed
-  , Real const& glimit = 3.442619855899
-  , Real const& gvol   = 9.91256303526217e-3
-  , int const& gsize  = 128
-  );
+            , Real const& glimit = 3.442619855899
+            , Real const& gvol   = 9.91256303526217e-3
+            , int const& gsize  = 128
+            );
 
-    /** Initialize with an int seed Array.
+    /** Initialize with a seed Array.
      * @param bigSeed seed of the generator
      * @param glimit maximal value of the boxes in the ziggourat method
      * @param gvol volume of each box in the ziggourat method
@@ -106,17 +101,17 @@ class RandBase : protected MTRand
      **/
     template< class TContainer1D>
     RandBase( const ArrayBase<TContainer1D> &bigSeed
-  , Real const& glimit = 3.442619855899
-  , Real const& gvol   = 9.91256303526217e-3
-  , int const& gsize  = 128
-  )
-  : gsize_(gsize), glimit_(glimit), gvol_(gvol)
+            , Real const& glimit = 3.442619855899
+            , Real const& gvol   = 9.91256303526217e-3
+            , int const& gsize  = 128
+            )
+            : gsize_(gsize), glimit_(glimit), gvol_(gvol)
     {
       // dimension
       int first = bigSeed.begin(), size = bigSeed.size();
       uint32* arraySeed = new uint32[size];
       // cast int in uint32
-      for (int i=first; i<=bigSeed.lastIdx(); i++)
+      for (int i=first; i<bigSeed.end(); i++)
       { arraySeed[i-first] = uint32(bigSeed[i]);}
       // Re-seeding functions with same behavior as initializers
       seed(arraySeed, size);
@@ -124,10 +119,8 @@ class RandBase : protected MTRand
       // initialize zigourat method for gaussian random generator
       gaussInit();
     }
-
    /** destructor. */
     ~RandBase();
-
    /** Pseudo-random int uniform generator.
     *  \f[
     *  f(x) = 1/(n+1), \quad 0\leq x \leq n
@@ -136,13 +129,7 @@ class RandBase : protected MTRand
     *  Mersenne Twister method. This is a wrapper of the MTRand class.
     *  @sa STK::MTRand
     **/
-    inline int randDiscreteUnif() { return int(randInt());}
-
-    inline Real randDiscreteUnifReal()
-    {
-      return Real(randInt());
-    }
-
+    inline int randDiscreteUnif() { return int(Real(randInt()));}
     /** pseudo-random uniform generator.
      *  This is a wrapper of the MTRand class.
      *  \f[
@@ -153,8 +140,20 @@ class RandBase : protected MTRand
     **/
     inline Real randUnif() { return Real(randDblExc());}
 
-   /** @return same as randUnif().*/
-   inline Real operator()() { return randUnif(); }
+    /** @return same as randUnif().*/
+    inline Real operator()() { return (Real)MTRand::operator()(); }
+    /** real number in [0,1] */
+    inline Real rand() { return (Real)MTRand::rand(); }
+    /** real number in [0,n] */
+    inline Real rand( Real const& n ) { return (Real)MTRand::rand((double)n); }
+    /** real number in [0,1) */
+    inline Real randExc() { return (Real)MTRand::randExc(); }
+    /** real number in [0,n) */
+    inline Real randExc( Real const& n ) { return (Real)MTRand::randExc((double)n); }
+    /** real number in (0,1) */
+    inline Real randDblExc() { return (Real)MTRand::randDblExc(); }
+    /** real number in (0,n) */
+    inline Real randDblExc( Real const& n ) { return (Real)MTRand::randDblExc((double)n); }
 
     /** Pseudo-random gaussian generator of the gaussian probability law:
      * \f[     f(x) = \frac{1}{\sqrt{2\pi}}
@@ -165,7 +164,6 @@ class RandBase : protected MTRand
      * @return a real number from a normal (Gaussian) distribution.
     **/
     Real randGauss(Real const& mu = 0, Real const& sigma = 1);
-
     /** Pseudo-random exponential generator.
      * \f[
      *    f(x) = \exp\left\{ -x \right\}.
@@ -174,50 +172,6 @@ class RandBase : protected MTRand
      *  distribution using the inverse pdf method.
     **/
     Real randExp();
-
-    /** Pseudo-random int uniform generator for a uni-dimensional
-     *  container of int .
-     *  @param A container to fill
-     **/
-    template< class TContainer1D>
-    inline void randDiscreteUnif(ArrayBase<TContainer1D>& A)
-    { for (int i=A.beginRows(); i<=A.lastIdxRows(); i++)
-        for (int j=A.beginCols(); j<=A.lastIdxCols(); j++)
-          A(i,j) = randDiscreteUnif();
-    }
-
-    /** Pseudo-random Real uniform generator for a uni-dimensional
-     *  container of Real.
-     *  @param A container to fill
-     **/
-    template< class TContainer1D>
-    inline void randUnif(ArrayBase<TContainer1D>& A)
-    { for (int i=A.beginRows(); i<=A.lastIdxRows(); i++)
-        for (int j=A.beginCols(); j<=A.lastIdxCols(); j++)
-          A(i,j) = randUnif();
-    }
-
-    /** Pseudo-random Real gaussian generator for a uni-dimensional
-     *  container of Real.
-     *  @param A container to fill
-     **/
-    template< class TContainer1D>
-    inline void randGauss(ArrayBase< TContainer1D>& A)
-    { for (int i=A.beginRows(); i<=A.lastIdxRows(); i++)
-        for (int j=A.beginCols(); j<=A.lastIdxCols(); j++)
-          A(i,j) = randGauss();
-    }
-
-    /** Pseudo-random Real exponential generator for a uni-dimensional
-     *  container of Real.
-     *  @param A container to fill
-     **/
-    template< class TContainer1D>
-    inline void randExp(ArrayBase< TContainer1D>& A)
-    { for (int i=A.beginRows(); i<=A.lastIdxRows(); i++)
-        for (int j=A.beginCols(); j<=A.lastIdxCols(); j++)
-          A(i,j) = randExp();
-    }
 
   private:
     /*  Gauss parameters. */

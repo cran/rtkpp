@@ -38,7 +38,7 @@
 
 #include "../include/STK_Algo.h"
 #include "../include/STK_ISerie.h"
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 
 namespace STK
 {

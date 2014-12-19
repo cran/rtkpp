@@ -34,7 +34,7 @@
  **/
 
 /**
- * @defgroup Arrays Templated Arrays and (meta-templated) Expressions
+ * @defgroup Arrays Arrays and Expressions
  * @brief The Arrays project provides two kinds of arrays for storing
  * in a two entries arrays (matrices) numeric data.
  *
@@ -51,9 +51,9 @@
  * @li and the set of Arrays: CArray, CArrayPoint, CarrayVector that can be used
  * as C-like containers (as theirs names indicate).
  *
- * Moreover a Meta-template mechanism for optimization of complex expressions
- * at compile time is available. It is possible to mix any kind of array in such
- * expression.
+ * Moreover a Meta-template mechanism (lazy evaluation) for optimization of
+ * complex expressions at compile time is available. It is possible to mix any
+ * kind of array in such expressiones.
  **/
 
 /** @ingroup Arrays

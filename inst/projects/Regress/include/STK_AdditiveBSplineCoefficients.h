@@ -140,7 +140,7 @@ class AdditiveBSplineCoefficients : public IRunnerBase
     /** @return the extrapolated coefficients for the x matrix.
      *  @param x the values to extrapolate
      **/
-    Matrix extrapolate(Matrix const& x) const;
+    ArrayXX extrapolate(ArrayXX const& x) const;
 
   protected:
     /** the input data set */
@@ -154,8 +154,8 @@ class AdditiveBSplineCoefficients : public IRunnerBase
     /** Method used in order to position the knots. */
     Regress::KnotsPosition position_;
     /** Array with the knots and coefficients in each dimension. */
-    Array1D<BSplineCoefficients> coefs_;
-    /** Matrix of the coefficients */
+    Array1D<BSplineCoefficients<Vector> > coefs_;
+    /** Array of the coefficients */
     Array2D<Real> coefficients_;
 };
 
@@ -174,7 +174,7 @@ bool AdditiveBSplineCoefficients<Data>::run()
   }
   try
   {
-    // resize the Matrix with the marginal coefficients
+    // resize the Array with the marginal coefficients
     coefs_.clear(); // necesssary as coefficient_ is a reference at second call
     coefs_.resize(p_data_->cols());
 
@@ -211,7 +211,7 @@ bool AdditiveBSplineCoefficients<Data>::run()
 
 /* run the computations. */
 template<class Data>
-Matrix AdditiveBSplineCoefficients<Data>::extrapolate(Matrix const& x) const
+ArrayXX AdditiveBSplineCoefficients<Data>::extrapolate(ArrayXX const& x) const
 {
 #ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("in AdditiveBSplineCoefficients::extrapolate()\n");
@@ -219,7 +219,7 @@ Matrix AdditiveBSplineCoefficients<Data>::extrapolate(Matrix const& x) const
   if (x.cols() != coefs_.range())
   { STKRUNTIME_ERROR_NO_ARG(AdditiveBSplineBSplineCoefficients::extrapolate(x),x.cols() != coefs_.range());}
     // resize the matrix of coefficient
-    Matrix coefficients(x.rows(), Range());
+    ArrayXX coefficients(x.rows(), Range());
     for (int j= coefs_.begin(); j<coefs_.end(); j++)
     { coefficients.merge(coefs_[j].extrapolate(x.col(j)));}
 #ifdef STK_REGRESS_VERBOSE

@@ -10,6 +10,8 @@
 \alias{initialize,ClusterGammaComponent-method}
 \alias{initialize,ClusterHeterogeneous-method}
 \alias{initialize,ClusterInit-method}
+\alias{initialize,ClusterPoisson-method}
+\alias{initialize,ClusterPoissonComponent-method}
 \alias{initialize,ClusterStrategy-method}
 \alias{initialize,IClusterComponent-method}
 \alias{initialize,IClusterModelBase-method}
@@ -39,8 +41,14 @@
 \S4method{initialize}{ClusterHeterogeneous}(.Object, ldata = list(),
   nbCluster = 2)
 
-\S4method{initialize}{ClusterInit}(.Object, method = "random",
-  nbInitRun = 5, algo = clusterAlgo("SEM", 20, 0))
+\S4method{initialize}{ClusterInit}(.Object, method = "class", nbInit = 5,
+  algo = clusterAlgo("SEM", 20, 0))
+
+\S4method{initialize}{ClusterPoissonComponent}(.Object, data = matrix(nrow =
+  0, ncol = 0), nbCluster = 2, modelName = "poisson_pk_ljk")
+
+\S4method{initialize}{ClusterPoisson}(.Object, data = matrix(nrow = 0, ncol =
+  0), nbCluster = 2, modelName = "poisson_pk_ljk")
 
 \S4method{initialize}{ClusterStrategy}(.Object, nbTry, nbShortRun, initMethod,
   shortAlgo, longAlgo)
@@ -76,6 +84,12 @@ Initialization method of the [\code{\linkS4class{ClusterHeterogeneous}}] class.
 Used internally in the `rtkpp' package.
 
 Initialization method of the [\code{\linkS4class{ClusterInit}}] class.
+Used internally in the `rtkpp' package.
+
+Initialization method of the [\code{\linkS4class{ClusterPoissonComponent}}] class.
+Used internally in the `rtkpp' package.
+
+Initialization method of the [\code{\linkS4class{ClusterPoisson}}] class.
 Used internally in the `rtkpp' package.
 
 Initialization method of the [\code{\linkS4class{ClusterStrategy}}] class.

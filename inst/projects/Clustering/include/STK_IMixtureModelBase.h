@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -40,18 +40,17 @@
 #include "STK_Clust_Util.h"
 #include "Arrays/include/STK_CArrayPoint.h"
 #include "Arrays/include/STK_CArrayVector.h"
-#include "Arrays/include/STK_Array2D.h"
+#include "Arrays/include/STK_CArray.h"
 
 namespace STK
 {
-
 /** @ingroup Clustering
  *  @brief Base class for Mixture model.
  *
- * All the mixture parameters: pk, tik and zi are accessed by pointer and set
- * to this class using the method
+ * All the mixture parameters: pk, tik, nk and zi are accessed by pointer and
+ * set to this class using the method
  * @code
- *   void setMixtureParameters(CArrayPoint<Real>* p_pk, Array2D<Real>* p_tik, CArrayVector<int>* p_zi);
+ *   void setMixtureParameters(CPointX const* p_pk, CPointX const* p_nk, ArrayXX const* p_tik, CVectorXi const* p_zi);
  * @endcode
  * so that they can be used in a composed model.
  * @sa MixtureComposer
@@ -82,28 +81,34 @@ class IMixtureModelBase
     inline int nbVariable() const { return nbVariable_;}
 
     /** @return the proportions of each mixtures */
-    inline CArrayPoint<Real> const* p_pk() const { return p_pk_;};
+    inline CPointX const* p_pk() const { return p_pk_;};
+    /** @return the estimated number of individuals of each mixtures */
+    inline CPointX const* p_nk() const { return p_nk_;};
     /** @return the tik probabilities */
-    inline Array2D<Real> const* p_tik() const { return p_tik_;};
+    inline CArrayXX const* p_tik() const { return p_tik_;};
     /** @return  the zi class label */
-    inline CArrayVector<int> const* p_zi() const { return p_zi_;};
-    /** Set the parameters of the  mixture model using external prop, tik and zi.
+    inline CVectorXi const* p_zi() const { return p_zi_;};
+    /** Set the parameters of the  mixture model using external pk, tik and zi.
      *  @param p_pk pointer on the proportions of the mixture model
+     *  @param p_nk pointer on the estimated number of individuals of each mixtures
      *  @param p_tik pointer on the posterior probabilities
      *  @param p_zi pointer on the class labels
      * */
-    void setMixtureParameters( CArrayPoint<Real> const* p_pk
-                             , Array2D<Real> const* p_tik
-                             , CArrayVector<int> const* p_zi
+    void setMixtureParameters( CPointX const* p_pk
+                             , CPointX const* p_nk
+                             , CArrayXX const* p_tik
+                             , CVectorXi const* p_zi
                              );
 
   protected:
     /** The proportions of each mixtures */
-    CArrayPoint<Real> const* p_pk_;
+    CPointX const* p_pk_;
+    /** The estimated number of individuals of each mixtures */
+    CPointX const* p_nk_;
     /** The tik probabilities */
-    Array2D<Real> const* p_tik_;
+    CArrayXX const* p_tik_;
     /** The zik class label */
-    CArrayVector<int> const* p_zi_;
+    CVectorXi const* p_zi_;
     /** Set the number of sample of the model
      *  @param nbSample number of sample of the model
      * */

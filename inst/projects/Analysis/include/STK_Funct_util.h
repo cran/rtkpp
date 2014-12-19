@@ -28,7 +28,7 @@
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_Funct_util.h
+/** @file STK_Funct_Util.h
  *  @brief In this file we declare usual Real functions.
  **/
 

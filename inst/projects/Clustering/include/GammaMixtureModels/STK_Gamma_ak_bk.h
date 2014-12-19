@@ -55,7 +55,6 @@ struct MixtureTraits< Gamma_ak_bk<_Array> >
   typedef _Array Array;
   typedef typename Array::Type Type;
   typedef Gamma_ak_bk_Parameters  Parameters;
-  typedef MixtureComponent<_Array, Parameters> Component;
   typedef Array2D<Real>            Param;
 };
 
@@ -65,8 +64,8 @@ struct MixtureTraits< Gamma_ak_bk<_Array> >
  *  Gamma_ak_bk is a mixture model of the following form
  * \f[
  *     f(\mathbf{x}_i|\theta) = \sum_{k=1}^K p_k
- *     \prod_{j=1}^p\left(\frac{x_i^j}{b_{k}}\right)^{a_{jk}-1}
- *                   \frac{e^{-x_i^j/b_{k}}}{b_{k} \, \Gamma(a_{jk})},
+ *     \prod_{j=1}^p \left(\frac{x_i^j}{b_{k}}\right)^{a_{k}-1}
+ *                   \frac{e^{-x_i^j/b_{k}}}{b_{k} \, \Gamma(a_{k})},
  *      \quad x_i^j>0, \quad i=1,\ldots,n.
  * \f]
  **/
@@ -74,14 +73,14 @@ template<class Array>
 class Gamma_ak_bk : public GammaBase< Gamma_ak_bk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_ak_bk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gamma_ak_bk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_ak_bk<Array> > Base;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
     using Base::meanjk;
     using Base::variancejk;
 
@@ -95,8 +94,6 @@ class Gamma_ak_bk : public GammaBase< Gamma_ak_bk<Array> >
     inline Gamma_ak_bk( Gamma_ak_bk const& model) : Base(model) {}
     /** destructor */
     inline ~Gamma_ak_bk() {}
-    /** initialize shape and scale parameters using weighted moment estimates.*/
-    inline bool initializeStep() { return mStep();}
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
      *  and the scale will be selected randomly using an exponential of parameter
@@ -106,8 +103,7 @@ class Gamma_ak_bk : public GammaBase< Gamma_ak_bk<Array> >
     /** Compute the mStep. */
     bool mStep();
     /** @return the number of free parameters of the model */
-    inline int computeNbFreeParameters() const
-    { return 2*this->nbCluster();}
+    inline int computeNbFreeParameters() const { return 2*this->nbCluster();}
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers
@@ -137,12 +133,12 @@ bool Gamma_ak_bk<Array>::mStep()
 {
   if (!this->moments()) { return false;}
   // estimate a and b
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     // moment estimate and oldest value
     Real x0 = this->meank(k)*this->meank(k)/this->variancek(k);
     Real x1 = p_param(k)->shape_;
-    if ((x0 <=0.) || (Arithmetic<Real>::isNA(x0))) return false;
+    if ((x0 <=0.) || (isNA(x0))) return false;
 
     // get shape
     hidden::invPsiMLog f( (p_param(k)->meanLog_-std::log( this->meank(k))).mean() );

@@ -39,21 +39,34 @@
 
 namespace STK
 {
-template< typename Type, int SizeCols_=UnknownSize, bool Orient_ = Arrays::by_row_>
+// forward declarations
+template< typename Type, int SizeCols_=UnknownSize, bool Orient_ = Arrays::by_col_>
 class CArrayPoint;
+template< typename Type, int SizeRows_, int SizeCols_, bool Orient_> class CArray;
+template< typename Type, int Size_, bool Orient_> class CArraySquare;
+template< typename Type, int SizeRows_, bool Orient_> class CArrayVector;
+template< typename Type, bool Orient_> class CArrayNumber;
 
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArray;
-template< typename Type, int Size_, bool Orient_>
-class CArraySquare;
-template< typename Type, int SizeRows_, bool Orient_>
-class CArrayVector;
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArrayNumber;
+// useful typedef
+typedef CArrayPoint<Real, UnknownSize, Arrays::by_col_>   CPointX;
+typedef CArrayPoint<Real, 2, Arrays::by_col_>             CPoint2;
+typedef CArrayPoint<Real, 3, Arrays::by_col_>             CPoint3;
+typedef CArrayPoint<double, UnknownSize, Arrays::by_col_> CPointXd;
+typedef CArrayPoint<double, 2, Arrays::by_col_>           CPoint2d;
+typedef CArrayPoint<double, 3, Arrays::by_col_>           CPoint3d;
+typedef CArrayPoint<int, UnknownSize, Arrays::by_col_>    CPointXi;
+typedef CArrayPoint<int, 2, Arrays::by_col_>              CPoint2i;
+typedef CArrayPoint<int, 3, Arrays::by_col_>              CPoint3i;
 
-typedef CArrayPoint<Real, UnknownSize, Arrays::by_row_>   CPointX;
-typedef CArrayPoint<Real, 2, Arrays::by_row_>             CPoint2;
-typedef CArrayPoint<Real, 3, Arrays::by_row_>             CPoint3;
+typedef CArrayPoint<Real, UnknownSize, Arrays::by_row_>   CPointByRowX;
+typedef CArrayPoint<Real, 2, Arrays::by_row_>             CPointByRow2;
+typedef CArrayPoint<Real, 3, Arrays::by_row_>             CPointByRow3;
+typedef CArrayPoint<double, UnknownSize, Arrays::by_row_> CPointByRowXd;
+typedef CArrayPoint<double, 2, Arrays::by_row_>           CPointByRow2d;
+typedef CArrayPoint<double, 3, Arrays::by_row_>           CPointByRow3d;
+typedef CArrayPoint<int, UnknownSize, Arrays::by_row_>    CPointByRowXi;
+typedef CArrayPoint<int, 2, Arrays::by_row_>              CPointByRow2i;
+typedef CArrayPoint<int, 3, Arrays::by_row_>              CPointByRow3i;
 
 namespace hidden
 {
@@ -63,9 +76,9 @@ namespace hidden
 template<typename Type_, int SizeCols_, bool Orient_>
 struct Traits< CArrayPoint<Type_, SizeCols_, Orient_> >
 {
-    typedef CArrayNumber<Type_, 1, 1, Orient_> Number;
-    typedef CArrayNumber<Type_, 1, 1, Orient_> Col;
-    typedef CArrayNumber<Type_, 1, 1, Orient_> SubCol;
+    typedef CArrayNumber<Type_, Orient_> Number;
+    typedef CArrayNumber<Type_, Orient_> Col;
+    typedef CArrayNumber<Type_, Orient_> SubCol;
 
     typedef CArrayPoint<Type_, SizeCols_, Orient_> Row;
     typedef CArrayPoint<Type_, UnknownSize, Orient_> SubRow;
@@ -73,9 +86,6 @@ struct Traits< CArrayPoint<Type_, SizeCols_, Orient_> >
     /* Type or array (1,1) ? */
     typedef typename If<(SizeCols_ == 1), Number, SubRow>::Result SubVector;
     typedef typename If<(SizeCols_ == 1), Number, SubRow>::Result SubArray;
-
-    // Transposed type
-    typedef CArrayVector< Type_, SizeCols_, !Orient_> Transposed;
     // The CAllocator have to have the same structure than the CArray
     typedef CAllocator<Type_, Arrays::point_, 1, SizeCols_, Orient_> Allocator;
 
@@ -117,18 +127,18 @@ class CArrayPoint : public ICArray < CArrayPoint<Type, SizeCols_, Orient_> >
     /** constructor with specified dimension.
      *  @param sizeCols range of the columns
      **/
-    inline CArrayPoint( int const& sizeCols): Base(1, sizeCols) {}
+    inline CArrayPoint( int sizeCols): Base(1, sizeCols) {}
     /** constructor with rbeg, rend, cbeg and cend specified,
      *  initialization with a constant.
      *  @param sizeCols range of the columns
      *  @param v initial value of the container
      **/
-    inline CArrayPoint( int const& sizeCols, Type const& v): Base(1, sizeCols, v) {}
+    inline CArrayPoint( int sizeCols, Type const& v): Base(1, sizeCols, v) {}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
      **/
-    inline CArrayPoint( const CArrayPoint &T, bool ref=false): Base(T, ref) {}
+    inline CArrayPoint( CArrayPoint const& T, bool ref=false): Base(T, ref) {}
     /** wrapper constructor for 0 based C-Array.
      *  @param q pointer on the array
      *  @param nbCol number of columns
@@ -138,27 +148,29 @@ class CArrayPoint : public ICArray < CArrayPoint<Type, SizeCols_, Orient_> >
      *  @param allocator the allocator to wrap
      **/
     template<class OtherAllocator>
-    inline CArrayPoint( CAllocatorBase<OtherAllocator> const& allocator): Base(allocator.asDerived()) {}
+    inline CArrayPoint( CAllocatorBase<OtherAllocator> const& allocator)
+                      : Base(allocator.asDerived())
+    {}
     /** Copy constructor using an expression.
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    CArrayPoint( ExprBase<OtherDerived> const& T): Base() { LowBase::operator=(T);}
+    inline CArrayPoint( ExprBase<OtherDerived> const& T): Base(1,T.size()) { LowBase::operator=(T);}
     /** destructor. */
     inline ~CArrayPoint() {}
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
     inline CArrayPoint& operator=(Type const& v) { return LowBase::setValue(v);}
-    /** operator = : overwrite the CArray with the Right hand side T.
+    /** operator = : overwrite the CArrayPoint with the Right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArrayPoint& operator=(Rhs const& T) { return LowBase::assign(T);}
+    inline CArrayPoint& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy
      **/
-    inline CArrayPoint& operator=(CArrayPoint const& rhs) { return LowBase::assign(rhs);}
+    inline CArrayPoint& operator=(CArrayPoint rhs) { return LowBase::assign(rhs);}
 };
 
 } // namespace STK

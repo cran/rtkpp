@@ -233,7 +233,9 @@ class IMultiStatModel : public IStatModelBase, public IRunnerUnsupervised<Array,
      {
        if (!p_param())
        { STKRUNTIME_ERROR_NO_ARG(IMultiStatModel::writeParameters(os),no parameters);}
-       p_param_->print(os);
+#ifdef STK_DEBUG
+       stk_cout << _T("You should implement this method in your derived class\n");
+#endif
      }
 
   protected:

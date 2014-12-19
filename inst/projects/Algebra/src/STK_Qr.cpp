@@ -45,13 +45,10 @@ void print(Container2D const& A, STK::String const& name)
 {
   stk_cout << "print: " << name << _T("\n";);
   stk_cout << name << _T(".isRef() =")        << A.isRef()  << _T("\n");
-  stk_cout << name << _T(".capacityHo() =")   << A.capacityHo()  << _T("\n");
   stk_cout << name << _T(".cols() =")      << A.cols()  << _T("\n");
   stk_cout << name << _T(".rows() =")      << A.rows()  << _T("\n\n");
   stk_cout << name << _T(".rangeCols().isRef() =")  << A.rangeCols().isRef() << _T("\n");
   stk_cout << name << _T(".rangeCols() =\n")  << A.rangeCols() << _T("\n");
-  stk_cout << name << _T(".capacityCols().isRef() =") << A.capacityCols().isRef()  << _T("\n");
-  stk_cout << name << _T(".capacityCols() =\n") << A.capacityCols()  << _T("\n");
 }
 #endif
 

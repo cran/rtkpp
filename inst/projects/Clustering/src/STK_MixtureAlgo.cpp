@@ -58,15 +58,16 @@ bool CEMAlgo::run()
     {
       if (p_model_->cStep()<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(CEMAlgo::run,No more individuals in a class);
+        msg_error_ = STKERROR_NO_ARG(CEMAlgo::run,No more individuals after cStep\n);
         return false;
       }
       p_model_->pStep();
       p_model_->imputationStep();
       p_model_->mStep();
-      if (p_model_->eStep()<threshold_)
+      Real nb = p_model_->eStep();
+      if (nb<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(CEMAlgo::run,Not enough individuals in a class);
+        msg_error_ = STKERROR_1ARG(CEMAlgo::run,nb,Not enough individuals after eStep\n);
         return false;
       }
       Real lnLikelihood = p_model_->lnLikelihood();
@@ -109,9 +110,10 @@ bool EMAlgo::run()
       p_model_->pStep();
       p_model_->imputationStep();
       p_model_->mStep();
-      if (p_model_->eStep()<threshold_)
+      Real nb = p_model_->eStep();
+      if (nb<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(EMAlgo::run,Not enough individuals in a class);
+        msg_error_ = STKERROR_1ARG(EMAlgo::run,nb,Not enough individuals after eStep\n);
         return false;
       }
       Real lnLikelihood = p_model_->lnLikelihood();
@@ -142,59 +144,91 @@ bool EMAlgo::run()
 bool SEMAlgo::run()
 {
 #ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("---------------------------------\n");
   stk_cout << _T("Entering SEMAlgo::run() with:\n")
            << _T("nbIterMax_ = ") << nbIterMax_ << _T("\n")
-           << _T("epsilon_ = ") << epsilon_ << _T("\n");
+           << _T("p_model_->lnLikelihood = ") << p_model_->lnLikelihood() << _T("\n");
 #endif
+  bool result = true;
   try
   {
     for (int iter = 0; iter < this->nbIterMax_; ++iter)
     {
-      if (p_model_->sStep()<threshold_)
+      Real nb = p_model_->sStep(); // simulate labels
+      if (nb<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(SEMAlgo::run,Not enough individuals in a class);
-        return false;
+        msg_error_ = STKERROR_1ARG(SEMAlgo::run,nb,Not enough individuals after sStep\n);
+        result = false;
+        break;
       }
-      p_model_->pStep();
-      p_model_->samplingStep();
-      p_model_->mStep();
-      if (p_model_->eStep()<threshold_)
+      p_model_->samplingStep(); // simulate missing values
+      p_model_->pStep();        // estimate proportions
+      p_model_->mStep();        // estimate parameters
+      nb = p_model_->eStep();   // update tik and lnLikelihood
+      p_model_->storeIntermediateResults(iter+1); // store current parameters
+      if (nb<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(SEMAlgo::run,Not enough individuals in a class);
-        return false;
+        msg_error_ = STKERROR_1ARG(SEMAlgo::run,nb,Not enough individuals after eStep\n);
+        result = false;
+        break;
       }
     }
   }
   catch (Clust::exceptions const& error)
   {
     msg_error_ = Clust::exceptionToString(error);
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("An error occur in SEM algorithm: ") << msg_error_ << _T("\n");
+#ifdef STK_MIXTURE_VERBOSE
+  stk_cout << _T("An exception occur in SEM algorithm: ") << msg_error_ << _T("\n");
 #endif
-    return false;
+    result = false;
   }
-  return true;
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("In SEMAlgo::run() current values:\n");
+  p_model_->writeParameters(stk_cout);
+#endif
+  if (result)
+  {
+    // set averaged parameters
+    p_model_->setParameters();
+#ifdef STK_MIXTURE_VERY_VERBOSE
+    stk_cout << _T("\nIn SEMAlgo::run(), setParameters done:\n");
+    p_model_->writeParameters(stk_cout);
+#endif
+  }
+  else
+  { p_model_->releaseIntermediateResults();}
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Terminating SEMAlgo::run()\n") << error();
+  stk_cout << _T("--------------------------\n");
+#endif
+  return result;
 }
 
 bool SemiSEMAlgo::run()
 {
 #ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("---------------------------------\n");
   stk_cout << _T("Entering SemiSEMAlgo::run() with:\n")
            << _T("nbIterMax_ = ") << nbIterMax_ << _T("\n")
-           << _T("epsilon_ = ")  << epsilon_ << _T("\n");
+           << _T("epsilon_ = ")  << epsilon_ << _T("\n")
+           << _T("p_model_->lnLikelihood = ") << p_model_->lnLikelihood() << _T("\n");
 #endif
+  bool result = true;
   try
   {
     Real currentLnLikelihood = p_model_->lnLikelihood();
     for (int iter = 0; iter < this->nbIterMax_; ++iter)
     {
-      p_model_->pStep();
       p_model_->samplingStep();
+      p_model_->pStep();
       p_model_->mStep();
-      if (p_model_->eStep()<threshold_)
+      Real nb = p_model_->eStep();
+      p_model_->storeIntermediateResults(iter+1); // store current parameters
+      if (nb<threshold_)
       {
-        msg_error_ = STKERROR_NO_ARG(SemiSEMAlgo::run,Not enough individuals in a class);
-        return false;
+        msg_error_ = STKERROR_1ARG(SemiSEMAlgo::run,nb,Not enough individuals after eStep\n);
+        result = false;
+        break;
       }
       Real lnLikelihood = p_model_->lnLikelihood();
       // the likelihood can increase
@@ -215,11 +249,30 @@ bool SemiSEMAlgo::run()
   {
     msg_error_ = Clust::exceptionToString(error);
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("An error occur in SemiSEM algorithm: ") << msg_error_ << _T("\n");
+  stk_cout << _T("An exception occur in SemiSEM algorithm: ") << msg_error_ << _T("\n");
 #endif
-    return false;
+    result = false;
   }
-  return true;
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("In SemiSEMAlgo::run() current values:\n");
+  p_model_->writeParameters(stk_cout);
+#endif
+  if (result)
+  {
+    // set averaged parameters
+    p_model_->setParameters();
+#ifdef STK_MIXTURE_VERY_VERBOSE
+    stk_cout << _T("\nIn SemiSEMAlgo::run(), setParameters done:\n");
+    p_model_->writeParameters(stk_cout);
+#endif
+  }
+  else
+  { p_model_->releaseIntermediateResults();}
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("Terminating SemiSEMAlgo::run()\n") << error();
+  stk_cout << _T("--------------------------\n");
+#endif
+  return result;
 }
 
 } // namespace STK

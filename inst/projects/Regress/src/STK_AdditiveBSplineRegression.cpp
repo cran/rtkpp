@@ -48,13 +48,13 @@ namespace STK
  * @param degree degree of the BSpline basis
  * @param position position of the knots to used
  **/
-AdditiveBSplineRegression::AdditiveBSplineRegression( Matrix const* p_y
-                                                    , Matrix const* p_x
+AdditiveBSplineRegression::AdditiveBSplineRegression( ArrayXX const* p_y
+                                                    , ArrayXX const* p_x
                                                     , int const& nbControlPoints
                                                     , int const& degree
                                                     , KnotsPosition const& position
                                                     )
-                                                    : IRegression<Matrix, Matrix, Vector>(p_y, p_x)
+                                                    : IRegression<ArrayXX, ArrayXX, Vector>(p_y, p_x)
                                                     , nbControlPoints_(nbControlPoints)
                                                     , degree_(degree)
                                                     , position_(position)
@@ -77,10 +77,10 @@ void AdditiveBSplineRegression::initializeStep()
 }
 
 /* compute the regression function. */
-void AdditiveBSplineRegression::regression()
+void AdditiveBSplineRegression::regressionStep()
 {
   // compute X'X
-  MatrixSquare prod;
+  ArraySquareX prod;
   prod.move(multLeftTranspose(coefs_.coefficients()));
   // compute (X'X)^{-1}
   GinvSymmetric inv;
@@ -90,10 +90,10 @@ void AdditiveBSplineRegression::regression()
 }
 
 /* compute the regression function. */
-void AdditiveBSplineRegression::regression(Vector const& weights)
+void AdditiveBSplineRegression::regression(VectorX const& weights)
 {
   // compute X'X
-  MatrixSquare prod;
+  ArraySquareX prod;
   prod.move(weightedMultLeftTranspose(coefs_.coefficients(), weights));
 
   // compute (X'X)^{-1}
@@ -101,7 +101,7 @@ void AdditiveBSplineRegression::regression(Vector const& weights)
   inv(prod);
 
   // compute X'Y
-  Matrix temp;
+  ArrayXX temp;
   temp.move(wmultLeftTranspose(coefs_.coefficients(), p_y_->asDerived(), weights));
 
   // compute (X'X)^{-1}X'Y
@@ -109,13 +109,8 @@ void AdditiveBSplineRegression::regression(Vector const& weights)
 }
 
 /* Compute the predicted outputs by the regression function. */
-void AdditiveBSplineRegression::prediction()
-{
-  // remove existing predictions if any (should not be the case)
-  if (!p_predicted_) p_predicted_ = new Matrix;
-  // compute predictions
-  *p_predicted_ = coefs_.coefficients() * controlPoints_;
-}
+void AdditiveBSplineRegression::predictionStep()
+{ predicted_ = coefs_.coefficients() * controlPoints_;}
 
 
 /* @brief Extrapolate the values @c y from the value @c x.
@@ -123,7 +118,7 @@ void AdditiveBSplineRegression::prediction()
  *  where \f$ \psi \f$ represents the B-spline basis functions and \f$ \hat{beta} \f$
  *  the estimated coefficients.
  */
-Matrix AdditiveBSplineRegression::extrapolate( Matrix const& x) const
+ArrayXX AdditiveBSplineRegression::extrapolate( ArrayXX const& x) const
 { return mult(coefs_.extrapolate(x), controlPoints_);}
 
 } // namespace STK

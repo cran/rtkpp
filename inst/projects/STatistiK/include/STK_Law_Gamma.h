@@ -36,6 +36,7 @@
 #define STK_LAW_GAMMA_H
 
 #include "STK_Law_IUnivLaw.h"
+#include "Sdk/include/STK_Macros.h"
 
 namespace STK
 {
@@ -87,37 +88,42 @@ class Gamma : public IUnivLaw<Real>
     /** @return the value of the pdf
      *  @param x a positive real value
      **/
-    virtual Real pdf(const Real& x) const;
+    virtual Real pdf(Real const& x) const;
     /** @return the value of the log-pdf
      *  @param x a positive real value
      **/
-    virtual Real lpdf(const Real& x) const;
+    virtual Real lpdf(Real const& x) const;
     /** @return the cumulative distribution function
      *  @param t a positive real value
      **/
-    virtual Real cdf(const Real& t) const;
+    virtual Real cdf(Real const& t) const;
     /** @return the inverse cumulative distribution function
      *  @param p a probability number
      **/
-    virtual Real icdf(const Real& p) const;
+    virtual Real icdf(Real const& p) const;
     /** @return a pseudo Gamma random variate with the specified parameters.
      *  @param shape shape parameter
      *  @param scale scale (dispersion) parameter
      **/
-    static Real rand( const Real& shape, const Real& scale);
+    static Real rand( Real const& shape, Real const& scale);
     /** @return the value of the pdf
      *  @param x a positive real value
      *  @param shape shape parameter
      *  @param scale scale (dispersion) parameter
      **/
-    static Real pdf(const Real& x, const Real& shape, const Real& scale);
+    static Real pdf(Real const& x, Real const& shape, Real const& scale);
     /** @return the value of the log-pdf
      *  @param x a positive real value
      *  @param shape shape parameter
      *  @param scale scale (dispersion) parameter
      **/
-    static Real lpdf(const Real& x, const Real& shape, const Real& scale);
-
+    static Real lpdf(Real const& x, Real const& shape, Real const& scale);
+    /** @return the cumulative distribution function
+     *  @param t a positive real value
+     *  @param shape shape parameter
+     *  @param scale scale (dispersion) parameter
+     **/
+    static Real cdf(Real const& t, Real const& shape, Real const& scale);
   protected:
     /** The shape parameter */
     Real a_;

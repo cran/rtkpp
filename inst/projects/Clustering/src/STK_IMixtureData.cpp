@@ -42,9 +42,9 @@ IMixtureData::IMixtureData(std::string const& idData): nbVariable_(0), v_missing
  *  @param manager the IMixtureData to copy
  **/
 IMixtureData::IMixtureData( IMixtureData const& manager)
-            : nbVariable_(manager.nbVariable_)
-            , v_missing_(manager.v_missing_)
-            , idData_(manager.idData_)
+                          : nbVariable_(manager.nbVariable_)
+                          , v_missing_(manager.v_missing_)
+                          , idData_(manager.idData_)
 {}
 
 } // namespace STK

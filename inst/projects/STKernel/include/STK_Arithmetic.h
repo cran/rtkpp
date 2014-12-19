@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,15 +23,13 @@
 */
 
 /*
- * Project:  Base
- * Purpose:  Define for the the templated arithmetic for handling
- *           special values (NA) and limit values.
+ * Project:  STKernel::Arithmetic
+ * Purpose:  DSefine templated arithmetic for handling special values (NA).
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
- *
  **/
 
 /** @file STK_Arithmetic.h
- *  @brief In this file we define for the tempated class Arithmetic for
+ *  @brief In this file we define for the templated class Arithmetic for
  *  handling the greatest, lowest, NA,... values of all types.
  **/
 
@@ -209,6 +207,21 @@ struct Arithmetic : public std::numeric_limits<Type>
    **/
   static inline bool isFinite(Type const& x) throw() { return (!isNA(x) && !isInfinite(x));}
 };
+
+/** @ingroup Arithmetic
+ *  @brief utility method allowing to know if a value is a NA (Not Available) value */
+template<class Type>
+bool isNA(Type const& x) { return Arithmetic<Type>::isNA(x);}
+
+/** @ingroup Arithmetic
+ *  @brief utility method allowing to know if a value is a finite value */
+template<class Type>
+bool isFinite(Type const& x) { return Arithmetic<Type>::isFinite(x);}
+
+/** @ingroup Arithmetic
+ *  @brief utility method allowing to know if a value is an infinite value */
+template<class Type>
+bool isInfinite(Type const& x) { return Arithmetic<Type>::isInfinite(x);}
 
 } // namespace STK
 

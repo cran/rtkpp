@@ -42,7 +42,7 @@
 namespace STK
 {
 
-Gaussian2BlocksModel::Gaussian2BlocksModel( const Matrix *p_data)
+Gaussian2BlocksModel::Gaussian2BlocksModel( const ArrayXX *p_data)
                                                   : GaussianModel(p_data)
                                                   , dim_(p_data_->sizeCols())
                                                   , variance2_(0)
@@ -61,10 +61,10 @@ void Gaussian2BlocksModel::compCovariance()
   const int first1 = p_data_->beginCols(), last1 = std::min(p_data_->lastIdxCols(), first1+dim_-1);
   for (int i= first1; i <= last1; ++i)
   {
-    cov_(i, i) = Stat::varianceWithFixedMean<Vector>(p_data_->col(i), mean_[i]);
+    cov_(i, i) = Stat::varianceWithFixedMean(p_data_->col(i), mean_[i], false);
     for (int j= first1; j < i; ++j)
     {
-      cov_(i, j) = Stat::covarianceWithFixedMean<Vector>(p_data_->col(i), p_data_->col(j), mean_[i], mean_[j]);
+      cov_(i, j) = Stat::covarianceWithFixedMean(p_data_->col(i), p_data_->col(j), mean_[i], mean_[j]);
       cov_(j, i) = cov_(i,j);
     }
   }
@@ -74,8 +74,8 @@ void Gaussian2BlocksModel::compCovariance()
   {
     // compute variance of each column
     for (int i= first2; i <= last2; ++i)
-    { cov_(i, i) = Stat::varianceWithFixedMean<Vector>(p_data_->col(i), mean_[i]);}
-    variance2_ = (MatrixSquare(cov_, Range(first2, last2, 0)).trace())/(Real)size2;
+    { cov_(i, i) = Stat::varianceWithFixedMean(p_data_->col(i), mean_[i], false);}
+    variance2_ = (ArraySquareX(cov_, Range(first2, last2, 0)).trace())/(Real)size2;
     // compute variance of each column
     for (int i= first2; i <= last2; ++i)
     { cov_(i, i) = variance2_;}
@@ -91,7 +91,7 @@ void Gaussian2BlocksModel::compWeightedCovariance(Vector const& weights)
   const int first1 = p_data_->beginCols(), last1 = std::min(p_data_->lastIdxCols(), dim_);
   for (int i= first1; i <= last1; ++i)
   {
-    cov_(i, i) = Stat::varianceWithFixedMean<Vector>(p_data_->col(i), weights, mean_[i]);
+    cov_(i, i) = Stat::varianceWithFixedMean(p_data_->col(i), weights, mean_[i], false);
     for (int j= first1; j < i; ++j)
     {
       cov_(i, j) = 0.;
@@ -104,8 +104,8 @@ void Gaussian2BlocksModel::compWeightedCovariance(Vector const& weights)
   {
     // compute variance of each column
     for (int i= first2; i <= last2; ++i)
-    { cov_(i, i) = Stat::varianceWithFixedMean<Vector>(p_data_->col(i), weights, mean_[i]);}
-    variance2_ = (MatrixSquare(cov_, Range(first2, last2, 0)).trace())/(Real)size2;
+    { cov_(i, i) = Stat::varianceWithFixedMean(p_data_->col(i), weights, mean_[i], false);}
+    variance2_ = (ArraySquareX(cov_, Range(first2, last2, 0)).trace())/(Real)size2;
     for (int i= first2; i <= last2; ++i)
     { cov_(i, i) = variance2_;}
   }

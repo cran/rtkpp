@@ -54,7 +54,7 @@ namespace STK
 /* Constructor.
  *  @param p_workData A pointer on the the working data set
  **/
-IAAModel::IAAModel( Matrix* p_workData)
+IAAModel::IAAModel( ArrayXX* p_workData)
                   : p_regressor_(0)
                   , p_reductor_(0)
                   , p_workData_(p_workData)
@@ -68,7 +68,7 @@ IAAModel::IAAModel( Matrix* p_workData)
                   , isStandardized_(false)
 {}
 
-IAAModel::IAAModel( Matrix& workData)
+IAAModel::IAAModel( ArrayXX& workData)
                   : p_regressor_(0)
                   , p_reductor_(0)
                   , p_workData_(&workData)
@@ -84,7 +84,7 @@ IAAModel::IAAModel( Matrix& workData)
 
 /* destructor */
 IAAModel::~IAAModel()
-{ }
+{}
 
 /* set the dimension of the model
  */
@@ -93,7 +93,7 @@ void IAAModel::setDimension( int const& dim) { dim_ = dim;}
 /* set the working set with the Data to treat.
  * @param p_reductor a pointer on the reduction dimension method to use
  */
-void IAAModel::setWorkData( Matrix& workData)
+void IAAModel::setWorkData( ArrayXX& workData)
 {
   p_workData_ = &workData;
   isCentered_     = false;
@@ -107,7 +107,7 @@ void IAAModel::setReductor( IReduct* p_reductor)
 /* set the regression method.
  * @param p_regressor a pointer on the regresssion method to use
  */
-void IAAModel::setRegressor( IRegression<Matrix, Matrix, Vector>* p_regressor)
+void IAAModel::setRegressor( IRegression<ArrayXX, ArrayXX, Vector>* p_regressor)
 { p_regressor_ = p_regressor;}
 
 /** delete the reductor allocated set to this model. */
@@ -206,7 +206,7 @@ void IAAModel::reduction()
 void IAAModel::reduction( Vector const& weights)
 {
   if (!p_reductor_)
-    throw runtime_error(_T("Error in IAAModel::reduction(weigths): "
+    throw runtime_error(_T("Error in IAAModel::reduction(weights): "
                            "reductor have not be set."));
   // compute axis
   p_reductor_->setDimension(dim_);
@@ -216,10 +216,10 @@ void IAAModel::reduction( Vector const& weights)
 }
 
 /* compute the regression **/
-void IAAModel::regression()
+void IAAModel::regressionStep()
 {
   if (!p_regressor_)
-    throw runtime_error(_T("Error in IAAModel::regression(): "
+    throw runtime_error(_T("Error in IAAModel::regressionStep(): "
                            "regressor have not be set."));
   // compute regression
   p_regressor_->run();

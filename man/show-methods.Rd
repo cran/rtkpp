@@ -11,6 +11,8 @@
 \alias{show,ClusterGammaComponent-method}
 \alias{show,ClusterHeterogeneous-method}
 \alias{show,ClusterInit-method}
+\alias{show,ClusterPoisson-method}
+\alias{show,ClusterPoissonComponent-method}
 \alias{show,ClusterStrategy-method}
 \alias{show,IClusterComponent-method}
 \alias{show,IClusterModelBase-method}
@@ -21,6 +23,8 @@
 \alias{show-ClusterGamma,ClusterGamma,ClusterGamma-method}
 \alias{show-ClusterGammaComponent,ClusterGammaComponent,ClusterGammaComponent-method}
 \alias{show-ClusterHeterogeneous,ClusterHeterogeneous,ClusterHeterogeneous-method}
+\alias{show-ClusterPoisson,ClusterPoisson,ClusterPoisson-method}
+\alias{show-ClusterPoissonComponent,ClusterPoissonComponent,ClusterPoissonComponent-method}
 \alias{show-IClusterComponent,IClusterComponent,IClusterComponent-method}
 \alias{show-algo,ClusterAlgo-method}
 \alias{show-init,ClusterInit,ClusterInit-method}
@@ -44,6 +48,10 @@
 \S4method{show}{ClusterHeterogeneous}(object)
 
 \S4method{show}{ClusterInit}(object)
+
+\S4method{show}{ClusterPoissonComponent}(object)
+
+\S4method{show}{ClusterPoisson}(object)
 
 \S4method{show}{ClusterStrategy}(object)
 

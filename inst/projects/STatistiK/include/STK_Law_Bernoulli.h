@@ -36,6 +36,7 @@
 #define STK_LAW_BERNOULLI_H
 
 #include "STK_Law_IUnivLaw.h"
+#include "Sdk/include/STK_Macros.h"
 #include "STKernel/include/STK_Binary.h"
 
 namespace STK

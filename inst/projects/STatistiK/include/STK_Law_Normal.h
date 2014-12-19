@@ -36,6 +36,7 @@
 #define STK_LAW_NORMAL_H
 
 #include "STK_Law_IUnivLaw.h"
+#include "Sdk/include/STK_Macros.h"
 
 namespace STK
 {

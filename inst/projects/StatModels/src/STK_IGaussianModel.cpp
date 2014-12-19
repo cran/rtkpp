@@ -81,7 +81,7 @@ Real univariateGaussianLnLikelihood(Vector const& data, Real const& mu, Real con
  * @param sigma the (diagonal) covairance matrix
  * @return
  */
-Real diagonalGaussianLnLikelihood(Matrix const& data, Point const& mu, MatrixSquare const& sigma)
+Real diagonalGaussianLnLikelihood(ArrayXX const& data, Point const& mu, ArraySquareX const& sigma)
 {
   int first = mu.begin(), last = mu.lastIdx();
   // compute for each row tjhe gaussian ln-likehood

@@ -106,46 +106,45 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
       sizeCols_  = hidden::Traits<Derived>::sizeCols_,
       storage_   = hidden::Traits<Derived>::storage_
     };
+    //--------------
+    // Start Visitors
     /** @brief Visit the container using a constant visitor
      *  @param visitor the visitor to run
      **/
     template<typename Visitor>
-    void visit(Visitor& visitor) const;
-
+    typename Visitor::return_type visit(Visitor& visitor) const;
+    /** @brief compute the number of non-zero element in an expression.
+     *  For example
+     *  @code
+     *  (a > 0).count();
+     *  @endcode
+     *  compute the number of positive element of the array @c a.
+     *  @return the number of non-zero element in the expression.*/
+    int const count() const;
+    /** @brief check if there is any non-zero element in an expression.
+     * For example
+     *  @code
+     *  (a > 0).any();
+     *  @endcode
+     *  will return @c true if there exists positive numbers in the expression @c a.
+     *  @return @c true if at least one element is not zero in the expression, @c false otherwise.*/
+    bool const any() const;
+    /** @brief check if all the elements in an expression are not zero.
+     *  For example
+     *  @code
+     *  (a > 0).all();
+     *  @endcode
+     *  will return @c true if all the elements in the expression @c a are positive.
+     *   @return @c true if all the elements are not zero in the expression, @c false otherwise.*/
+    bool const all() const;
     /** @return the number of available values in the array (not count NA values).*/
     int const nbAvailableValues() const;
-    /** @return the number of non-zero element in the expression.*/
-    int const count() const;
+
     /** @return the minimum of all elements of this using a Visitor
       * and puts in (row, col) its location.
       * @sa maxElt(int,int), visitor(), minElt()
       */
     Type const minElt( int& row, int& col) const;
-    /** @return the maximum of all elements of this using a Visitor
-      * and puts in (row, col) its location.
-      * @sa minElt(), visitor()
-      */
-    Type const maxElt( int& row, int& col) const;
-    /** @return the minimum of all elements of this using a Visitor
-      * and puts in  pos its location.
-      * @note Have to be used for col-vector, row-vector or diagonal matrix only.
-      * @sa maxElt(), visitor()
-      */
-    Type const minElt( int& pos) const;
-    /** @return the maximum of all elements of this using a Visitor
-      * and puts in pos its location.
-      * @note Have to be used for col-vector, row-vector or diagonal matrix only.
-      * @sa minElt(), visitor()
-      */
-    Type const maxElt( int& pos) const;
-    /** @return the minimum of all elements of this using a Visitor.
-      * @sa maxElt(row, col), visitor()
-      */
-    Type const minElt() const;
-    /** @return the maximum of all elements of this using a Visitor.
-      * @sa minElt(row, col), visitor()
-      */
-    Type const maxElt() const;
     /** @return the minimum of all elements of @c *this which are not NA values
      *  using a Visitor and puts in (row, col) its location.
       * @sa maxEltSafe(int, int), visitor(), minElt()
@@ -155,7 +154,18 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
       * and puts in (row, col) its location.
       * @sa minElt(), visitor()
       */
+    Type const maxElt( int& row, int& col) const;
+    /** @return the maximum of all elements of this using a Visitor
+      * and puts in (row, col) its location.
+      * @sa minElt(), visitor()
+      */
     Type const maxEltSafe( int& row, int& col) const;
+    /** @return the minimum of all elements of this using a Visitor
+      * and puts in  pos its location.
+      * @note Have to be used for col-vector, row-vector or diagonal matrix only.
+      * @sa maxElt(), visitor()
+      */
+    Type const minElt( int& pos) const;
     /** @return the minimum of all elements of this using a Visitor
       * and puts in  pos its location.
       * @note Have to be used for col-vector, row-vector or diagonal matrix only.
@@ -167,11 +177,25 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
       * @note Have to be used for col-vector, row-vector or diagonal matrix only.
       * @sa minElt(), visitor()
       */
+    Type const maxElt( int& pos) const;
+    /** @return the maximum of all elements of this using a Visitor
+      * and puts in pos its location.
+      * @note Have to be used for col-vector, row-vector or diagonal matrix only.
+      * @sa minElt(), visitor()
+      */
     Type const maxEltSafe( int& pos) const;
+    /** @return the minimum of all elements of this using a Visitor.
+      * @sa maxElt(row, col), visitor()
+      */
+    Type const minElt() const;
     /** @return the minimum of all elements of this using a Visitor
       * @sa maxElt(row, pos), visitor()
       */
     Type const minEltSafe() const;
+    /** @return the maximum of all elements of this using a Visitor.
+      * @sa minElt(row, col), visitor()
+      */
+    Type const maxElt() const;
     /** @return the maximum of all elements of this using a Visitor
       * @sa minElt(row, pos), visitor()
       */
@@ -179,49 +203,38 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
 
     /** @return the sum of all the elements of this using a Visitor*/
     inline Type const sum() const;
+    /** @return safely the sum of all the elements of this */
+    inline Type const sumSafe() const;
     /** @return the norm of this*/
     inline Type const norm() const;
+    /** @return the norm of this*/
+    inline Type const normSafe() const;
     /** @return the square norm of this*/
     inline Type const norm2() const;
+    /** @return the square norm of this*/
+    inline Type const norm2Safe() const;
     /** @return the infinite norm of this*/
     inline Type const normInf() const;
+
     /** @return the mean of all the elements of this*/
     inline Type const mean() const;
+    /** @return safely the mean of all the elements of this*/
+    inline Type const meanSafe() const;
     /** @return the variance of all the elements of this*/
     inline Type const variance() const;
+    /** @return the variance of all the elements of this*/
+    inline Type const varianceSafe() const;
     /** @return the variance with given mean of all the elements of this*/
-    inline Type const variance(Type const mean) const;
+    inline Type const variance(Type const& mean) const;
+    /** @return safely the variance with given mean of all the elements of this*/
+    inline Type const varianceSafe(Type const& mean) const;
 
     /** @return the weighted sum of all the elements of this using a Visitor
      *  @note will only work with row-vectors or col-vectors
      **/
     template<typename Rhs>
     inline Type const wsum(ExprBase<Rhs> const& weights) const;
-    /** @return the weighted norm of this
-     *  @note will only work with row-vectors or col-vectors
-     **/
-    template<typename Rhs>
-    inline Type const wnorm(ExprBase<Rhs> const& weights) const;
-    /** @return the weighted square norm of this
-     *  @note will only work with row-vectors or col-vectors
-     **/
-    template<typename Rhs>
-    inline Type const wnorm2(ExprBase<Rhs> const& weights) const;
-    /** @return the weighted mean of all the elements of this using a Visitor
-     * @note will only work with row-vectors or col-vectors
-     **/
-    template<typename Rhs>
-    inline Type const wmean(ExprBase<Rhs> const& weights) const;
-    /** @return the weighted variance of all the elements of this using a Visitor
-     *  @note will only work with row-vectors or col-vectors
-     **/
-    template<typename Rhs>
-    inline Type const wvariance(ExprBase<Rhs> const& weights) const;
-    /** @return the variance with given mean of all the elements of this*/
-    template<typename Rhs>
-    inline Type const wvariance(Type const wmean, ExprBase<Rhs> const& weights) const;
-
-    /** @return the weighted sum of all the elements of this using a Visitor
+    /** @return the safely weighted sum of all the elements of this
      *  @note will only work with row-vectors or col-vectors
      **/
     template<typename Rhs>
@@ -230,29 +243,78 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
      *  @note will only work with row-vectors or col-vectors
      **/
     template<typename Rhs>
+    inline Type const wnorm(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted norm of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
     inline Type const wnormSafe(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted square norm of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wnorm2(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted square norm of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wnorm2Safe(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted mean of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wmean(ExprBase<Rhs> const& weights) const;
+    /** @return the safely weighted mean of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wmeanSafe(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted variance of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wvariance(ExprBase<Rhs> const& weights) const;
+    /** @return the weighted variance of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wvarianceSafe(ExprBase<Rhs> const& weights) const;
+    /** @return the variance with given mean of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wvariance(Type const& mean, ExprBase<Rhs> const& weights) const;
+    /** @return safely the variance with given mean of all the elements of this
+     *  @note will only work with row-vectors or col-vectors
+     **/
+    template<typename Rhs>
+    inline Type const wvarianceSafe(Type const& mean, ExprBase<Rhs> const& weights) const;
+    // Visitors terminated
+    //--------------------
 
     /** @return an expression from the difference of this and  other. */
     MAKE_BINARY_OPERATOR(operator-,DifferenceOp)
-    /** @return an expression from the addition operator. */
+    /** @return an expression with the addition of this and other. */
     MAKE_BINARY_OPERATOR(operator+,SumOp)
-    /** @return an expression from the quotient operator. */
+    /** @return an expression with the quotient of this and other. */
     MAKE_BINARY_OPERATOR(operator/,DivOp)
-    /** @return an expression from min of this and  other */
+    /** @return an expression with the product (element by element) of this and other.*/
+    MAKE_BINARY_OPERATOR(prod,ProductOp)
+    /** @return an expression with the min of this and other.*/
     MAKE_BINARY_OPERATOR(min,MinOp)
-    /** @return an expression from the max of this and  other */
+    /** @return an expression from the max of this and other.*/
     MAKE_BINARY_OPERATOR(max,MaxOp)
-    /** @return an expression from the \< operator of *this and  other*/
+    /** @return an expression from the \< operator of this and other*/
     MAKE_BINARY_OPERATOR(operator<,LessOp)
-    /** @return an expression from the \<= operator of *this and  other */
+    /** @return an expression from the \<= operator of this and other.*/
     MAKE_BINARY_OPERATOR(operator<=,LeqOp)
-    /** @return an expression from the \> operator of *this and  other */
+    /** @return an expression from the \> operator of this and other.*/
     MAKE_BINARY_OPERATOR(operator>,GreaterOp)
-    /** @return an expression from the \>= operator of *this and  other */
+    /** @return an expression from the \>= operator of this and other.*/
     MAKE_BINARY_OPERATOR(operator>=,GeqOp)
-    /** @return an expression from the == operator of *this and  other */
+    /** @return an expression from the == operator of this and other.*/
     MAKE_BINARY_OPERATOR(operator==,EqualOp)
-    /** @return an expression from the != operator of *this and  other */
+    /** @return an expression from the != operator of this and other.*/
     MAKE_BINARY_OPERATOR(operator!=,NotEqualOp)
 
     /** @return an expression of the opposite of this */
@@ -260,7 +322,7 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     /** @return which values of this is a NA value */
     MAKE_UNARY_OPERATOR_NOARG(isNA, IsNaOp)
     /** @return not of the values */
-    MAKE_UNARY_OPERATOR_NOARG(Not, NotOp)
+    MAKE_UNARY_OPERATOR_NOARG(neg, NegOp)
     /** @return which values of this are finite value */
     MAKE_UNARY_OPERATOR_NOARG(isFinite, IsFiniteOp)
     /** @return which values of this are infinite value */
@@ -290,7 +352,7 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     /** @return an expression of the cube of this. */
     MAKE_UNARY_OPERATOR_NOARG(cube, CubeOp)
 
-    /** @return an expression of the cube of this. */
+    /** @return an expression of the power of this. */
     MAKE_UNARY_OPERATOR_1ARG(pow, PowOp)
     /** @return an expression of this with each elements incremented by
      *  the constant number */
@@ -299,9 +361,6 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     friend inline UnaryOperator<AddOp<Type>, Derived> const
     operator+(Type const number, ExprBase<Derived> const& other)
     { return other.asDerived() + number;}
-    /** @return a safe value of this */
-    inline UnaryOperator<SafeOp<Type>, Derived> const safe(Type const number = Type()) const
-    { return UnaryOperator<SafeOp<Type>, Derived>(this->asDerived(), SafeOp<Type>(number)); }
     /** @return an expression of this with each elements decremented by the
      * constant  number */
     inline UnaryOperator<AddOp<Type>, Derived> const
@@ -311,6 +370,9 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     friend inline UnaryOperator<AddOp<Type>, UnaryOperator<OppositeOp<Type>, Derived> > const
     operator-(Type const number, const ExprBase<Derived>& other)
     { return (-other.asDerived()) + number;}
+    /** @return a safe value of this */
+    inline UnaryOperator<SafeOp<Type>, Derived> const safe(Type const number = Type()) const
+    { return UnaryOperator<SafeOp<Type>, Derived>(this->asDerived(), SafeOp<Type>(number)); }
     /** @return an expression of this scaled by the number factor number */
     MAKE_UNARY_OPERATOR_1ARG(operator*, MultipleOp)
     // handle the case number * expression
@@ -319,7 +381,6 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     { return other.asDerived()*number; }
     /** @return an expression of this divided by the number value number */
     MAKE_UNARY_OPERATOR_1ARG(operator/, QuotientOp)
-
     /** @return an expression of *this < number. */
     MAKE_UNARY_OPERATOR_1ARG(operator<, LessThanOp)
     /** @return an expression of *this <= number. */
@@ -337,6 +398,7 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     template<typename CastedType>
     inline UnaryOperator<CastOp<Type, CastedType>, Derived> const cast() const
     { return UnaryOperator<CastOp<Type, CastedType>, Derived>(this->asDerived());}
+
     /** @return an expression of funct0 to this. */
     template< template<typename> class OtherOperator>
     inline UnaryOperator<OtherOperator<Type>, Derived> const funct0() const
@@ -377,7 +439,7 @@ class ExprBase : public ITContainer<Derived, hidden::Traits<Derived>::structure_
     typename hidden::Promote<Type, typename Rhs::Type>::result_type const
     dotSafe(ExprBase<Rhs> const& other) const;
 
-    /** @return the matricial product of this with other.*/
+    /** @return the matrix multiplication of this with other.*/
     template<typename Rhs>
     typename ProductReturnType<Derived, Rhs>::ReturnType const
     operator*( ExprBase<Rhs> const& other) const;

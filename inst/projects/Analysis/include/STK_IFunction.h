@@ -77,7 +77,7 @@ class IFunction : public IRecursiveTemplate<Function>
     /** @return the value of the function at x
      *  @param x a real value in the range (xmin, xmax).
      **/
-    inline Real operator()(Real x) const { return this->asDerived().fImpl(x);}
+    inline Real operator()(Real const& x) const { return this->asDerived().fImpl(x);}
 
     /** @return the minimal value of the function at x */
     inline Real xmin() const { return this->asDerived().xminImpl();}

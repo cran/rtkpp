@@ -70,7 +70,7 @@
 
 // namespace Funct
 // usual functions
-#include "../projects/Analysis/include/STK_Funct_util.h"
+#include "../projects/Analysis/include/STK_Funct_Util.h"
 // raw functions for poisson function
 #include "../projects/Analysis/include/STK_Funct_poisson_raw.h"
 // raw functions

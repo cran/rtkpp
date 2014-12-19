@@ -38,7 +38,7 @@
 #include "../include/STK_ISerie.h"
 #include "../include/STK_Algo.h"
 #include "../include/STK_Funct_gamma.h"
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 #include "../include/STK_Funct_poisson_raw.h"
 #include "../include/STK_Funct_raw.h"
 
@@ -404,7 +404,7 @@ Real gammaRatioP(Real const& a, Real const& x)
 Real gammaRatio(Real const& a, Real const& x, bool lower_tail)
 {
   // Check if a and x are available
-  if (Arithmetic<Real>::isNA(a)||Arithmetic<Real>::isNA(x)) return a;
+  if (isNA(a)||isNA(x)) return a;
   // Negative parameter not allowed
   if (a<=0)
     throw domain_error("Funct::gammaRatio(a,x,lower_tail) "

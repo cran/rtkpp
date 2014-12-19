@@ -383,7 +383,7 @@ struct IsNaOp
   * @brief Template functor testing if a number is a NA value
   */
 template<class Type>
-struct NotOp
+struct NegOp
 {
   enum { NbParam_ = 1 };
   typedef bool result_type;

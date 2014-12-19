@@ -81,10 +81,11 @@ bool StrategyFacade::run()
     if (p_strategy_->run()) { flag = true;}
     else
     {
-      msg_error_ = p_strategy_->error();
+      msg_error_ += STKERROR_NO_ARG(StrategyFacade::run,strategy failed\n);
+      msg_error_ += p_strategy_->error();
 #ifdef STK_MIXTURE_VERBOSE
       stk_cout << _T("StrategyFacade:run() terminated without success.\n")
-               << _T("error = ") << msg_error_ << _T("\n")
+               << msg_error_ << _T("\n")
                << _T("------------------------------------------------\n");
 #endif
     }
@@ -94,8 +95,7 @@ bool StrategyFacade::run()
   else
   { msg_error_ = STKERROR_NO_ARG(MixtureFacade::run(),strategy is not set);}
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("StrategyFacade:run() terminated.\n"
-                 "p_model->lnLikelihood() =")
+  stk_cout << _T("StrategyFacade:run() terminated.\np_model->lnLikelihood() =")
            << p_model_->lnLikelihood() << _T("\n")
            << _T("--------------------------------\n");
 #endif

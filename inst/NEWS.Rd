@@ -1,6 +1,14 @@
 \name{NEWS}
 \title{News for Package 'rtkpp}
 
+\section{Changes in rtkpp version 0.8.5 (2014-12-01)}{
+  \itemize{
+    \item Using openmp support
+    \item using accelerated new version of the stk++ library
+    \item adding factors to the categorical mixtures 
+    \item many bug corrections 
+  }
+}
 \section{Changes in rtkpp version 0.8.4 (2014-11-06)}{
   \itemize{
     \item Adding clusterHeterogeneous method for clustering heterogeneous data

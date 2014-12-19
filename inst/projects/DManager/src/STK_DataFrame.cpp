@@ -135,14 +135,14 @@ void DataFrame::shift(int const& cbeg)
 {
   // list1D shift
   Base::shift(cbeg);
-  // IContainer2D shift for Col
-  shiftbeginCols(cbeg);
+  // ICAllocatorBase shift for Col
+  shiftBeginCols(cbeg);
 }
 
 /* New beginning index for the object. */
 void DataFrame::shift(int const& rbeg, int const& cbeg)
 {
- if (firstIdxRows() == rbeg && beginCols() == cbeg) return;
+ if (beginRows() == rbeg && beginCols() == cbeg) return;
  if (isRef())
  { STKRUNTIME_ERROR_2ARG(DataFrame::shift,rbeg,cbeg,cannot operate on reference); }
   // list1D shift
@@ -151,7 +151,7 @@ void DataFrame::shift(int const& rbeg, int const& cbeg)
   for (int j=begin(); j<=lastIdx(); j++)
     if (elt(j)) { elt(j)->shift(rbeg);}
   // update range of the rows
-  shiftFirstIdxRows(rbeg);
+  shiftBeginRows(rbeg);
 }
 
 
@@ -168,7 +168,7 @@ void DataFrame::popBackCols(int const& n)
     if (elt(j)) delete elt(j);
   // popBack() of List1D
   Base::popBack(n);
-  // update IContainer2D
+  // update ICAllocatorBase
   decLastIdxCols(n);
   // if it was the last elt, free mem
   if (this->sizeCols() == 0) freeMem();
@@ -204,7 +204,7 @@ void DataFrame::insertVariable(int pos, IVariable* const & V)
   List1D<IVariable*>::insertElt(pos);
   elt(pos) = V;
   // the variable have to be in the same range
-  elt(pos)->shift(firstIdxRows());
+  elt(pos)->shift(beginRows());
   // update horizontal range (the number of column)
   incLastIdxCols(1);
 
@@ -235,7 +235,7 @@ void DataFrame::pushBackVariable( IVariable* const &V)
   // update horizontal range (the number of column)
   incLastIdxCols(1);
   // adjust the first index of the inserted variable
-  elt(lastIdxCols())->shift(firstIdxRows());
+  elt(lastIdxCols())->shift(beginRows());
   // update rows with NA values
   int inc = sizeRows() - V->size();
   if (inc == 0) return; // same size
@@ -267,7 +267,7 @@ void DataFrame::merge( DataFrame const& other)
   // update rows with NA values
   int pos(lastIdx()+1), inc = sizeRows() - otherRef.sizeRows();
 
-  otherRef.shift(firstIdxRows(), beginCols());
+  otherRef.shift(beginRows(), beginCols());
   Base::merge(otherRef);
 
   if (inc == 0) return; // same size
@@ -307,7 +307,7 @@ void DataFrame::insertDataFrame( int pos, const DataFrame& D)
     if (D.elt(i))
     {
       elt(icol) = D.elt(i)->clone();
-      elt(icol)->shift(firstIdxRows());
+      elt(icol)->shift(beginRows());
     }
     else { elt(icol) = 0;}
   }
@@ -350,7 +350,7 @@ void DataFrame::pushBackDataFrame( DataFrame const &D)
     if (D.elt(i))
     {
       elt(icol) = D.elt(i)->clone();
-      elt(icol)->shift(firstIdxRows());
+      elt(icol)->shift(beginRows());
     }
   }
   // update LastHo
@@ -379,7 +379,7 @@ void DataFrame::pushBackCols(int const& n)
   if (n <= 0) return;
   // add n columns to list1D
   insert(Range(lastIdx()+1, n), 0);
-  // update IContainer2D
+  // update ICAllocatorBase
   incLastIdxCols(n);
 }
 
@@ -394,7 +394,7 @@ void DataFrame::insertCols( int pos, int const& n)
   { STKOUT_OF_RANGE_2ARG(Dataframe::insertCols,pos, n,pos>lastIdx());}
   // insert n elements in list1D
   insert(Range(pos, n), 0);
-  // update IContainer2D
+  // update ICAllocatorBase
   incLastIdxCols(n);
 }
 
@@ -417,7 +417,7 @@ void DataFrame::insertRows( int pos, int const& n)
 {
   // if n<=0 nothing to do
   if (n<=0) return;
-  if (firstIdxRows() > pos)
+  if (beginRows() > pos)
   { STKOUT_OF_RANGE_2ARG(DataFrame::insertRows,pos, n,beginRows() > pos);}
   if (lastIdxRows()+1 < pos)
   { STKOUT_OF_RANGE_2ARG(DataFrame::insertRows,pos, n,lastIdxRows()+1 < pos);}
@@ -444,7 +444,7 @@ void DataFrame::eraseRows( int pos, int const& n)
 {
   // if n<=0 nothing to do
   if (n<=0) return;
-  if (firstIdxRows() > pos)
+  if (beginRows() > pos)
   { STKOUT_OF_RANGE_2ARG(DataFrame::eraseRows,pos, n,beginRows() > pos);}
   if (lastIdxRows() < pos)
   { STKOUT_OF_RANGE_2ARG(DataFrame::eraseRows,pos, n,lastIdxRows() < pos);}

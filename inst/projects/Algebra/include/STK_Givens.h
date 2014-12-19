@@ -105,8 +105,8 @@ Real compGivens( Type const& y, Type const& z, Type& cosinus, Type& sinus)
  *  @brief Apply Givens rotation.
  * 
  * Perform a right multiplication of the Container M with a
- * Givens Matrix on the col1 and col2. col1 should be less than col2.
- * The Matrix M is passed as const as we are using reference
+ * Givens Array on the col1 and col2. col1 should be less than col2.
+ * The Array M is passed as const as we are using reference
  * on the two cols we want to rotate.
  * 
  * @see http://en.wikipedia.org/wiki/Givens_rotation
@@ -131,11 +131,11 @@ void rightGivens( ArrayBase<TContainer2D>& M, int j1, int j2
 }
 
 /** @ingroup Algebra
- *  @brief left multiplication by a Givens Matrix.
+ *  @brief left multiplication by a Givens ArrayXX.
  * 
- * Perform a left multiplication of the matrix M with a Givens Matrix
+ * Perform a left multiplication of the matrix M with a Givens ArrayXX
  * on the row1 and row2. row1 should be less than row2.
- * The Matrix M is passed as const as we are using reference
+ * The Array M is passed as const as we are using reference
  * on the two rows we want to rotate.
  * 
  * @see http://en.wikipedia.org/wiki/Givens_rotation

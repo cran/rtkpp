@@ -3,14 +3,14 @@
 \alias{clusterInit}
 \title{Create an instance of [\code{\linkS4class{ClusterInit}}] class}
 \usage{
-clusterInit(method = "random", nbInitRun = 5, algo = "SEM",
+clusterInit(method = "class", nbInit = 5, algo = "SEM",
   nbIteration = 20, epsilon = 0.01)
 }
 \arguments{
 \item{method}{Character string with the initialisation method.
-Possible values: "random", "class", "fuzzy". Default value is "random".}
+Possible values: "random", "class", "fuzzy". Default value is "class".}
 
-\item{nbInitRun}{integer defining the number of initialization point to test. Default value is 5.}
+\item{nbInit}{integer defining the number of initialization point to test. Default value is 5.}
 
 \item{algo}{Character string with the initialisation algorithm.
 Possible values: "EM", "CEM", "SEM", "SemiSEM". Default value is "SEM".}
@@ -40,11 +40,11 @@ It is strongly recommended to use a few number of iterations of the \code{SEM}
 or \code{CEM} algorithms after initialization. This allow to detect "bad"
 initialization starting point of the estimation algorithm.
 
-These two stages are repeated until \code{nbInitRun} is reached. The initial
+These two stages are repeated until \code{nbInit} is reached. The initial
 point with the best log-likelihood is conserved as the initial starting point.
 }
 \examples{
-clusterInit(method = "class", nbInitRun=1, algo="CEM",nbIteration=50, epsilon=0.00001)
+clusterInit(method = "class", nbInit=1, algo="CEM",nbIteration=50, epsilon=0.00001)
  clusterInit(nbIteration=0) # no algorithm
 }
 \author{

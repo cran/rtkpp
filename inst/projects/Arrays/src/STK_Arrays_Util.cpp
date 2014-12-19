@@ -42,11 +42,11 @@ namespace Arrays
 /* Return n+m, where n is the first number such that m < 2^n.
   *  @param m the size of the container
  **/
-int evalSizeCapacity(int const& m)
+int evalSizeCapacity(int m)
 {
   int n = 0;
-  for (int k=1, n=0 ; k <= m; n++, k <<= 1);
-  return m+n;
+  for (int k=1; k <= m; k <<= 1) {n++;}
+  return(m+n);
 }
 
 
@@ -56,7 +56,7 @@ int evalSizeCapacity(int const& m)
 Range evalRangeCapacity(STK::Range const& I)
 {
   int n = 0;
-  for (int k=1, n=0 ; k <= I.size(); n++, k <<= 1);
+  for (int k=1; k <= I.size(); k <<= 1){ n++;}
   return Range(I.begin(),I.size() + n);
 }
 

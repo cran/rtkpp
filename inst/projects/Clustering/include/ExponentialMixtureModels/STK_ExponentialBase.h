@@ -51,12 +51,12 @@ class ExponentialBase : public IMixtureModel<Derived >
 {
   public:
     typedef IMixtureModel<Derived > Base;
-    typedef Array2D<Real>::Col ColVector;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
 
   protected:
     /** default constructor
@@ -75,7 +75,7 @@ class ExponentialBase : public IMixtureModel<Derived >
     Real impute(int i, int j) const
     {
       Real sum = 0.;
-      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+      for (int k= p_tik()->beginCols(); k < components().end(); ++k)
       { sum += p_tik()->elt(i,k) * p_param(k)->scale(j);}
       return sum;
     }
@@ -95,6 +95,21 @@ class ExponentialBase : public IMixtureModel<Derived >
     void writeParameters(ostream& os) const;
 };
 
+/* Write the parameters on the output stream os */
+template<class Derived>
+void ExponentialBase<Derived>::writeParameters(ostream& os) const
+{
+  Array2DPoint<Real> shape(p_data()->cols()), scale(p_data()->cols());
+  for (int k= baseIdx; k < components().end(); ++k)
+  {
+    // store shape and scale values in an array for a nice output
+    for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
+    { scale[j] = p_param(k)->scale(j);}
+    os << _T("---> Component ") << k << _T("\n");
+    os << _T("scale = ") << scale;
+  }
+}
+
 /*get the parameters of the model*/
 template<class Derived>
 void ExponentialBase<Derived>::getParameters(Array2D<Real>& params) const
@@ -106,20 +121,7 @@ void ExponentialBase<Derived>::getParameters(Array2D<Real>& params) const
     { params(k, j) = p_param(k)->scale(j);}
   }
 }
-/* Write the parameters on the output stream os */
-template<class Derived>
-void ExponentialBase<Derived>::writeParameters(ostream& os) const
-{
-    Array2DPoint<Real> shape(p_data()->cols()), scale(p_data()->cols());
-    for (int k= baseIdx; k < components().end(); ++k)
-    {
-      // store shape and scale values in an array for a nice output
-      for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-      { scale[j] = p_param(k)->scale(j);}
-      os << _T("---> Component ") << k << _T("\n");
-      os << _T("scale = ") << scale;
-    }
-}
+
 
 } // namespace STK
 

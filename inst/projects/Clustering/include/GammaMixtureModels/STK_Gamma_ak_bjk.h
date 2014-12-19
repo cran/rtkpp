@@ -53,7 +53,6 @@ struct MixtureTraits< Gamma_ak_bjk<_Array> >
 {
   typedef _Array Array;
   typedef typename Array::Type Type;
-  typedef MixtureComponent<_Array, Gamma_ak_bjk_Parameters> Component;
   typedef Gamma_ak_bjk_Parameters        Parameters;
   typedef Array2D<Real>        Param;
 };
@@ -73,14 +72,14 @@ template<class Array>
 class Gamma_ak_bjk : public GammaBase< Gamma_ak_bjk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_ak_bjk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gamma_ak_bjk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_ak_bjk<Array> > Base;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
     using Base::meanjk;
     using Base::variancejk;
 
@@ -94,8 +93,6 @@ class Gamma_ak_bjk : public GammaBase< Gamma_ak_bjk<Array> >
     inline Gamma_ak_bjk( Gamma_ak_bjk const& model) : Base(model) {}
     /** destructor */
     inline ~Gamma_ak_bjk() {}
-    /** initialize shape and scale parameters using weighted moment estimates.*/
-    inline bool initializeStep() { return mStep();}
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
      *  and the scale will be selected randomly using an exponential of parameter
@@ -141,12 +138,12 @@ bool Gamma_ak_bjk<Array>::mStep()
 {
   if (!this->moments()) { return false;}
   // estimate a and b
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     // moment estimate and oldest value
     Real x0 = (p_param(k)->mean_.square()/p_param(k)->variance_).mean();
     Real x1 = p_param(k)->shape_;
-    if ((x0 <=0.) || (Arithmetic<Real>::isNA(x0))) return false;
+    if ((x0 <=0.) || (isNA(x0))) return false;
 
     // get shape
     hidden::invPsiMLog f( (p_param(k)->meanLog_-p_param(k)->mean_.log()).mean() );

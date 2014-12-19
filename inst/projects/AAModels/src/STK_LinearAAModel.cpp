@@ -57,7 +57,7 @@ namespace STK
 /* Default constructor : compute the Linear AA models of the matrix X
  *  using the local variance as criteria.
 **/
-LinearAAModel::LinearAAModel( Matrix const& data)
+LinearAAModel::LinearAAModel( ArrayXX const& data)
                             : Runner(data)
                             , GaussianAAModel(0)
                             , workData_(data)
@@ -102,12 +102,12 @@ bool LinearAAModel::run()
   {
     if (!p_reductor_)
     {
-      msg_error_ = STKERROR_NO_ARG(LinearAAModel::run(),reductor have not be set);
+      msg_error_ = STKERROR_NO_ARG(LinearAAModel::run(),reductor is not set);
       return false;
     }
     if (!p_regressor_)
     {
-      msg_error_ = STKERROR_NO_ARG(LinearAAModel::run(),regressor have not be set);
+      msg_error_ = STKERROR_NO_ARG(LinearAAModel::run(),regressor is not be set);
       return false;
     }
     // set p_workData to the reductor
@@ -123,7 +123,7 @@ bool LinearAAModel::run()
     p_regressor_->setY(p_workData_);
     p_regressor_->setX(p_reduced_);
     // compute the regression function
-    regression();
+    regressionStep();
 #ifdef STK_AAMODELS_VERBOSE
     stk_cout << _T("In LinearAAModel::run(), regression done.\n");
 #endif
@@ -151,10 +151,8 @@ bool LinearAAModel::run( Vector const& weights)
 {
   try
   {
-    if (!p_reductor_)
-      throw runtime_error(_T("reductor have not be set."));
-    if (!p_regressor_)
-      throw runtime_error(_T("regressor have not be set."));
+    if (!p_reductor_) STKRUNTIME_ERROR_NO_ARG(LinearAAModel::run,reductor is not set);
+    if (!p_regressor_) STKRUNTIME_ERROR_NO_ARG(LinearAAModel::run,regressor is not set);
     // set p_workData to the reductor
     p_reductor_->setData(*p_workData_);
     // compute the weighted reduced data set
@@ -169,7 +167,7 @@ bool LinearAAModel::run( Vector const& weights)
     p_regressor_->setX(p_reduced_);
     // compute the weighted regression vectors
     regression(weights);
-#ifdef STK_VERBOSE
+#ifdef STK_AAMODELS_VERBOSE
     stk_cout << _T("In LinearAAModel::run(weights), regression done.\n");
 #endif
     computeModelParameters();
@@ -200,13 +198,13 @@ bool LinearAAModel::run( Vector const& weights)
  **/
 void LinearAAModel::simul( const Law::IUnivLaw<Real>& law
                          , Vector const& mu, Real const& std
-                         , Matrix& proj, Matrix& data
+                         , ArrayXX& proj, ArrayXX& data
                          )
 {
   if (data.cols() != mu.range())
     STKRUNTIME_ERROR_NO_ARG(LinearAAModel::simul,data.cols()!=mu.range());
   // simul AA model
-  law.randArray(data);
+  data.rand(law);
 #ifdef STK_AAMODELS_VERBOSE
   stk_cout << _T("data simulated\n");
 #endif

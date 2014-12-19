@@ -42,7 +42,7 @@ namespace STK
 {
 
 /** @ingroup Algebra
- *  @brief The class Qr perform the QR decomposition of a Matrix.
+ *  @brief The class Qr perform the QR decomposition of a ArrayXX.
  * 
  *  - Input:  A matrix (nrow,ncol)
  *  - Output:
@@ -57,7 +57,7 @@ class Qr: public IQr<Qr>
      *  @param A the matrix to decompose
      *  @param ref true if we overwrite A
      **/
-    inline Qr( Matrix const&  A =Matrix(), bool ref = false):  Base(A, ref) {}
+    inline Qr( ArrayXX const&  A =ArrayXX(), bool ref = false):  Base(A, ref) {}
     /** @brief Constructor
      *  @param data reference on a matrix expression
      */

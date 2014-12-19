@@ -54,7 +54,7 @@ NULL
 #' x[round(runif(5,1,nrow(geyser))), 2] <- NA
 #'
 #' ## use graphics functions
-#' model <- clusterGamma(data=x, nbCluster=2:3, strategy = clusterFastStrategy())
+#' model <- clusterGamma(data=x, nbCluster=3, strategy = clusterFastStrategy())
 #'
 #' \dontrun{
 #' plot(model)
@@ -263,7 +263,7 @@ setClass(
       if (ncol(object@component@shape)!=ncol(object@component@data))
       {stop("shape must have nbVariable columns.")}
       if (nrow(object@component@shape)!=object@nbCluster)
-      {stop("shape must have nbVariable rows.")}
+      {stop("shape must have nbCluster rows.")}
 
       if (ncol(object@component@scale)!=ncol(object@component@data))
       {stop("scale must have nbVariable columns.")}
@@ -365,8 +365,7 @@ setMethod(
 #' @param ... further arguments passed to or from other methods
 #'
 #' @importFrom graphics plot
-#' @aliases plot-ClusterGamma
-#ClusterGamma-method
+#' @aliases plot-ClusterGamma, ClusterGamma-method
 #' @docType methods
 #' @rdname plot-ClusterGamma-method
 #' @export

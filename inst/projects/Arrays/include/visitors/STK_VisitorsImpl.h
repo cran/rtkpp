@@ -43,9 +43,13 @@ namespace STK
 
 namespace hidden
 {
-// forward declarations, for arrays
 template<typename Visitor, typename Derived, bool orient_, int SizeRows_, int SizeCols_>
+struct VisitorArrayNoUnrollImpl;
+template<typename Visitor, typename Derived, bool orient_, int SizeRows_, int SizeCols_>
+struct VisitorArrayUnrollImpl;
+template<typename Visitor, typename Derived, int SizeRows_, int SizeCols_>
 struct VisitorArrayImpl;
+
 template<typename Visitor, typename Derived, int SizeRows_, int SizeCols_>
 struct VisitorUnrollCol;
 template<typename Visitor, typename Derived, int SizeRows_, int SizeCols_>
@@ -68,19 +72,19 @@ struct VisitorLowerImpl;
  *  @brief Specialization for general 2D arrays, data stored by column and
  *  dimensions not known at compile time. */
 template<typename Visitor, typename Derived>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, UnknownSize, UnknownSize>
+struct VisitorArrayNoUnrollImpl<Visitor, Derived, Arrays::by_col_, UnknownSize, UnknownSize>
 {
-  inline static void run( Derived const& expr, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int j = expr.beginCols(); j < expr.endCols(); ++j)
-      for(int i = expr.beginRows(); i < expr.endRows(); ++i)
-        visitor(expr.elt(i, j), i, j);
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& array, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& applier)
   {
-    for(int j = array.beginCols(); j < array.endCols(); ++j)
-      for(int i = array.beginRows(); i < array.endRows(); ++i)
-        visitor(array.elt(i, j));
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+        applier(tab.elt(i, j));
   }
 };
 
@@ -88,20 +92,96 @@ struct VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, UnknownSize, UnknownS
  *  @brief Specialization for general 2D arrays, data stored by rows and
  *  dimensions are not known at compile time.*/
 template<typename Visitor, typename Derived>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, UnknownSize, UnknownSize>
+struct VisitorArrayNoUnrollImpl<Visitor, Derived, Arrays::by_row_, UnknownSize, UnknownSize>
 {
-  inline static void run( Derived const& expr, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int i = expr.beginRows(); i < expr.endRows(); ++i)
-      for(int j = expr.beginCols(); j < expr.endCols(); ++j)
-        visitor(expr.elt(i, j), i, j);
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& array, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& applier)
   {
-    for(int i = array.beginRows(); i < array.endRows(); ++i)
-      for(int j = array.beginCols(); j < array.endCols(); ++j)
-        visitor(array.elt(i, j));
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+        applier(tab.elt(i, j));
   }
+};
+
+/** @ingroup hidden
+ *  @brief specialization for the general case when we unroll the rows and the
+ *  and the columns with a column oriented arrays */
+template<typename Visitor, typename Derived, int SizeRows_ , int SizeCols_>
+struct VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_>
+{
+  inline static void run( Derived const& tab, Visitor& visitor)
+  {
+    // this will unroll the column SizeCols_
+    VisitorUnrollCol<Visitor, Derived, SizeRows_, SizeCols_>::run(tab, visitor);
+    // do the same for the next column
+    VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_-1>::run(tab, visitor);
+  }
+  inline static void apply( Derived& tab, Visitor& applier)
+  {
+    VisitorUnrollCol<Visitor, Derived, SizeRows_, SizeCols_>::apply(tab, applier);
+    VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_-1>::apply(tab, applier);
+  }
+};
+
+/** @ingroup hidden
+ *  @brief specialization for the Arrays with 1 column.
+ *  In this case, just unroll the column. */
+template<typename Visitor, typename Derived, int SizeRows_>
+struct VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, 1>
+{
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { VisitorUnrollCol<Visitor, Derived, SizeRows_, 1>::run(tab, visitor);}
+  inline static void apply( Derived& tab, Visitor& applier)
+  { VisitorUnrollCol<Visitor, Derived, SizeRows_, 1>::apply(tab, applier);}
+};
+
+/** @ingroup hidden
+ *  @brief specialization for the general case when we unroll the rows and the
+ *  columns with a row oriented arrays */
+template<typename Visitor, typename Derived, int SizeRows_ , int SizeCols_>
+struct VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_row_, SizeRows_, SizeCols_>
+{
+  inline static void run( Derived const& tab, Visitor& visitor)
+  {
+    // this will unroll the current row
+    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_>::run(tab, visitor);
+    // this will unroll the current row
+    VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_row_, SizeRows_-1, SizeCols_>::run(tab, visitor);
+  }
+  inline static void apply( Derived& tab, Visitor& visitor)
+  {
+    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_>::apply(tab, visitor);
+    VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_row_, SizeRows_-1, SizeCols_>::apply(tab, visitor);
+  }
+};
+
+/** @ingroup hidden
+ *  @brief specialization for the arrays with 1 column (Vector) */
+template<typename Visitor, typename Derived, int SizeCols_>
+struct VisitorArrayUnrollImpl<Visitor, Derived, Arrays::by_row_, 1, SizeCols_>
+{
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { VisitorUnrollRow<Visitor, Derived, 1, SizeCols_>::run(tab, visitor);}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { VisitorUnrollRow<Visitor, Derived, 1, SizeCols_>::apply(tab, visitor);}
+};
+
+/** @ingroup hidden
+ *  @brief specialization for the general case with 1 row and 1 column arrays.
+ *  This specialization allow to disambiguate instantiation.
+ **/
+template<typename Visitor, typename Derived, int Orient_>
+struct VisitorArrayUnrollImpl<Visitor, Derived, Orient_, 1, 1>
+{
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(tab.beginRows(), tab.beginCols()), tab.beginRows(), tab.beginCols());}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt(tab.beginRows(), tab.beginCols()));}
 };
 
 /** @ingroup hidden
@@ -109,20 +189,20 @@ struct VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, UnknownSize, UnknownS
  *  MaxUnrollSquareRoot and the number of column is unknown or greater
  *  than MaxUnrollSquareRoot
  */
-template<typename Visitor, typename Derived, int Orient_, int SizeRows_>
-struct VisitorArrayImpl< Visitor, Derived, Orient_, SizeRows_, UnknownSize>
+template<typename Visitor, typename Derived, int SizeRows_>
+struct VisitorArrayImpl< Visitor, Derived, SizeRows_, UnknownSize>
 {
-  inline static void run( Derived const& expr, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorArrayImpl<Visitor, Derived, Orient_, SizeRows_ -1, UnknownSize>::run(expr, visitor);
-    for(int j = expr.beginCols(); j < expr.endCols(); ++j)
-      visitor(expr.elt(Idx(SizeRows_), j), Idx(SizeRows_), j);
+    VisitorArrayImpl<Visitor, Derived, SizeRows_ -1, UnknownSize>::run(tab, visitor);
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      visitor(tab.elt(Idx(SizeRows_), j), Idx(SizeRows_), j);
   }
-  inline static void apply( Derived& array, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    VisitorArrayImpl<Visitor, Derived, Orient_, SizeRows_ -1, UnknownSize>::apply(array, visitor);
-    for(int j = array.beginCols(); j < array.endCols(); ++j)
-      visitor(array.elt(Idx(SizeRows_), j));
+    VisitorArrayImpl<Visitor, Derived, SizeRows_ -1, UnknownSize>::apply(tab, visitor);
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      visitor(tab.elt(Idx(SizeRows_), j));
   }
 };
 
@@ -131,137 +211,59 @@ struct VisitorArrayImpl< Visitor, Derived, Orient_, SizeRows_, UnknownSize>
  *  and the number of column is unknown or greater than MaxUnrollSquareRoot.
  *  This class will stop the unrolling of on the rows.
  **/
-template<typename Visitor, typename Derived, int Orient_>
-struct VisitorArrayImpl< Visitor, Derived, Orient_, 1, UnknownSize>
+template<typename Visitor, typename Derived>
+struct VisitorArrayImpl< Visitor, Derived, 1, UnknownSize>
 {
-  inline static void run( Derived const& expr, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int j = expr.beginCols(); j < expr.endCols(); ++j)
-      visitor(expr.elt(baseIdx, j), baseIdx, j);
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      visitor(tab.elt(tab.beginRows(), j), tab.beginRows(), j);
   }
-  inline static void apply( Derived& array, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    for(int j = array.beginCols(); j < array.endCols(); ++j)
-      visitor(array.elt(baseIdx, j));
+    for(int j = tab.beginCols(); j < tab.endCols(); ++j)
+      visitor(tab.elt(tab.beginRows(), j));
   }
 };
 
 /** @ingroup hidden
  *  Specialization of VisitorArrayImpl when the number of columns is less than
- *  MaxUnrollSquareRoot and the number of rows is unknown or greater
- *  thanMaxUnrollSquareRoot
+ *  MaxUnrollSquareRoot and the number of rows is unknown
  */
-template<typename Visitor, typename Derived, int Orient_, int SizeCols_>
-struct VisitorArrayImpl< Visitor, Derived, Orient_, UnknownSize, SizeCols_>
-{
-  inline static void run( Derived const& expr, Visitor& visitor)
-  {
-    VisitorArrayImpl<Visitor, Derived, Orient_, UnknownSize, SizeCols_-1>::run(expr, visitor);
-    for(int i = expr.beginRows(); i < expr.endRows(); ++i)
-      visitor(expr.elt(i, Idx(SizeCols_)), i, Idx(SizeCols_));
-  }
-  inline static void apply( Derived& array, Visitor& visitor)
-  {
-    VisitorArrayImpl<Visitor, Derived, Orient_, SizeCols_ -1, UnknownSize>::apply(array, visitor);
-    for(int i = array.beginRows(); i < array.endRows(); ++i)
-      visitor(array.elt(i, Idx(SizeCols_)));
-  }
-};
-
-/** @ingroup hidden
- *  Specialization of VisitorArrayImpl when the number of columns is less than
- *  MaxUnrollSquareRoot and the number of rows is unknown or greater
- *  thanMaxUnrollSquareRoot
- */
-template<typename Visitor, typename Derived, int Orient_>
-struct VisitorArrayImpl< Visitor, Derived, Orient_, UnknownSize, 1>
-{
-  inline static void run( Derived const& expr, Visitor& visitor)
-  {
-    for(int i = expr.beginRows(); i < expr.endRows(); ++i)
-      visitor(expr.elt(i, baseIdx), i, baseIdx);
-  }
-  inline static void apply( Derived& array, Visitor& visitor)
-  {
-    for(int i = array.beginRows(); i < array.endRows(); ++i)
-      visitor(array.elt(i, baseIdx));
-  }
-};
-
-/** @ingroup hidden
- *  @brief specialization for the general case when we unroll the rows and the
- *  and the columns with a column oriented arrays */
-template<typename Visitor, typename Derived, int SizeRows_ , int SizeCols_>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_>
-{
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  {
-    // this will unroll the column baseIdx + SizeCols_ -1
-    VisitorUnrollCol<Visitor, Derived, SizeRows_, SizeCols_>::run(matrix, visitor);
-    // do the same for column
-    VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_-1>::run(matrix, visitor);
-  }
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  {
-    VisitorUnrollCol<Visitor, Derived, SizeRows_, SizeCols_>::apply(matrix, visitor);
-    VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, SizeCols_-1>::apply(matrix, visitor);
-  }
-};
-
-/** @ingroup hidden
- *  @brief specialization for the Arrays with 1 column.
- *  In this case, just unroll the column. */
-template<typename Visitor, typename Derived, int SizeRows_>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_col_, SizeRows_, 1>
-{
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { VisitorUnrollCol<Visitor, Derived, SizeRows_, 1>::run(matrix, visitor);}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { VisitorUnrollCol<Visitor, Derived, SizeRows_, 1>::apply(matrix, visitor);}
-};
-
-/** @ingroup hidden
- *  @brief specialization for the general case when we unroll the rows and the
- *  columns with a row oriented arrays */
-template<typename Visitor, typename Derived, int SizeRows_ , int SizeCols_>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, SizeRows_, SizeCols_>
-{
-    inline static void run( Derived const& matrix, Visitor& visitor)
-    {
-      // this will unroll the current row
-      VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_>::run(matrix, visitor);
-      // this will unroll the current row
-      VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, SizeRows_-1, SizeCols_>::run(matrix, visitor);
-    }
-    inline static void apply( Derived& matrix, Visitor& visitor)
-    {
-      VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_>::apply(matrix, visitor);
-      VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, SizeRows_-1, SizeCols_>::apply(matrix, visitor);
-    }
-};
-
-/** @ingroup hidden
- *  @brief specialization for the arrays with 1 column (Vector) */
 template<typename Visitor, typename Derived, int SizeCols_>
-struct VisitorArrayImpl<Visitor, Derived, Arrays::by_row_, 1, SizeCols_>
+struct VisitorArrayImpl< Visitor, Derived, UnknownSize, SizeCols_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { VisitorUnrollRow<Visitor, Derived, 1, SizeCols_>::run(matrix, visitor);}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { VisitorUnrollRow<Visitor, Derived, 1, SizeCols_>::apply(matrix, visitor);}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  {
+    VisitorArrayImpl<Visitor, Derived, UnknownSize, SizeCols_-1>::run(tab, visitor);
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      visitor(tab.elt(i, Idx(SizeCols_)), i, Idx(SizeCols_));
+  }
+  inline static void apply( Derived& tab, Visitor& visitor)
+  {
+    VisitorArrayImpl<Visitor, Derived, UnknownSize, SizeCols_ -1>::apply(tab, visitor);
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      visitor(tab.elt(i, Idx(SizeCols_)));
+  }
 };
 
 /** @ingroup hidden
- *  @brief specialization for the general case with 1 row and 1 column arrays.
- *  This specialization allow to disambiguate instantiation.
- **/
-template<typename Visitor, typename Derived, int Orient_>
-struct VisitorArrayImpl<Visitor, Derived, Orient_, 1, 1>
+ *  Specialization of VisitorArrayImpl when the number of columns is one and
+ *  the number of rows is unknown.
+ */
+template<typename Visitor, typename Derived>
+struct VisitorArrayImpl< Visitor, Derived, UnknownSize, 1>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { visitor(matrix.elt(baseIdx, baseIdx), baseIdx, baseIdx);}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { visitor(matrix.elt(baseIdx, baseIdx));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  {
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      visitor(tab.elt(i, tab.beginCols()), i, tab.beginCols());
+  }
+  inline static void apply( Derived& tab, Visitor& applier)
+  {
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      applier(tab.elt(i, tab.beginCols()));
+  }
 };
 
 /** @ingroup hidden
@@ -269,15 +271,15 @@ struct VisitorArrayImpl<Visitor, Derived, Orient_, 1, 1>
 template<typename Visitor, typename Derived, int SizeRows_, int SizeCols_>
 struct VisitorUnrollCol
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorUnrollCol<Visitor, Derived, SizeRows_-1, SizeCols_>::run(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeRows_), Idx(SizeCols_)), Idx(SizeRows_), Idx(SizeCols_));
+    VisitorUnrollCol<Visitor, Derived, SizeRows_-1, SizeCols_>::run(tab, visitor);
+    visitor(tab.elt(Idx(SizeRows_), Idx(SizeCols_)), Idx(SizeRows_), Idx(SizeCols_));
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    VisitorUnrollCol<Visitor, Derived, SizeRows_-1, SizeCols_>::apply(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeRows_), Idx(SizeCols_)));
+    VisitorUnrollCol<Visitor, Derived, SizeRows_-1, SizeCols_>::apply(tab, visitor);
+    visitor(tab.elt(Idx(SizeRows_), Idx(SizeCols_)));
   }
 };
 
@@ -286,10 +288,10 @@ struct VisitorUnrollCol
 template<typename Visitor, typename Derived, int SizeCols_>
 struct VisitorUnrollCol<Visitor, Derived, 1, SizeCols_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { visitor(matrix.elt(baseIdx, Idx(SizeCols_)), baseIdx, Idx(SizeCols_));}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { visitor(matrix.elt(baseIdx, Idx(SizeCols_)));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx, Idx(SizeCols_)), baseIdx, Idx(SizeCols_));}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx, Idx(SizeCols_)));}
 };
 
 /** @ingroup hidden
@@ -297,15 +299,15 @@ struct VisitorUnrollCol<Visitor, Derived, 1, SizeCols_>
 template<typename Visitor, typename Derived, int SizeRows_, int SizeCols_>
 struct VisitorUnrollRow
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_-1>::run(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeRows_), Idx(SizeCols_)), Idx(SizeRows_), Idx(SizeCols_));
+    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_-1>::run(tab, visitor);
+    visitor(tab.elt(Idx(SizeRows_), Idx(SizeCols_)), Idx(SizeRows_), Idx(SizeCols_));
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_-1>::apply(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeRows_), Idx(SizeCols_)));
+    VisitorUnrollRow<Visitor, Derived, SizeRows_, SizeCols_-1>::apply(tab, visitor);
+    visitor(tab.elt(Idx(SizeRows_), Idx(SizeCols_)));
   }
 };
 
@@ -314,10 +316,10 @@ struct VisitorUnrollRow
 template<typename Visitor, typename Derived, int SizeRows_>
 struct VisitorUnrollRow<Visitor, Derived, SizeRows_, 1>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { visitor(matrix.elt(Idx(SizeRows_), baseIdx), Idx(SizeRows_), baseIdx);}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { visitor(matrix.elt(Idx(SizeRows_), baseIdx));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(Idx(SizeRows_), tab.beginCols()), Idx(SizeRows_), tab.beginCols());}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt(Idx(SizeRows_), tab.beginCols()));}
 };
 
 /** @ingroup hidden
@@ -325,10 +327,11 @@ struct VisitorUnrollRow<Visitor, Derived, SizeRows_, 1>
 template<typename Visitor, typename Derived>
 struct VisitorVectorImpl<Visitor, Derived, UnknownSize>
 {
-  inline static void run( Derived const& vect, Visitor& visitor)
-  { for(int i = vect.begin(); i < vect.end(); ++i) visitor(vect.elt(i), i, vect.colIdx());}
-  inline static void apply( Derived& array, Visitor& applier)
-  { for(int i = array.begin(); i < array.end(); ++i) applier(array.elt(i));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { for(int i = tab.begin(); i < tab.end(); ++i)
+    visitor(tab.elt(i), i, tab.colIdx());}
+  inline static void apply( Derived& tab, Visitor& applier)
+  { for(int i = tab.begin(); i < tab.end(); ++i) applier(tab.elt(i));}
 };
 
 /** @ingroup hidden
@@ -337,15 +340,15 @@ struct VisitorVectorImpl<Visitor, Derived, UnknownSize>
 template<typename Visitor, typename Derived, int SizeRows_>
 struct VisitorVectorImpl
 {
-  inline static void run( Derived const& vect, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorVectorImpl<Visitor, Derived, SizeRows_-1>::run(vect, visitor);
-    visitor(vect.elt(Idx(SizeRows_), vect.colIdx()), Idx(SizeRows_), vect.colIdx());
+    VisitorVectorImpl<Visitor, Derived, SizeRows_-1>::run(tab, visitor);
+    visitor(tab.elt(Idx(SizeRows_), tab.colIdx()), Idx(SizeRows_), tab.colIdx());
   }
-  inline static void apply( Derived& array, Visitor& applier)
+  inline static void apply( Derived& tab, Visitor& applier)
   {
-    VisitorVectorImpl<Visitor, Derived, SizeRows_-1>::apply(array, applier);
-    applier(array.elt(Idx(SizeRows_), array.colIdx()));
+    VisitorVectorImpl<Visitor, Derived, SizeRows_-1>::apply(tab, applier);
+    applier(tab.elt(Idx(SizeRows_), tab.colIdx()));
   }
 };
 
@@ -354,10 +357,10 @@ struct VisitorVectorImpl
 template<typename Visitor, typename Derived>
 struct VisitorVectorImpl<Visitor, Derived, 1>
 {
-  inline static void run( Derived const& vect, Visitor& visitor)
-  { visitor(vect.elt(baseIdx), baseIdx, vect.colIdx());}
-  inline static void apply( Derived& array, Visitor& applier)
-  { applier(array.elt(baseIdx));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx), baseIdx, tab.colIdx());}
+  inline static void apply( Derived& tab, Visitor& applier)
+  { applier(tab.elt(baseIdx));}
 };
 
 /** @ingroup hidden
@@ -365,10 +368,10 @@ struct VisitorVectorImpl<Visitor, Derived, 1>
 template<typename Visitor, typename Derived>
 struct VisitorPointImpl<Visitor, Derived, UnknownSize>
 {
-  inline static void run( Derived const& row, Visitor& visitor)
-  { for(int j = row.begin(); j < row.end(); ++j) visitor(row.elt(j), row.rowIdx(),j);}
-  inline static void apply( Derived& row, Visitor& visitor)
-  { for(int j = row.begin(); j < row.end(); ++j) visitor(row.elt(j));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { for(int j = tab.begin(); j < tab.end(); ++j) visitor(tab.elt(j), tab.rowIdx(),j);}
+  inline static void apply( Derived& tab, Visitor& applier)
+  { for(int j = tab.begin(); j < tab.end(); ++j) applier(tab.elt(j));}
 };
 
 
@@ -378,15 +381,15 @@ struct VisitorPointImpl<Visitor, Derived, UnknownSize>
 template<typename Visitor, typename Derived, int SizeCols_>
 struct VisitorPointImpl
 {
-  inline static void run( Derived const& row, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::run(row, visitor);
-    visitor(row.elt(Idx(SizeCols_)), row.rowIdx(), Idx(SizeCols_));
+    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::run(tab, visitor);
+    visitor(tab.elt(Idx(SizeCols_)), tab.rowIdx(), Idx(SizeCols_));
   }
-  inline static void apply( Derived& row, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::apply(row, visitor);
-    visitor(row.elt(Idx(SizeCols_)));
+    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::apply(tab, visitor);
+    visitor(tab.elt(Idx(SizeCols_)));
   }
 };
 
@@ -395,10 +398,10 @@ struct VisitorPointImpl
 template<typename Visitor, typename Derived>
 struct VisitorPointImpl<Visitor, Derived, 1>
 {
-  inline static void run( Derived const& row, Visitor& visitor)
-  { visitor(row.elt(baseIdx), baseIdx, row.rowIdx());}
-  inline static void apply( Derived& row, Visitor& visitor)
-  { visitor(row.elt(baseIdx));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx), tab.rowIdx(), baseIdx);}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx));}
 };
 
 /** @ingroup hidden
@@ -406,39 +409,39 @@ struct VisitorPointImpl<Visitor, Derived, 1>
 template<typename Visitor, typename Derived>
 struct VisitorDiagonalImpl<Visitor, Derived, UnknownSize>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { for(int j = matrix.begin(); j < matrix.end(); ++j) visitor(matrix.elt(j), j,j);}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { for(int j = matrix.begin(); j < matrix.end(); ++j) visitor(matrix.elt(j));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { for(int j = tab.begin(); j < tab.end(); ++j) visitor(tab.elt(j), j,j);}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { for(int j = tab.begin(); j < tab.end(); ++j) visitor(tab.elt(j));}
 };
 
 /** @ingroup hidden
- *  @brief A VisitorDiagonalImpl allow to unroll the visit of a Diagonal matrix if possible
+ *  @brief A VisitorDiagonalImpl allow to unroll the visit of a Diagonal tab if possible
  *  */
 template<typename Visitor, typename Derived, int SizeCols_>
 struct VisitorDiagonalImpl
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::run(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeCols_)), Idx(SizeCols_), Idx(SizeCols_));
+    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::run(tab, visitor);
+    visitor(tab.elt(Idx(SizeCols_)), Idx(SizeCols_), Idx(SizeCols_));
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::apply(matrix, visitor);
-    visitor(matrix.elt(Idx(SizeCols_)));
+    VisitorPointImpl<Visitor, Derived, SizeCols_-1>::apply(tab, visitor);
+    visitor(tab.elt(Idx(SizeCols_)));
   }
 };
 
 /** @ingroup hidden
- *  @brief specialization for the Diagonal matrix of size one */
+ *  @brief specialization for diagonal tab of size one */
 template<typename Visitor, typename Derived>
 struct VisitorDiagonalImpl<Visitor, Derived, 1>
 {
-  inline static void run( Derived const& row, Visitor& visitor)
-  { visitor(row.elt(baseIdx), baseIdx, baseIdx);}
-  inline static void apply( Derived& row, Visitor& visitor)
-  { visitor(row.elt(baseIdx));}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx), baseIdx, baseIdx);}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt(baseIdx));}
 };
 
 /** @ingroup hidden
@@ -446,17 +449,17 @@ struct VisitorDiagonalImpl<Visitor, Derived, 1>
 template<typename Visitor, typename Derived>
 struct VisitorUpperImpl<Visitor, Derived, Arrays::by_col_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int j = matrix.lastIdxCols(); j >= matrix.beginCols(); --j)
-      for(int i = std::min(j, matrix.lastIdxRows()); i >= matrix.beginRows(); --i)
-        visitor(matrix.elt(i, j), i, j);
+    for(int j = tab.lastIdxCols(); j >= tab.beginCols(); --j)
+      for(int i = std::min(j, tab.lastIdxRows()); i >= tab.beginRows(); --i)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    for(int j = matrix.lastIdxCols(); j >= matrix.beginCols(); --j)
-      for(int i = std::min(j, matrix.lastIdxRows()); i >= matrix.beginRows(); --i)
-        visitor(matrix.elt(i, j));
+    for(int j = tab.lastIdxCols(); j >= tab.beginCols(); --j)
+      for(int i = std::min(j, tab.lastIdxRows()); i >= tab.beginRows(); --i)
+        visitor(tab.elt(i, j));
   }
 };
 
@@ -465,17 +468,17 @@ struct VisitorUpperImpl<Visitor, Derived, Arrays::by_col_>
 template<typename Visitor, typename Derived>
 struct VisitorUpperImpl<Visitor, Derived, Arrays::by_row_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int i = matrix.beginRows(); i <= matrix.lastIdxRows(); ++i)
-      for(int j = std::max(i, matrix.beginCols()); j <= matrix.lastIdxCols(); ++j)
-        visitor(matrix.elt(i, j), i, j);
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      for(int j = std::max(i, tab.beginCols()); j < tab.endCols(); ++j)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    for(int i = matrix.beginRows(); i <= matrix.lastIdxRows(); ++i)
-      for(int j = std::max(i, matrix.beginCols()); j <= matrix.lastIdxCols(); ++j)
-        visitor(matrix.elt(i, j));
+    for(int i = tab.beginRows(); i < tab.endRows(); ++i)
+      for(int j = std::max(i, tab.beginCols()); j < tab.endCols(); ++j)
+        visitor(tab.elt(i, j));
   }
 };
 
@@ -485,17 +488,17 @@ struct VisitorUpperImpl<Visitor, Derived, Arrays::by_row_>
 template<typename Visitor, typename Derived>
 struct VisitorLowerImpl<Visitor, Derived, Arrays::by_col_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int j = matrix.beginCols(); j <= matrix.lastIdxCols(); ++j)
-      for(int i = std::max(j, matrix.beginRows()); i <= matrix.lastIdxRows(); ++i)
-        visitor(matrix.elt(i, j), i, j);
+    for(int j = tab.beginCols(); j <= tab.lastIdxCols(); ++j)
+      for(int i = std::max(j, tab.beginRows()); i <= tab.lastIdxRows(); ++i)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    for(int j = matrix.beginCols(); j <= matrix.lastIdxCols(); ++j)
-      for(int i = std::max(j, matrix.beginRows()); i <= matrix.lastIdxRows(); ++i)
-        visitor(matrix.elt(i, j));
+    for(int j = tab.beginCols(); j <= tab.lastIdxCols(); ++j)
+      for(int i = std::max(j, tab.beginRows()); i <= tab.lastIdxRows(); ++i)
+        visitor(tab.elt(i, j));
   }
 };
 
@@ -504,17 +507,17 @@ struct VisitorLowerImpl<Visitor, Derived, Arrays::by_col_>
 template<typename Visitor, typename Derived>
 struct VisitorLowerImpl<Visitor, Derived, Arrays::by_row_>
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
+  inline static void run( Derived const& tab, Visitor& visitor)
   {
-    for(int i = matrix.lastIdxRows(); i >= matrix.beginRows(); --i)
-      for(int j = std::min(i, matrix.lastIdxCols()); j >= matrix.beginCols(); --j)
-        visitor(matrix.elt(i, j), i, j);
+    for(int i = tab.lastIdxRows(); i >= tab.beginRows(); --i)
+      for(int j = std::min(i, tab.lastIdxCols()); j >= tab.beginCols(); --j)
+        visitor(tab.elt(i, j), i, j);
   }
-  inline static void apply( Derived& matrix, Visitor& visitor)
+  inline static void apply( Derived& tab, Visitor& visitor)
   {
-    for(int i = matrix.lastIdxRows(); i >= matrix.beginRows(); --i)
-      for(int j = std::min(i, matrix.lastIdxCols()); j >= matrix.beginCols(); --j)
-        visitor(matrix.elt(i, j));
+    for(int i = tab.lastIdxRows(); i >= tab.beginRows(); --i)
+      for(int j = std::min(i, tab.lastIdxCols()); j >= tab.beginCols(); --j)
+        visitor(tab.elt(i, j));
   }
 };
 
@@ -525,10 +528,10 @@ struct VisitorLowerImpl<Visitor, Derived, Arrays::by_row_>
 template<typename Visitor, typename Derived>
 struct VisitorNumberImpl
 {
-  inline static void run( Derived const& matrix, Visitor& visitor)
-  { visitor(matrix.elt(), matrix.beginRows(), matrix.beginCols());}
-  inline static void apply( Derived& matrix, Visitor& visitor)
-  { visitor(matrix.elt());}
+  inline static void run( Derived const& tab, Visitor& visitor)
+  { visitor(tab.elt(), tab.beginRows(), tab.beginCols());}
+  inline static void apply( Derived& tab, Visitor& visitor)
+  { visitor(tab.elt());}
 };
 
 

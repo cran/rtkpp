@@ -52,27 +52,16 @@ class ArrayInitializer
   public:
     typedef typename Derived::Type Type;
     /** Constructor */
-    inline ArrayInitializer( Derived& array, const Type& s)
+    inline ArrayInitializer( Derived& array, Type const& s)
                            : array_(array), row_(array.beginRows()), col_(array.beginCols())
     { // check if there is space
       if (array.empty())
       { STKRUNTIME_ERROR_NO_ARG(ArrayInitializer::ArrayInitializer,array is empty);}
       toFirstElt();
       array_.elt(row_, col_) = s;
-   }
-    //    template<typename Rhs>
-    //    inline ArrayInitializer( Derived& array, const ArrayBase<Rhs>& other)
-    //                           : array_(array), row_(array.beginRows()), col_(array.beginCols())
-    //     { // check if there is space
-    //      if (array.empty())
-    //      { STKRUNTIME_ERROR_NO_ARG(ArrayInitializer::ArrayInitializer,Too many coefficients passed to operator<<(array is empty));}
-    //
-    //       array_.sub(Range(row_,other.sizeRows()), Range(col_,other.sizeCols())) = other;
-    //       col_     += other.sizeCols();
-    //     }
-
+    }
     /** inserts a scalar value in the target matrix */
-    ArrayInitializer& operator,(const Type& s)
+    ArrayInitializer& operator,(Type const& s)
     {
       toNextElt();
       array_.elt(row_, col_) = s;
@@ -83,14 +72,14 @@ class ArrayInitializer
 
   protected:
     /** Set (row_, col_) to the first element of the array.
-     * @note Useful only if the structure of the array does not allow element
-     * in the (firstIdxRows(), beginCols()) position.
+     *  @note Useful only if the structure of the array does not allow element
+     *  in the (beginRows(), beginCols()) position.
      **/
     void toFirstElt()
     {
-      while ( (array_.rangeColsInRow(row_).size() <= 0) && (row_ <= array_.lastIdxRows()))
+      while ( (array_.rangeColsInRow(row_).size() <= 0) && (row_ < array_.endRows()))
       { row_++;}
-      if (row_ > array_.lastIdxRows())
+      if (row_ >= array_.endRows())
       { STKRUNTIME_ERROR_NO_ARG(ArrayInitializer::toFirstElt,array is empty);}
       col_ = array_.rangeColsInRow(row_).begin();
     }

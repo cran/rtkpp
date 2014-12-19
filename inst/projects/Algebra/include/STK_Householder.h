@@ -157,17 +157,17 @@ void rightHouseholder( ArrayBase<Lhs> const& M, ExprBase<Rhs> const& v)
 }
 
 /** @ingroup Algebra
- *  @brief left multiplication by a Householder Matrix.
+ *  @brief left multiplication by a Householder ArrayXX.
  * 
- * Perform a left multiplication of the Matrix M with a Householder
+ * Perform a left multiplication of the Array M with a Householder
  * Marix H. M <- HM with H = I + WZ'. The Householder vectors are
  * stored in the columns of H.
  * 
  * @param M the matrix to multiply
- * @param H the Householder Matrix
+ * @param H the Householder ArrayXX
  **/
 template < class Lhs, class Rhs>
-void leftMatrixHouseholder( ArrayBase<Lhs> const& M, ArrayBase<Rhs> const& H)
+void leftArrayHouseholder( ArrayBase<Lhs> const& M, ArrayBase<Rhs> const& H)
 {
   // compute the number of iterations
   int first = H.beginCols(), last = std::min( H.lastIdxCols(), H.lastIdxRows());
@@ -185,17 +185,17 @@ void leftMatrixHouseholder( ArrayBase<Lhs> const& M, ArrayBase<Rhs> const& H)
 }
 
 /** @ingroup Algebra
- *  @brief left multiplication by a Householder Matrix.
+ *  @brief left multiplication by a Householder ArrayXX.
  * 
  * Perform a right multiplication of the matrix M with a Householder
  * Marix H. M <- MP with H = I + WZ'. The Householder vectors are
  * stored in the rows of H.
  * 
- * @param M the Matrix to multiply
- * @param H the Householder Matrix
+ * @param M the Array to multiply
+ * @param H the Householder ArrayXX
  **/
 template < class TContainer2D, class Rhs>
-void rightMatrixHouseholder( ArrayBase<TContainer2D> const& M, ArrayBase<Rhs> const& H)
+void rightArrayHouseholder( ArrayBase<TContainer2D> const& M, ArrayBase<Rhs> const& H)
 {
   // compute the number of iterations
   int first = H.beginCols(), last = std::min( H.lastIdxCols(), H.lastIdxRows());

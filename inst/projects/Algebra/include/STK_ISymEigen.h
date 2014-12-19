@@ -46,12 +46,12 @@ namespace STK
 {
 /** @ingroup Algebra
  *  @brief The class ISymEigen is an interface class for the method
- *  computing the eigenvalue Decomposition of a symmetric Matrix.
+ *  computing the eigenvalue Decomposition of a symmetric ArrayXX.
  * 
  *  The decomposition of a symmetric matrix require
  *  - Input:  A symmetric matrix A of size (n,n)
  *  - Output:
- *     -# P Matrix of size (n,n).
+ *     -# P Array of size (n,n).
  *     -# D Vector of dimension n
  *     -# \f$ A = PDP' \f$
  *  The matrix A can be copied or overwritten by the class.
@@ -68,12 +68,12 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     typedef IRunnerBase Base;
     /** @brief Constructor
      *  The original data set can be overwritten by the eigenvectors if it is
-     *  stored in a CArraySquareXX. Observe that in this case the base index have
+     *  stored in a CSquareXd. Observe that in this case the base index have
      *  to be 0 otherwise.
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    ISymEigen( CArraySquareXX const& data, bool ref =false)
+    ISymEigen( CSquareXd const& data, bool ref =false)
              : Base()
              , norm_(0.), rank_(0), det_(0.)
              , eigenVectors_(data, ref)
@@ -124,17 +124,17 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     inline Real norm()  const { return norm_;}
     /** @return the rank of the matrix */
     inline int rank()  const { return rank_;}
-    /** @return the determinant of the Matrix */
+    /** @return the determinant of the Array */
     inline Real det()  const { return det_;}
     /**  @return the rotation matrix */
-    inline CArraySquareXX const& rotation() const{ return eigenVectors_;}
+    inline CSquareXd const& rotation() const{ return eigenVectors_;}
     /**  @return the rotation matrix */
-    inline CArraySquareXX const& eigenVectors() const{ return eigenVectors_;}
+    inline CSquareXd const& eigenVectors() const{ return eigenVectors_;}
     /** @return the eigenvalues */
     inline CVectorX const& eigenValues() const { return eigenValues_;}
     /** Compute the generalized inverse of the symmetric matrix and put
      *  the result in res.
-     *  @param res the generalized inverse of the Matrix.
+     *  @param res the generalized inverse of the ArrayXX.
      */
     template<class ArraySquare>
     void ginv(ArraySquare& res)
@@ -180,7 +180,7 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     /** determinant */
     Real det_;
    /** Square matrix or the eigenvectors. */
-   CArraySquareXX eigenVectors_;
+   CSquareXd eigenVectors_;
    /** Array of the eigenvalues */
    CVectorX eigenValues_;
    /** Array for the support of the eigenvectors */

@@ -47,7 +47,7 @@ namespace Arrays
 /** Return n+m, where n is the first number such that m < 2^n.
   *  @param m the size of the container
  **/
-int evalSizeCapacity(int const& m);
+int evalSizeCapacity(int m);
 
 /** Return n+m, where n is the first number such that m < 2^n.
   *  @param I the range of the container

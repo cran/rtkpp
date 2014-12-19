@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -40,22 +40,33 @@
 namespace STK
 {
 // forward declaration
-template< typename Type, int SizeRows_=UnknownSize, bool Orient_ = Arrays::by_col_>
-class CArrayVector;
+template< typename Type, int SizeRows_=UnknownSize, bool Orient_ = Arrays::by_col_> class CArrayVector;
 
+template< typename Type, int SizeRows_, int SizeCols_, bool Orient_> class CArray;
+template< typename Type, int Size_, bool Orient_> class CArraySquare;
+template< typename Type, int SizeCols_, bool Orient_> class CArrayPoint;
+template< typename Type, bool Orient_> class CArrayNumber;
+
+// useful typedef
 typedef CArrayVector<Real, UnknownSize, Arrays::by_col_>   CVectorX;
 typedef CArrayVector<Real, 2, Arrays::by_col_>             CVector2;
 typedef CArrayVector<Real, 3, Arrays::by_col_>             CVector3;
+typedef CArrayVector<double, UnknownSize, Arrays::by_col_> CVectorXd;
+typedef CArrayVector<double, 2, Arrays::by_col_>           CVector2d;
+typedef CArrayVector<double, 3, Arrays::by_col_>           CVector3d;
+typedef CArrayVector<int, UnknownSize, Arrays::by_col_>    CVectorXi;
+typedef CArrayVector<int, 2, Arrays::by_col_>              CVector2i;
+typedef CArrayVector<int, 3, Arrays::by_col_>              CVector3i;
 
-
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArray;
-template< typename Type, int Size_, bool Orient_>
-class CArraySquare;
-template< typename Type, int SizeCols_, bool Orient_>
-class CArrayPoint;
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArrayNumber;
+typedef CArrayVector<Real, UnknownSize, Arrays::by_row_>   CVectorByRowX;
+typedef CArrayVector<Real, 2, Arrays::by_row_>             CVectorByRow2;
+typedef CArrayVector<Real, 3, Arrays::by_row_>             CVectorByRow3;
+typedef CArrayVector<double, UnknownSize, Arrays::by_row_> CVectorByRowXd;
+typedef CArrayVector<double, 2, Arrays::by_row_>           CVectorByRow2d;
+typedef CArrayVector<double, 3, Arrays::by_row_>           CVectorByRow3d;
+typedef CArrayVector<int, UnknownSize, Arrays::by_row_>    CVectorByRowXi;
+typedef CArrayVector<int, 2, Arrays::by_row_>              CVectorByRow2i;
+typedef CArrayVector<int, 3, Arrays::by_row_>              CVectorByRow3i;
 
 namespace hidden
 {
@@ -65,18 +76,15 @@ namespace hidden
 template<typename Type_, int SizeRows_, bool Orient_>
 struct Traits< CArrayVector<Type_, SizeRows_, Orient_> >
 {
-    typedef CArrayNumber<Type_, 1, 1, Orient_> Number;
-    typedef CArrayNumber<Type_, 1, 1, Orient_> Row;
-    typedef CArrayNumber<Type_, 1, 1, Orient_> SubRow;
+    typedef CArrayNumber<Type_, Orient_> Number;
+    typedef CArrayNumber<Type_, Orient_> Row;
+    typedef CArrayNumber<Type_, Orient_> SubRow;
 
     typedef CArrayVector<Type_, SizeRows_, Orient_> Col;
     typedef CArrayVector<Type_, UnknownSize, Orient_> SubCol;
 
     typedef typename  If<(SizeRows_ == 1), Number, SubCol>::Result SubVector;
     typedef typename  If<(SizeRows_ == 1), Number, SubCol>::Result SubArray;
-
-    // Transposed type
-    typedef CArrayPoint< Type_, SizeRows_, !Orient_> Transposed;
     // The CAllocator have to have the same structure than the CArray
     typedef CAllocator<Type_, Arrays::vector_, SizeRows_, 1, Orient_> Allocator;
 
@@ -117,13 +125,13 @@ class CArrayVector : public ICArray < CArrayVector<Type, SizeRows_, Orient_> >
     /** constructor with specified dimension.
      *  @param sizeRows size of the rows
      **/
-    inline CArrayVector( int const& sizeRows) : Base(sizeRows, 1) {}
+    inline CArrayVector( int sizeRows) : Base(sizeRows, 1) {}
     /** constructor with sizeRows specified,
      *  initialization with a constant.
      *  @param sizeRows size of the rows
      *  @param v initial value of the container
      **/
-    inline CArrayVector( int const& sizeRows, Type const& v) : Base(sizeRows, 1, v) {}
+    inline CArrayVector( int sizeRows, Type const& v) : Base(sizeRows, 1, v) {}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
@@ -143,18 +151,18 @@ class CArrayVector : public ICArray < CArrayVector<Type, SizeRows_, Orient_> >
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    CArrayVector( ExprBase<OtherDerived> const& T): Base() { LowBase::operator=(T);}
+    inline CArrayVector( ExprBase<OtherDerived> const& T): Base(T.size(), 1) { LowBase::operator=(T);}
     /** destructor. */
     inline ~CArrayVector() {}
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
     inline CArrayVector& operator=(Type const& v) { return LowBase::setValue(v);}
-    /** operator = : overwrite the CArray with the Right hand side T.
+    /** operator = : overwrite the CArrayPoint with the Right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArrayVector& operator=(Rhs const& T) { return LowBase::assign(T);}
+    inline CArrayVector& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy
      **/

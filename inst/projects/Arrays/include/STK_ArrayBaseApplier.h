@@ -32,14 +32,14 @@
  *  @brief In this file we define the ArrayBaseApplier classes.
  **/
 
-#ifndef STK_ARRAYBASEAPPLYER_H
-#define STK_ARRAYBASEAPPLYER_H
+#ifndef STK_ARRAYBASEAPPLIER_H
+#define STK_ARRAYBASEAPPLIER_H
 
 namespace STK
 {
 
-/** Apply the Visitor @a visitor to the whole coefficients of the array.
-  * The template parameter @a Visitor is the type of the visitor and provides
+/* Apply the Visitor @c visitor to the whole coefficients of the array.
+  * The template parameter @c Visitor is the type of the visitor and provides
   * the following interface:
   * @code
   * struct MyVisitor {
@@ -50,7 +50,7 @@ namespace STK
   *
   * @note visitors offer automatic unrolling for small fixed size matrix.
   *
-  * @sa setValue
+  * @sa setValue, setOnes(), setZeros()
   */
 template<typename Derived>
 template<typename Visitor>
@@ -67,76 +67,66 @@ void ArrayBase<Derived>::apply(Visitor& visitor)
 template<typename Derived>
 Derived& ArrayBase<Derived>::setValue(Type const& value)
 {
-  hidden::ValueVisitor<Type> visitor(value);
+  hidden::ValueApplier<Type> visitor(value);
   apply(visitor);
   return this->asDerived();
 }
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-void ArrayBase<Derived>::ones()
+Derived& ArrayBase<Derived>::setOnes()
 {
-  hidden::ValueVisitor<Type> visitor(Type(1));
+  hidden::ValueApplier<Type> visitor(Type(1));
   apply(visitor);
+  return this->asDerived();
 }
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-void ArrayBase<Derived>::zeros()
+Derived& ArrayBase<Derived>::setZeros()
 {
-  hidden::ValueVisitor<Type> visitor(Type(0));
+  hidden::ValueApplier<Type> visitor(Type(0));
   apply(visitor);
+  return this->asDerived();
 }
+
+/* @brief Set the value one to all the Array */
+template<typename Derived>
+Derived& ArrayBase<Derived>::ones()
+{ return setOnes();}
+
+/* @brief Set the value one to all the Array */
+template<typename Derived>
+Derived& ArrayBase<Derived>::zeros()
+{ return setZeros();}
 
 template<typename Derived>
-void ArrayBase<Derived>::randUnif()
+Derived& ArrayBase<Derived>::randUnif()
 {
-  hidden::RandUnifVisitor<Type> visitor;
+  hidden::RandUnifApplier<Type> visitor;
   apply(visitor);
+  return this->asDerived();
 }
 
+/* set Gaussian random values to this */
 template<typename Derived>
-void ArrayBase<Derived>::randGauss()
+Derived& ArrayBase<Derived>::randGauss()
 {
-    hidden::RandGaussVisitor<Type> visitor;
-    apply(visitor);
+  hidden::RandGaussApplier<Type> visitor;
+  apply(visitor);
+  return this->asDerived();
 }
 
-
-
-
-/** @ingroup Arrays
- *  @brief Applies the visitor @a visitor to the whole elements of the matrix or
- *  vector.
-  *
-  * The template parameter @a Visitor is the type of the visitor and provides
-  * the following interface:
-  * @code
-  * struct MyVisitor {
-  *   // called for all elements
-  *   void operator() (Type& value, int i, int j);
-  * };
-  * };
-  * @endcode
-  * The value is modified by the Visitor.
-  *
-  * @note compared to one or two @c for loops, visitors offer automatic
-  * unrolling for small fixed size matrix.
-  */
-template< typename Derived, typename Visitor>
-class ArrayBaseApplier
+/* set random values to this using a law given by the user */
+template<typename Derived>
+Derived& ArrayBase<Derived>::rand( Law::IUnivLaw<Type> const& law)
 {
-  private:
-    Derived& array_;
-  public:
-    typedef typename hidden::VisitorSelector<Visitor, Derived>::Impl Impl;
-
-    ArrayBaseApplier( Derived& T) : array_(T) { }
-    ~ArrayBaseApplier() { }
-    inline void apply(Visitor& funct) { Impl::apply(array_, funct);}
-};
+  hidden::RandApplier<Type> visitor(law);
+  apply(visitor);
+  return this->asDerived();
+}
 
 
 } // namespace STK
 
-#endif /* STK_ARRAYBASEAPPLYER_H */
+#endif /* STK_ARRAYBASEAPPLIER_H */

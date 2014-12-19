@@ -36,7 +36,7 @@
 #ifndef STK_IMIXTUREMANAGER_H
 #define STK_IMIXTUREMANAGER_H
 
-//#include "DManager/include/STK_IDataHandler.h"
+#include "Arrays/include/STK_Array2D.h"
 
 namespace STK
 {
@@ -93,10 +93,9 @@ class IMixtureManager
     void releaseMixtureData(String const& idData);
     /** get the parameters from an IMixture.
      *  @param p_mixture pointer on the mixture
-     *  @param idData Id name of the data set attached to the mixture
      *  @param data the array to return with the parameters
      **/
-    virtual void getParameters(IMixture* p_mixture, std::string idData, Array2D<Real>& data) const =0;
+    virtual void getParameters(IMixture* p_mixture, Array2D<Real>& data) const =0;
 
   protected:
     /** Utility lookup function allowing to find a MixtureData from its idData

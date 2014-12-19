@@ -35,7 +35,7 @@
 #ifndef STK_TRANSPOSEOPERATOR_H
 #define STK_TRANSPOSEOPERATOR_H
 
-#include "STK_SliceOperators.h"
+#include "STK_SlicingOperators.h"
 
 namespace STK
 {
@@ -135,11 +135,15 @@ class TransposeOperator  : public TransposeOperatorBase< Lhs >, public TRef<1>
         sizeCols_  = hidden::Traits< TransposeOperator<Lhs> >::sizeCols_,
         storage_   = hidden::Traits< TransposeOperator<Lhs> >::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
     /** Constructor */
     inline TransposeOperator( Lhs const& lhs) : Base(), lhs_(lhs) {}
 
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.cols();}
+    inline RowRange const& rowsImpl() const { return lhs_.cols();}
     /** @return the first index of the rows */
     inline int const beginRowsImpl() const { return lhs_.beginCols();}
     /** @return the ending index of the rows */
@@ -148,7 +152,7 @@ class TransposeOperator  : public TransposeOperatorBase< Lhs >, public TRef<1>
     inline int const sizeRowsImpl() const { return lhs_.sizeCols();}
 
     /** @return the range of the Columns */
-    inline Range const cols() const { return lhs_.rows();}
+    inline ColRange const& colsImpl() const { return lhs_.rows();}
     /** @return the first index of the columns */
     inline int const beginColsImpl() const { return lhs_.beginRows();}
     /** @return the ending index of the columns */

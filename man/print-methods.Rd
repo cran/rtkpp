@@ -11,6 +11,8 @@
 \alias{print,ClusterGammaComponent-method}
 \alias{print,ClusterHeterogeneous-method}
 \alias{print,ClusterInit-method}
+\alias{print,ClusterPoisson-method}
+\alias{print,ClusterPoissonComponent-method}
 \alias{print,ClusterStrategy-method}
 \alias{print,IClusterComponent-method}
 \alias{print,IClusterModelBase-method}
@@ -36,6 +38,10 @@
 \S4method{print}{ClusterHeterogeneous}(x, ...)
 
 \S4method{print}{ClusterInit}(x, ...)
+
+\S4method{print}{ClusterPoissonComponent}(x, k, ...)
+
+\S4method{print}{ClusterPoisson}(x, ...)
 
 \S4method{print}{ClusterStrategy}(x, ...)
 

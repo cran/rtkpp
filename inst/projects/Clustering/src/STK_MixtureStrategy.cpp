@@ -87,11 +87,13 @@ bool SimpleStrategy::run()
   stk_cout << _T("Entering SimpleStrategy::run() with: ")
            << _T("nbTry_ = ") << nbTry_ << _T("\n");
 #endif
+  IMixtureComposer* p_currentModel = 0;
   if (p_model_->state() < 1) { p_model_->randomFuzzyInit();}
   Real value = p_model_->lnLikelihood();
-  IMixtureComposer* p_currentModel = p_model_->create();
   try
   {
+    p_currentModel = p_model_->create();
+
     // initialize and run algo. break if success
     for (int iTry = 0; iTry < nbTry_; ++iTry)
     {
@@ -100,16 +102,20 @@ bool SimpleStrategy::run()
       if (!p_init_->run())
       {
 #ifdef STK_MIXTURE_VERBOSE
-        stk_cout << "In SimpleStrategy::run(), Initialization failed.\n";
+        stk_cout << "SimpleStrategy::run(), Initialization failed.\n";
 #endif
+        msg_error_ += STKERROR_NO_ARG(SimpleStrategy::run,Initialization failed\n);
+        msg_error_ += p_init_->error();
       } // init step
       p_param_->p_algo_->setModel(p_currentModel);
       // initial
       if (!p_param_->p_algo_->run())
       {
 #ifdef STK_MIXTURE_VERBOSE
-        stk_cout << "In SimpleStrategy::run(), Long run failed.\n";
+        stk_cout << "SimpleStrategy::run(), Long run failed.\n";
 #endif
+        msg_error_ += STKERROR_NO_ARG(SimpleStrategy::run,long run failed\n);
+        msg_error_ += p_param_->p_algo_->error();
       }
       else { break;}  // we get a result
     } // iTry
@@ -125,9 +131,9 @@ bool SimpleStrategy::run()
   stk_cout << "SimpleStrategy::run() terminated.              \n";
   stk_cout << "-----------------------------------------------\n";
 #endif
-  if (p_model_->lnLikelihood() == value)
+  if (p_model_->lnLikelihood() <= value)
   {
-    msg_error_ = STKERROR_NO_ARG(In SimpleStrategy::run,All trials failed);
+    msg_error_ += STKERROR_NO_ARG(SimpleStrategy::run,No gain\n);
     return false;
   }
   return true;
@@ -141,13 +147,15 @@ bool XemStrategy::run()
            << _T("nbTry_ = ") << nbTry_ << _T("\n")
            << _T("nbShortRun_ = ") << p_param_->nbShortRun_ << _T("\n");
 #endif
-  // initialize bestModel and bestLikelihood
+  // the current model is used in the short runs
+  IMixtureComposer* p_currentModel     = p_model_->create();
+  IMixtureComposer* p_currentBestModel = p_model_->create();
+  // add some perturbation to the tik and compute the ln-likelihood
   if (p_model_->state() < 1) { p_model_->randomFuzzyInit();}
+  Real value = p_model_->lnLikelihood();
+  // start estimation
   try
   {
-    // the current model is used in the short runs
-    IMixtureComposer* p_currentModel     = p_model_->create();
-    IMixtureComposer* p_currentBestModel = p_model_->create();
     for (int iTry = 0; iTry < nbTry_; ++iTry)
     {
 #ifdef STK_MIXTURE_VERY_VERBOSE
@@ -202,6 +210,11 @@ bool XemStrategy::run()
   stk_cout << "XemStrategy::run() terminated.\n";
   stk_cout << "-------------------------------\n";
 #endif
+  if (p_model_->lnLikelihood() <= value)
+  {
+    msg_error_ += STKERROR_NO_ARG(In XemStrategy::run,No gain\n);
+    return false;
+  }
   return true;
 }
 
@@ -216,8 +229,10 @@ bool FullStrategy::run()
   IMixtureComposer* p_currentModel     = 0;
   IMixtureComposer* p_currentBestModel = 0;
   IMixtureComposer* p_bestShortModel   = 0;
+  // add some perturbation to the tik and compute the ln-likelihood
   if (p_model_->state() < 1) { p_model_->randomFuzzyInit();}
   Real value = p_model_->lnLikelihood();
+  // start estimation
   try
   {
     // the current best model store the best result throughout the strategy
@@ -230,8 +245,7 @@ bool FullStrategy::run()
     for (int iTry = 0; iTry < nbTry_; ++iTry)
     {
       // in case nbShortRun_==0: initialize directly p_bestShortModel
-      if (p_param_->nbShortRun_ == 0)
-      { initStep(p_currentModel, p_bestShortModel);}
+      if (p_param_->nbShortRun_ == 0) { initStep(p_currentModel, p_bestShortModel);}
       else
       {
         for (int iShort=0; iShort < p_param_->nbShortRun_; ++iShort)
@@ -242,7 +256,9 @@ bool FullStrategy::run()
           // perform short run on the current best model
           p_param_->p_shortAlgo_->setModel(p_currentBestModel);
           if (!p_param_->p_shortAlgo_->run())
-          { msg_error_ += p_param_->p_shortAlgo_->error();
+          {
+            msg_error_ += STKERROR_NO_ARG(FullStrategy::run,short algo failed\n);
+            msg_error_ += p_param_->p_shortAlgo_->error();
 #ifdef STK_MIXTURE_VERBOSE
             stk_cout << _T("In FullStrategy::run()\n")
                      << _T("iShort = ") << iShort << _T("\n")
@@ -258,12 +274,14 @@ bool FullStrategy::run()
       // and exit the iTry loop
       p_param_->p_longAlgo_->setModel(p_bestShortModel);
       if (!p_param_->p_longAlgo_->run())
-      { msg_error_ = p_param_->p_shortAlgo_->error();
+      {
+        msg_error_ += STKERROR_NO_ARG(FullStrategy::run,long algo failed\n);
+        msg_error_ += p_param_->p_longAlgo_->error();
 #ifdef STK_MIXTURE_VERBOSE
-        stk_cout << _T("In FullStrategy::run(): Long Algo fail\n");
+        stk_cout << _T("In FullStrategy::run(): Long Algo failed\n");
 #endif
       }
-      // if we get a better result, store it in p_bestShortModel
+      // if we get a better result, store it in p_model_
       if( p_model_->lnLikelihood()<p_bestShortModel->lnLikelihood())
       { std::swap(p_model_, p_bestShortModel); break;}
     } // end iTry
@@ -277,16 +295,16 @@ bool FullStrategy::run()
     if (p_currentBestModel) delete p_currentBestModel;
     if (p_bestShortModel)   delete p_bestShortModel;
     if (p_currentModel)     delete p_currentModel;
-    msg_error_ = e.error();
+    msg_error_ += e.error();
     return false;
   }
 #ifdef STK_MIXTURE_VERBOSE
   stk_cout << "FullStrategy::run() terminated.              \n";
   stk_cout << "---------------------------------------------\n";
 #endif
-  if (p_model_->lnLikelihood() == value)
+  if (p_model_->lnLikelihood() <= value)
   {
-    msg_error_ = STKERROR_NO_ARG(In SimpleStrategy::run,All trials failed);
+    msg_error_ += STKERROR_NO_ARG(FullStrategy::run,No gain\n);
     return false;
   }
   return true;
@@ -298,23 +316,23 @@ void FullStrategy::initStep(IMixtureComposer*& p_currentModel, IMixtureComposer*
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Entering FullStrategy::initStep\n");
 #endif
-  // set current model
-  p_init_->setModel(p_currentModel);
-  //
   // perform nbInitRun_ initialization (should be > 0)
   // and select the best model
   for (int iInitRun=0; iInitRun < p_param_->nbInitRun_; iInitRun++)
   {
+    // set current model
+    p_init_->setModel(p_currentModel);
     if (!p_init_->run())
     {
 #ifdef STK_MIXTURE_VERBOSE
   stk_cout<< _T("FullStrategy::initStep, initialization failed\n");
+  stk_cout<< p_init_->error() << _T("\n");
 #endif
     }
     // if we get a better result, swap it with currentBestModel
     if( p_currentBestModel->lnLikelihood()<p_currentModel->lnLikelihood())
     { std::swap(p_currentModel, p_currentBestModel);}
-  } // iInitRun
+  }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("FullStrategy::initStep done\n");
 #endif

@@ -58,7 +58,6 @@ struct MixtureTraits< Gamma_ajk_bk<_Array> >
   typedef _Array Array;
   typedef typename Array::Type Type;
   typedef Gamma_ajk_bk_Parameters  Parameters;
-  typedef MixtureComponent<_Array, Parameters> Component;
   typedef Array2D<Real>            Param;
 };
 
@@ -77,14 +76,14 @@ template<class Array>
 class Gamma_ajk_bk : public GammaBase< Gamma_ajk_bk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_ajk_bk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gamma_ajk_bk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_ajk_bk<Array> > Base;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
     using Base::meanjk;
     using Base::variancejk;
 
@@ -98,8 +97,8 @@ class Gamma_ajk_bk : public GammaBase< Gamma_ajk_bk<Array> >
     inline Gamma_ajk_bk( Gamma_ajk_bk const& model) : Base(model) {}
     /** destructor */
     inline ~Gamma_ajk_bk() {}
-    /** initialize shape and scale parameters using weighted moment estimates.*/
-    inline bool initializeStep() { return mStep();}
+    /** Initialize the component of the model. */
+    void initializeModelImpl() {}
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
      *  and the scale will be selected randomly using an exponential of parameter
@@ -151,7 +150,7 @@ bool Gamma_ajk_bk<Array>::mStep()
   for(iter = 0; iter<MAXITER; ++iter)
   {
     // compute ajk
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+    for (int k= baseIdx; k < components().end(); ++k)
     {
       for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
       {

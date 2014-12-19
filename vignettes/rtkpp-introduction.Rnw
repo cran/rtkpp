@@ -1,0 +1,201 @@
+%\VignetteIndexEntry{HDPenReg}
+
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{top=3cm, bottom=3cm, left=2cm, right=2cm}
+
+\usepackage{url}
+
+%-------------------
+% nice code
+\usepackage{xcolor}
+\usepackage{listings}
+
+\lstdefinestyle{customcpp}{
+  language=C++,
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  basicstyle=\ttfamily\footnotesize,
+  frame=single,
+  xleftmargin=\parindent,
+  showstringspaces=false,
+  keywordstyle=\color{blue},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange},
+}
+
+\newcommand{\includecode}[1]{\lstinputlisting[style=customcpp]{#1}}
+% end nice code
+%---------------------
+
+\usepackage{Sweave}
+
+% Title Page
+\title{ rtkpp: R and stk++ integration using Rcpp}
+\author{Serge Iovleff}
+\date{}
+
+% start documentation
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+\section{Introduction}
+
+\texttt{stk++} is a versatile, fast, reliable and elegant collection of
+\texttt{C++} classes for statistics, clustering, linear algebra (using native
+methods or Lapack), arrays (with an Eigen-like API \cite{JSS:RcppEigen}),
+regression, dimension reduction, etc. Some functionalities provided by the
+library are available in the \texttt{R} environment as \texttt{R} functions.
+
+The \texttt{rtkpp} package provides the header files composing the
+\texttt{stk++} \texttt{C++} library (thus users do not need to
+install \texttt{stk++} itself in order to use rtkpp), along with implementations
+of \texttt{Rcpp::as} and \texttt{Rcpp::wrap} for the \texttt{C++}
+classes defined in \texttt{stk++}. In this sense it is similar
+to the \texttt{RcppEigen} \cite{CRAN:RcppEigen,JSS:RcppEigen} and
+\texttt{RcppArmadillo} \cite{CRAN:RcppArmadillo} packages.
+
+
+\section{Wrapping \texttt{R} data by \texttt{stk++} arrays}
+
+\texttt{Rcpp} facilitates conversion of objects from \texttt{R} to
+\texttt{C++} through the templated functions \texttt{Rcpp::as}.
+The function \texttt{Rcpp::as} is implemented in \texttt{stk++} but
+it is not strictly necessary to use it. You can rather use this kind
+of code
+\begin{lstlisting}[style=customcpp]
+Rcpp::NumericMatrix m_data = data; // data is SEXP representing a R-matrix
+STK::RMatrix<double> mat(m_data); // STK::RMatrix<double> mat(data) will work
+\end{lstlisting}
+The templated class \texttt{STK::RMatrix} wrap the Rcpp matrix (which itself
+wrap the \texttt{R} \verb+SEXP+ structure). You can access directly (and
+eventually modify) the \texttt{R} data in your application.
+
+The second templated class you can use is the \texttt{STK::RVector} which
+allow to wrap \texttt{Rcpp::NumericVector}.
+
+\section{Converting \texttt{stk++} arrays and expressions to \texttt{R} data}
+
+\texttt{Rcpp} facilitates data conversion from \texttt{C++} to \texttt{R}
+through  \texttt{Rcpp::wrap}. This function is extended by rtkpp for the stk++
+arrays and vectors.
+
+The following example is taken from the \texttt{STK::ClusterLauncher} class
+\begin{lstlisting}[style=customcpp]
+  Array2D<Real> mean(K, nbVariable), sigma(K, nbVariable);
+  // get estimated parameters
+  // ....
+  // and save them
+  NumericVector m_mean  = Rcpp::wrap(mean);
+  NumericVector m_sigma = Rcpp::wrap(sigma);
+\end{lstlisting}
+
+Note that the \texttt{Rcpp::wrap} is rather limited in its usage and if you
+need, for example, to convert expression rather than arrays then you can use the
+\texttt{STK::wrap} function (see example below).
+
+\section{An example}
+
+The package countMissings can be downloaded at the \url{www.stkpp.org} url.
+It is basically composed of one R-script file (countNA.R) and one C++ file
+(countNA.cpp).
+
+Given a R matrix, it is possible to get a list composed of two vectors
+constaining respectively the number of missing values in each rows and the
+number of missing values in each columns of the R matrixs.
+
+The R-script \texttt{countNA.R} looks
+\begin{lstlisting}[style=customcpp]
+countNA <- function(data)
+{
+  if (!is.matrix(data)) { stop("in countNA, data must be a matrix.")}
+  .Call("countNA", data, PACKAGE = "countMissings")
+}
+\end{lstlisting}
+and the C++ files looks
+\begin{lstlisting}[style=customcpp]
+#include "RTKpp.h"
+RcppExport SEXP countNA( SEXP r_matrix)
+{
+  BEGIN_RCPP
+  STK::RMatrix<double> m_data(r_matrix);
+  // use STK::wrap function (Rcpp::wrap function will not work)
+  return Rcpp::List::create( Rcpp::Named("rows")= STK::wrap(STK::countByRow(m_data.isNA()))
+                           , Rcpp::Named("cols")= STK::wrap(STK::count(m_data.isNA()))
+                           );
+  END_RCPP
+}
+\end{lstlisting}
+
+\section{Linking with \texttt{rtkpp}}
+
+The only thing to do is to include the header file
+\begin{lstlisting}[style=customcpp]
+// Rcpp.h will be include by rtkpp
+#include <RTKpp.h>
+\end{lstlisting}
+in the code. When compiling the sources, you indicate the location of the stk++
+library using \verb+rtkpp:::CxxFlags()+, \verb+rtkpp:::CppFlags()+ and
+\verb+rtkpp:::LdFlags()+ in the \texttt{Makevars}.
+
+If you are building a package with a lot of cpp files, you may find
+convenient to locate your sources in a separate directory. Hereafter we give an
+example of a Makevars you can modify at your convenience in order to handle
+this situation.
+\begin{verbatim}
+#-----------------------------------------------------------------------
+# Purpose:  Makevars for the R packages using rtkpp (stk++)
+#-----------------------------------------------------------------------
+PKGNAME = NAME_OF_YOUR_PACKAGE
+
+PKGDIR    = FULL_PATH_TO_YOUR_PACKAGE
+PKGLIBDIR = $(PKGDIR)/lib
+PKGLIB    = $(PKGLIBDIR)/lib$(PKGNAME).a
+
+## Use the R_HOME indirection to support installations of multiple R version
+## use $(SHLIB_OPENMP_CXXFLAGS) if you want openmp
+PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` \
+               `${R_HOME}/bin/Rscript -e "rtkpp:::CxxFlags()"`
+PKG_CPPFLAGS = `${R_HOME}/bin/Rscript -e "rtkpp:::CppFlags()"` \
+                $(SHLIB_OPENMP_CXXFLAGS)
+
+## use $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) if you want lapack
+PKG_LIBS = `${R_HOME}/bin/Rscript -e "Rcpp:::LdFlags()"` \
+           `$(R_HOME)/bin/Rscript -e "rtkpp:::LdFlags()"` \
+            $(SHLIB_OPENMP_CFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(PKGLIB)
+
+## Define any flags you need for compiling your sources
+PKGNAME_CXXFLAGS = $(PKG_CXXFLAGS)
+PKGNAME_CPPFLAGS =
+
+export
+
+.PHONY: all pkglib
+
+## $(SHLIB) is the usual default target that is built automatically from all source
+## files in this directory. pkglib is an additional target for the package
+## that will be found in $(PKGDIR).
+all: $(SHLIB)
+$(SHLIB): pkglib
+
+## build the PKGLIB (lib$(PKGNAME).a)
+pkglib:
+	(cd $(PKGDIR) && $(MAKE)  all)
+	(cd $(PKGDIR) && $(MAKE) clean)
+\end{verbatim}
+
+\bibliographystyle{plain}
+\bibliography{rtkpp}
+
+
+\end{document}

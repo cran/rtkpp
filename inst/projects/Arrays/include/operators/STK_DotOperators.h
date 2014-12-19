@@ -98,6 +98,10 @@ class DotProduct : public ExprBase< DotProduct<Lhs, Rhs> >
       sizeCols_  = hidden::Traits<DotProduct>::sizeCols_,
       storage_   = hidden::Traits<DotProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
     inline DotProduct( const Lhs& lhs, const Rhs& rhs)
                      : lhs_(lhs), rhs_(rhs)
@@ -109,11 +113,11 @@ class DotProduct : public ExprBase< DotProduct<Lhs, Rhs> >
       result_.elt() = lhs.dot(rhs);
     }
     /**  @return the range of the rows */
-    inline Range rows() const { return result_.rows();}
-    /** @return the range of the columns */
-    inline Range cols() const { return result_.cols();}
+    inline RowRange const& rowsImpl() const { return result_.rows();}
     /** @return the number of rows */
     inline int sizeRowsImpl() const { return result_.sizeRows();}
+    /** @return the range of the columns */
+    inline ColRange const& colsImpl() const { return result_.cols();}
     /** @return the number of columns */
     inline int sizeColsImpl() const { return result_.sizeCols();}
     /** @return the left hand side expression */

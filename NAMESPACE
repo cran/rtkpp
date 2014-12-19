@@ -5,13 +5,16 @@ export(clusterAlgo
       ,clusterDiagGaussianNames
       ,clusterGammaNames
       ,clusterCategoricalNames
-      ,clusterValidDiagGaussianNames
+      ,clusterPoissonNames
       ,clusterValidGammaNames
       ,clusterValidCategoricalNames
+      ,clusterValidPoissonNames
+      ,clusterValidDiagGaussianNames
       ,clusterDiagGaussian
-      ,clusterHeterogeneous
       ,clusterGamma
       ,clusterCategorical
+      ,clusterPoisson
+      ,clusterHeterogeneous
       )
 
 export(CxxFlags,
@@ -22,14 +25,16 @@ exportClasses(ClusterAlgo
              ,ClusterInit
              ,ClusterStrategy
              ,IClusterModelBase
-             ,ClusterDiagGaussian
-             ,ClusterGamma
-             ,ClusterCategorical
-             ,ClusterHeterogeneous
              ,IClusterComponent
              ,ClusterDiagGaussianComponent
+             ,ClusterDiagGaussian
              ,ClusterGammaComponent
+             ,ClusterGamma
              ,ClusterCategoricalComponent
+             ,ClusterCategorical
+             ,ClusterPoissonComponent
+             ,ClusterPoisson
+             ,ClusterHeterogeneous
              )
 
 exportMethods(print)

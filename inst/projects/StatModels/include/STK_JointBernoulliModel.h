@@ -82,13 +82,8 @@ class JointBernoulliParameters: public IMultiParameters<JointBernoulliParameters
       else        { ln1mProb_[j] = -Arithmetic<Real>::infinity();}
     }
     /** resize the set of parameter */
-    inline void resizeImpl(Range const& size)
-    { prob_.resize(size); lnProb_.resize(size); ln1mProb_.resize(size);}
-    /** print the parameters.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os)
-    { os << prob_ << _T("\n");}
+    inline void resizeImpl(Range const& range)
+    { prob_.resize(range); lnProb_.resize(range); ln1mProb_.resize(range);}
 
   protected:
     Array2DPoint<Real> prob_;

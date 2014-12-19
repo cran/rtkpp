@@ -9,6 +9,8 @@
 \alias{missingValues,ClusterGamma-method}
 \alias{missingValues,ClusterGammaComponent-method}
 \alias{missingValues,ClusterHeterogeneous-method}
+\alias{missingValues,ClusterPoisson-method}
+\alias{missingValues,ClusterPoissonComponent-method}
 \title{Return the missing values of a component or a cluster class.}
 \usage{
 missingValues(x)
@@ -20,6 +22,10 @@ missingValues(x)
 \S4method{missingValues}{ClusterGammaComponent}(x)
 
 \S4method{missingValues}{ClusterGamma}(x)
+
+\S4method{missingValues}{ClusterPoissonComponent}(x)
+
+\S4method{missingValues}{ClusterPoisson}(x)
 
 \S4method{missingValues}{ClusterDiagGaussianComponent}(x)
 

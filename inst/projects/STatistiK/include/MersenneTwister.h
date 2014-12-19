@@ -116,28 +116,17 @@ class MTRand
     { seed(); }
 
     /** real number in [0,1] */
-    inline double rand()
-    { return double(randInt()) * (1.0/4294967295.0); }
-
+    inline double rand() { return double(randInt()) * (1.0/4294967295.0); }
     /** real number in [0,n] */
-    inline double rand( const double& n )
-    { return rand() * n; }
-
+    inline double rand( const double& n ) { return rand() * n; }
     /** real number in [0,1) */
-    inline double randExc()
-    { return double(randInt()) * (1.0/4294967296.0); }
-
+    inline double randExc() { return double(randInt()) * (1.0/4294967296.0); }
     /** real number in [0,n) */
-    inline double randExc( const double& n )
-    { return randExc() * n; }
-
+    inline double randExc( const double& n ) { return randExc() * n; }
     /** real number in (0,1) */
-    inline double randDblExc()
-    { return ( double(randInt()) + 0.5 ) * (1.0/4294967296.0); }
-
+    inline double randDblExc() { return ( double(randInt()) + 0.5 ) * (1.0/4294967296.0); }
     /** real number in (0,n) */
-    inline double randDblExc( const double& n )
-    { return randDblExc() * n; }
+    inline double randDblExc( const double& n ) { return randDblExc() * n; }
 
     /** integer in [0,2^32-1] */
     inline uint32 randInt()

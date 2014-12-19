@@ -42,24 +42,45 @@
 /* forward declarations */
 namespace STK
 {
-template <typename Type> class RcppVector;
-template <typename Type> class RcppMatrix;
-}
+template <typename Type> class RVector;
+template <typename Type> class RMatrix;
+
+} // namespace STK
 
 
 /* Rcpp integration */
 namespace Rcpp
 {
-  /* support for wrap */
+  /* This support for wrap, will not work as base template
+   * template <typename T>
+   * inline SEXP wrap(const T& object);
+   * of Rcpp will be preferred by the compiler...
+   *
+   * If you want to wrap an expression, you have to use
+   * STK::wrap()
+   **/
   template<typename Derived>
-  SEXP wrap(STK::ITContainer<Derived, STK::hidden::Traits<Derived>::structure_> const& obj);
+  SEXP wrap( STK::ExprBase<Derived> const& matrix);
 
-  namespace traits
-  {
-    /* support for as */
-    template<typename Type> class Exporter< STK::RcppVector<Type> >;
-    template<typename Type> class Exporter< STK::RcppMatrix<Type> >;
-  } // namespace traits
+  template<typename Type>
+  SEXP wrap( STK::Array2D<Type> const& matrix);
+  template<typename Type>
+  SEXP wrap( STK::Array2DVector<Type> const& vec);
+  template<typename Type>
+  SEXP wrap( STK::Array2DPoint<Type> const& vec);
+  template <typename Type, int SizeRows_, int SizeCols_, bool Orient_>
+  SEXP wrap( STK::CArray<Type, SizeRows_, SizeCols_, Orient_> const& matrix);
+  template <typename Type, int SizeRows_, bool Orient_>
+  SEXP wrap( STK::CArrayVector<Type, SizeRows_, Orient_ > const& vec);
+  template <typename Type, int SizeCols_, bool Orient_>
+  SEXP wrap( STK::CArrayPoint<Type, SizeCols_, Orient_> const& vec);
+
+namespace traits
+{
+  /* support for as */
+  template<typename Type> class Exporter< STK::RVector<Type> >;
+  template<typename Type> class Exporter< STK::RMatrix<Type> >;
+} // namespace traits
 
 } // namespace Rcpp
 

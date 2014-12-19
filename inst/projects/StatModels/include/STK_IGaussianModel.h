@@ -64,7 +64,7 @@ Real univariateGaussianLnLikelihood(Vector const& data, Real const& mu, Real con
  *  @param sigma the (diagonal) covairance matrix (only the diagonal is used)
  *  @return
  */
-Real diagonalGaussianLnLikelihood(Matrix const& data, Point const& mu, MatrixSquare const& sigma);
+Real diagonalGaussianLnLikelihood(ArrayXX const& data, Point const& mu, ArraySquareX const& sigma);
 
 /** @ingroup StatModels
  *  @brief Compute the the maximum likelihood estimates of a complete Gaussian

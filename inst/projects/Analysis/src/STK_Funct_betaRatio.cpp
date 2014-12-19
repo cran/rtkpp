@@ -38,7 +38,7 @@
 #include "../include/STK_ISerie.h"
 #include "../include/STK_Algo.h"
 #include "../include/STK_Funct_gamma.h"
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 #include "../include/STK_Funct_poisson_raw.h"
 #include "../include/STK_Funct_raw.h"
 
@@ -575,8 +575,8 @@ Real betaRatio_se( Real const& a, Real const& b, Real const& x
 Real betaRatio( Real const& a, Real const& b, Real const& x, bool lower_tail)
 {
   // Check if a and x are available
-  if (  Arithmetic<Real>::isNA(a) || Arithmetic<Real>::isNA(b)
-     || Arithmetic<Real>::isNA(x)
+  if (  isNA(a) || isNA(b)
+     || isNA(x)
      ) return Arithmetic<Real>::NA();
   // Negative parameter not allowed
   if ((a<=0)||(b<=0))

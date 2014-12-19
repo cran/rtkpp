@@ -39,7 +39,7 @@ Copyright 1984, 1987, 1992, 2000 by Stephen L. Moshier
 
 #include <cmath>
 #include "../include/STK_Funct_raw.h"
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 #include "../include/STK_Const_Math.h"
 
 /** The Bernouilli numbers divided by 2k */

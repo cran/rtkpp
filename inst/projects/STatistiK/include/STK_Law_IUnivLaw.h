@@ -36,9 +36,7 @@
 #ifndef STK_LAW_IUNIVLAW_H
 #define STK_LAW_IUNIVLAW_H
 
-// RandBase header
 #include "STK_Law_ILawBase.h"
-#include "Arrays/include/STK_ArrayBase.h"
 #include "STKernel/include/STK_Real.h"
 
 namespace STK
@@ -80,17 +78,6 @@ class IUnivLaw : public ILawBase
   public:
     /** Virtual destructor. **/
     inline virtual ~IUnivLaw() {}
-    /** Pseudo-random Real law generator for a two dimensional
-     *  container of Real.
-     *  @param A the container to store the random numbers
-     **/
-    template < class Array>
-    void randArray( ArrayBase< Array>& A) const
-    {
-      for (int j=A.beginCols(); j<=A.lastIdxCols(); j++)
-        for (int i=A.beginRows(); i<=A.lastIdxRows(); i++)
-          A(i, j) = rand();
-    }
     /** @return a @c Type random variate . */
     virtual Type rand() const =0;
     /** @brief compute the probability distribution function (density) in the

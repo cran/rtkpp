@@ -28,17 +28,18 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_SliceOperators.h
- *  @brief In this file we implement the RowOperator and ColOperator classes.
+/** @file STK_SlicingOperators.h
+ *  @brief In this file we implement the RowOperator, ColOperator and SubOperator classes.
  **/
 
-#ifndef STK_SLICEOPERATORS_H
-#define STK_SLICEOPERATORS_H
+#ifndef STK_SLICINGOPERATORS_H
+#define STK_SLICINGOPERATORS_H
 
 namespace STK
 {
 
 // forward declaration
+template< typename Derived> class SlicingOperatorBase;
 template< typename Array> class RowOperator;
 template< typename Array> class ColOperator;
 // only for vectors, points and the like
@@ -52,7 +53,6 @@ namespace hidden
   **/
 template<int Structure_> struct ColumnTraits
 { enum { structure_ = Arrays::vector_ }; };
-
 /** specialization for point_ */
 template<> struct ColumnTraits<Arrays::point_>
 { enum { structure_ = Arrays::number_}; };
@@ -65,7 +65,6 @@ template<> struct ColumnTraits<Arrays::number_>
   **/
 template<int Structure_> struct RowTraits
 { enum { structure_ = Arrays::point_ }; };
-
 /** specialization for vector_ */
 template<> struct RowTraits<Arrays::vector_>
 { enum { structure_ = Arrays::number_}; };
@@ -73,6 +72,15 @@ template<> struct RowTraits<Arrays::vector_>
 template<> struct RowTraits<Arrays::number_>
 { enum { structure_ = Arrays::number_}; };
 
+} // end namespace hidden
+
+// forward declaration
+template< typename Lhs> class RowOperatorBase;
+template< typename Lhs> class ColOperatorBase;
+
+
+namespace hidden
+{
 /** @ingroup hidden
  *  @brief Traits class for the row operator
  */
@@ -90,46 +98,7 @@ struct Traits< RowOperator <Lhs> >
   };
 };
 
-/** @ingroup hidden
- *  @brief Traits class for the column operator
- */
-template<typename Lhs>
-struct Traits< ColOperator <Lhs> >
-{
-  typedef typename Lhs::Type Type;
-  enum
-  {
-    structure_ = ColumnTraits<Lhs::structure_>::structure_,
-    orient_    = Lhs::orient_,
-    sizeRows_  = Lhs::sizeRows_,
-    sizeCols_  = 1,
-    storage_   = Lhs::storage_
-  };
-};
-
-/** @ingroup hidden
- *  @brief Traits class for the sub operator
- */
-template<typename Lhs>
-struct Traits< SubOperator <Lhs> >
-{
-  typedef typename Lhs::Type Type;
-  enum
-  {
-    structure_ = Lhs::structure_,
-    orient_    = Lhs::orient_,
-    sizeRows_  = Lhs::sizeRows_,
-    sizeCols_  = Lhs::sizeCols_,
-    storage_   = Lhs::storage_
-  };
-};
-
-} // end namespace hidden
-
-// forward declaration
-template< typename Lhs> class RowOperatorBase;
-template< typename Lhs> class ColOperatorBase;
-
+} // namespace hidden
 /** @ingroup Arrays
   * @class RowOperator
   *
@@ -145,7 +114,7 @@ template< typename Lhs> class ColOperatorBase;
   * don't have to name RowOperator type explicitly.
   */
 template< typename Lhs>
-class RowOperator  : public RowOperatorBase< Lhs>, public TRef<1>
+class RowOperator: public RowOperatorBase< Lhs>, public TRef<1>
 {
   public:
     typedef RowOperatorBase< Lhs> Base;
@@ -158,38 +127,46 @@ class RowOperator  : public RowOperatorBase< Lhs>, public TRef<1>
         sizeCols_  = hidden::Traits< RowOperator<Lhs> >::sizeCols_,
         storage_   = hidden::Traits< RowOperator<Lhs> >::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
+
     /** Constructor */
-    inline RowOperator( Lhs const& lhs, int i) : Base(i), lhs_(lhs) {}
+    inline RowOperator( Lhs const& lhs, int i)
+                      : Base(i), lhs_(lhs), rows_(i,1), cols_(lhs_.rangeColsInRow(i)) {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return Range(this->i_,1);}
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return this->i_;}
+    inline int const beginRowsImpl() const { return rows_.begin();}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return this->i_+1;}
+    inline int const endRowsImpl() const { return rows_.end();}
     /** @return the number of rows */
     inline int const sizeRowsImpl() const { return 1;}
 
     /** @return the range of the Columns */
-    inline Range const cols() const { return lhs_.rangeColsInRow(this->i_);}
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return lhs_.rangeColsInRow(this->i_).begin();}
+    inline int const beginColsImpl() const { return cols_.begin();}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return lhs_.rangeColsInRow(this->i_).end();}
+    inline int const endColsImpl() const { return cols_.end();}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return lhs_.rangeColsInRow(this->i_).size();}
+    inline int const sizeColsImpl() const { return cols_.size();}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
 
   protected:
     Lhs const& lhs_;
+    RowRange rows_;
+    ColRange cols_;
 };
 
 /** @ingroup Arrays
   * @brief implement the access to the elements in the general case.
   **/
 template< typename Lhs>
-class RowOperatorBase : public ExprBase< RowOperator< Lhs> >
+class RowOperatorBase: public ExprBase< RowOperator< Lhs> >
 {
   public:
     typedef typename hidden::Traits< RowOperator<Lhs> >::Type Type;
@@ -219,6 +196,27 @@ class RowOperatorBase : public ExprBase< RowOperator< Lhs> >
     int i_;
 };
 
+namespace hidden
+{
+/** @ingroup hidden
+ *  @brief Traits class for the column operator
+ */
+template<typename Lhs>
+struct Traits< ColOperator <Lhs> >
+{
+  typedef typename Lhs::Type Type;
+  enum
+  {
+    structure_ = ColumnTraits<Lhs::structure_>::structure_,
+    orient_    = Lhs::orient_,
+    sizeRows_  = Lhs::sizeRows_,
+    sizeCols_  = 1,
+    storage_   = Lhs::storage_
+  };
+};
+
+} // namespace hidden
+
 /** @ingroup Arrays
   * @class ColOperator
   *
@@ -234,7 +232,7 @@ class RowOperatorBase : public ExprBase< RowOperator< Lhs> >
   * don't have to name ColOperator type explicitly.
   */
 template< typename Lhs>
-class ColOperator  : public ColOperatorBase< Lhs>, public TRef<1>
+class ColOperator: public ColOperatorBase< Lhs>, public TRef<1>
 {
   public:
     typedef ColOperatorBase< Lhs> Base;
@@ -247,30 +245,39 @@ class ColOperator  : public ColOperatorBase< Lhs>, public TRef<1>
         sizeCols_  = hidden::Traits< ColOperator<Lhs> >::sizeCols_,
         storage_   = hidden::Traits< ColOperator<Lhs> >::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
+
     /** Constructor */
-    inline ColOperator( Lhs const& lhs, int i) : Base(i), lhs_(lhs) {}
+    inline ColOperator( Lhs const& lhs, int j)
+                      : Base(j), lhs_(lhs), rows_(lhs_.rangeRowsInCol(j)), cols_(j,1) {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rangeRowsInCol(this->j_);}
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return lhs_.rangeRowsInCol(this->j_).begin();}
+    inline int const beginRowsImpl() const { return rows_.begin();}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return lhs_.rangeRowsInCol(this->j_).end();}
+    inline int const endRowsImpl() const { return rows_.end();}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return lhs_.rangeRowsInCol(this->j_).size();}
+    inline int const sizeRowsImpl() const { return rows_.size();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return Range(this->j_,1);}
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return this->j_;}
+    inline int const beginColsImpl() const { return cols_.begin();}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return this->j_+1;}
+    inline int const endColsImpl() const { return cols_.end();}
     /** @return the number of columns */
     inline int const sizeColsImpl() const { return 1;}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
+
   protected:
     Lhs const& lhs_;
+    RowRange rows_;
+    ColRange cols_;
 };
 
 /** @ingroup Arrays
@@ -307,6 +314,27 @@ class ColOperatorBase : public ExprBase< ColOperator< Lhs> >
     int j_;
 };
 
+namespace hidden
+{
+/** @ingroup hidden
+ *  @brief Traits class for the sub operator
+ */
+template<typename Lhs>
+struct Traits< SubOperator <Lhs> >
+{
+  typedef typename Lhs::Type Type;
+  enum
+  {
+    structure_ = Lhs::structure_,
+    orient_    = Lhs::orient_,
+    sizeRows_  = Lhs::sizeRows_,
+    sizeCols_  = Lhs::sizeCols_,
+    storage_   = Lhs::storage_
+  };
+};
+
+} // namespace hidden
+
 /** @ingroup Arrays
   * @class SubOperator
   *
@@ -336,18 +364,24 @@ class SubOperator<Lhs, Arrays::vector_ > : public ExprBase< SubOperator< Lhs> >,
       sizeCols_  = hidden::Traits< SubOperator<Lhs> >::sizeCols_,
       storage_   = hidden::Traits< SubOperator<Lhs> >::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<UnknownSize> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<1> ColRange;
+
     /** Constructor */
-    inline SubOperator( Lhs const& lhs, Range const& I) : Base(), lhs_(lhs), rows_(I) {}
+    inline SubOperator( Lhs const& lhs, RowRange const& I) : Base(), lhs_(lhs), rows_(I) {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return rows_;}
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the first row index of the sub expression */
     inline int const beginRowsImpl() const { return rows_.begin();}
     /** @return the ending row index of the sub expression */
     inline int const endRowsImpl() const { return rows_.end();}
     /** @return the number of rows of the sub expression */
     inline int const sizeRowsImpl() const { return rows_.size();}
+
     /** @return the range of the Columns */
-    inline Range const cols() const { return lhs_.cols();}
+    inline ColRange const& colsImpl() const { return lhs_.cols();}
     /** @return the first column index of the sub expression */
     inline int const beginColsImpl() const { return lhs_.begin();}
     /** @return the ending column index of the sub expression */
@@ -368,7 +402,7 @@ class SubOperator<Lhs, Arrays::vector_ > : public ExprBase< SubOperator< Lhs> >,
 
   protected:
     Lhs const& lhs_;
-    Range rows_;
+    RowRange rows_;
 };
 
 /** @ingroup Arrays
@@ -400,18 +434,23 @@ class SubOperator<Lhs, Arrays::point_ > : public ExprBase< SubOperator< Lhs> >, 
       sizeCols_  = hidden::Traits< SubOperator<Lhs> >::sizeCols_,
       storage_   = hidden::Traits< SubOperator<Lhs> >::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<1> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<UnknownSize> ColRange;
     /** Constructor */
-    inline SubOperator( Lhs const& lhs, Range const& I) : Base(), lhs_(lhs), cols_(I) {}
+    inline SubOperator( Lhs const& lhs, ColRange const& J) : Base(), lhs_(lhs), cols_(J) {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first row index of the sub expression */
     inline int const beginRowsImpl() const { return lhs_.begin();}
     /** @return the ending row index of the sub expression */
     inline int const endRowsImpl() const { return lhs_.end();}
     /** @return the number of rows */
     inline int const sizeRowsImpl() const { return 1;}
+
     /** @return the range of the Columns */
-    inline Range const cols() const { return cols_;}
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the first column index of the sub expression */
     inline int const beginColsImpl() const { return cols_.begin();}
     /** @return the ending column index of the sub expression */
@@ -432,9 +471,9 @@ class SubOperator<Lhs, Arrays::point_ > : public ExprBase< SubOperator< Lhs> >, 
 
   protected:
     Lhs const& lhs_;
-    Range cols_;
+    ColRange cols_;
 };
 
 } // namespace STK
 
-#endif /* STK_SLICEOPERATORS_H */
+#endif /* STK_SLICINGOPERATORS_H */

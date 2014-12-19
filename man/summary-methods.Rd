@@ -6,6 +6,7 @@
 \alias{summary,ClusterDiagGaussian-method}
 \alias{summary,ClusterGamma-method}
 \alias{summary,ClusterHeterogeneous-method}
+\alias{summary,ClusterPoisson-method}
 \alias{summary,IClusterComponent-method}
 \alias{summary,IClusterModelBase-method}
 \alias{summary,MixmodResults-method}
@@ -18,6 +19,8 @@
 \S4method{summary}{ClusterGamma}(object, ...)
 
 \S4method{summary}{ClusterHeterogeneous}(object, ...)
+
+\S4method{summary}{ClusterPoisson}(object, ...)
 
 \S4method{summary}{IClusterModelBase}(object, ...)
 

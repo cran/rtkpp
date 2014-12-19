@@ -60,7 +60,7 @@ Real erf_raw(Real const& a);
 /** @ingroup Analysis
  *  @brief Compute the complementary error function erfc(a)
  */
-Real erfc_raw(int const& a);
+Real erfc_raw(Real const& a);
 
 /** @ingroup Analysis
  *  @brief Compute the cumulative distribution function of

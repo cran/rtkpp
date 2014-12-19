@@ -36,7 +36,7 @@
 #ifndef STK_DATAFRAME_H
 #define STK_DATAFRAME_H
 
-#include "Arrays/include/STK_ITContainer2D.h"
+#include "Arrays/include/STK_ICAllocator.h"
 
 #include "STK_List1D.h"
 #include "STK_IVariable.h"
@@ -49,17 +49,17 @@ namespace STK
   * @brief DataFrame is a List of Variable with the same number of rows.
   *  This is thus also a 2D container.
   *
-  * A DataFrame inherit from the class @c List1D and and @c IContainer2D.
+  * A DataFrame inherit from the class @c List1D and and @c ICAllocatorBase.
   * It is essentially a List, except that each column (the variables)
   * possess the same dimension.
   *
   * Each Cell of the List1D contain a pointer on a Variable.
  **/
-class DataFrame : protected List1D<IVariable* >, public IContainer2D<UnknownSize,UnknownSize>
+class DataFrame : protected List1D<IVariable* >, public ICAllocatorBase<UnknownSize,UnknownSize>
 {
   protected:
     /** Type of the Base container */
-    typedef IContainer2D<UnknownSize, UnknownSize > Base2D;
+    typedef ICAllocatorBase<UnknownSize, UnknownSize > Base2D;
     /** Type for the list container. */
     typedef List1D<IVariable*> Base;
 
@@ -76,7 +76,7 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D<UnknownSize
     virtual ~DataFrame();
 
     /**@return the range of the columns */
-    inline Range cols() const { return Base2D::cols();}
+    inline ColRange const& colsImpl() const { return Base2D::colsImpl();}
     /** @return the index of the first column */
     inline int beginCols() const { return Base2D::beginColsImpl();}
     /**  @return the ending index of the columns */
@@ -85,7 +85,7 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D<UnknownSize
     inline int sizeCols() const { return Base2D ::sizeColsImpl();}
 
     /** @return the range of the rows */
-    inline Range rows() const { return Base2D::rows();}
+    inline RowRange const& rowsImpl() const { return Base2D::rowsImpl();}
     /** @return the index of the first row */
     inline int beginRows() const { return Base2D::beginRowsImpl();}
     /** @return the ending index of the rows */
@@ -93,12 +93,8 @@ class DataFrame : protected List1D<IVariable* >, public IContainer2D<UnknownSize
     /** @return the number of rows */
     inline int sizeRows() const { return Base2D::sizeRowsImpl();}
 
-    /** @return the index of the first column */
-    inline int firstIdxCols() const { return Base2D::firstIdxCols();}
     /**  @return the index of the last column */
     inline int lastIdxCols() const { return Base2D::lastIdxCols();}
-    /** @return the index of the first row */
-    inline int firstIdxRows() const { return Base2D::firstIdxRows();}
     /** @return the index of the last row */
     inline int lastIdxRows() const { return Base2D::lastIdxRows();}
 

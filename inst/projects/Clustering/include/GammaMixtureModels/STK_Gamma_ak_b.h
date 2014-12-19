@@ -57,7 +57,6 @@ struct MixtureTraits< Gamma_ak_b<_Array> >
   typedef _Array Array;
   typedef typename Array::Type Type;
   typedef Gamma_ak_b_Parameters Parameters;
-  typedef MixtureComponent<_Array, Parameters> Component;
   typedef Array2D<Real>        Param;
 };
 
@@ -76,27 +75,26 @@ template<class Array>
 class Gamma_ak_b : public GammaBase<Gamma_ak_b<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_ak_b<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gamma_ak_b<Array> >::Parameters Parameters;
     typedef GammaBase<Gamma_ak_b<Array> > Base;
 
-    typedef Array2D<Real>::ColVector ColVector;
-
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
     using Base::meanjk;
     using Base::variancejk;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline Gamma_ak_b( int nbCluster) : Base(nbCluster), scale_() {}
+    inline Gamma_ak_b( int nbCluster) : Base(nbCluster), scale_(), stat_scale_() {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gamma_ak_b( Gamma_ak_b const& model) : Base(model), scale_(model.scale_) {}
+    inline Gamma_ak_b( Gamma_ak_b const& model)
+                     : Base(model), scale_(model.scale_), stat_scale_(model.stat_scale_) {}
     /** destructor */
     inline ~Gamma_ak_b() {}
     /** Initialize the component of the model.
@@ -109,10 +107,22 @@ class Gamma_ak_b : public GammaBase<Gamma_ak_b<Array> >
       for (int k= baseIdx; k < components().end(); ++k)
       { p_param(k)->p_scale_ = &scale_;}
     }
-    /** use the default static method initializeStep() for a first initialization
-     *  of the parameters using tik values.
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline bool initializeStep() { return mStep();}
+    void storeIntermediateResultsImpl(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResultsImpl()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParametersImpl()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** Initialize randomly the parameters of the Gaussian mixture. The centers
      *  will be selected randomly among the data set and the standard-deviation
      *  will be set to 1.
@@ -121,12 +131,13 @@ class Gamma_ak_b : public GammaBase<Gamma_ak_b<Array> >
     /** Compute the weighted mean and the common variance. */
     bool mStep();
     /** @return the number of free parameters of the model */
-    inline int computeNbFreeParameters() const
-    { return this->nbCluster() + 1;}
+    inline int computeNbFreeParameters() const { return this->nbCluster() + 1;}
 
   protected:
     /** common scale */
     Real scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_scale_;
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers
@@ -166,7 +177,7 @@ bool Gamma_ak_b<Array>::mStep()
   {
     // compute ak
     Real num = 0., den = 0.;
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+    for (int k= baseIdx; k < components().end(); ++k)
     {
       // moment estimate and oldest value
       Real x0 = (p_param(k)->mean_.square()/p_param(k)->variance_).mean();

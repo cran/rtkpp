@@ -32,7 +32,7 @@ NULL
 #' good estimate in the clusering estimation process.
 #'
 #' A strategy is a way to find a good estimate of the parameters of a mixture model
-#' when using an EM algorithm. A ``try'' is composed of three stages
+#' when using an EM algorithm or its variants. A ``try'' is composed of three stages
 #' \itemize{
 #'   \item \code{nbShortRun} short iterations of the initialization step and
 #'    of the \code{EM}, \code{CEM}, \code{SEM} or \code{SemiSEM} algorithm.
@@ -88,7 +88,7 @@ NULL
 #' @author Serge Iovleff
 #' @export
 clusterStrategy <- function( nbTry =1
-                           , nbInit= 3, initMethod="random", initAlgo= "SEM", nbInitIteration=20, initEpsilon=0.01
+                           , nbInit= 3, initMethod="class", initAlgo= "SEM", nbInitIteration=20, initEpsilon=0.01
                            , nbShortRun= 5, shortRunAlgo= "EM", nbShortIteration=100, shortEpsilon=1e-04
                            , longRunAlgo= "EM", nbLongIteration=1000, longEpsilon=1e-07
                            )
@@ -222,7 +222,7 @@ setMethod(
     cat("****************************************\n")
     cat("*** Initialization :\n")
     cat("* method = ", x@initMethod@method, "\n")
-    cat("* number of init       = ", x@initMethod@nbInitRun, "\n")
+    cat("* number of init       = ", x@initMethod@nbInit, "\n")
     cat("* algorithm            = ", x@initMethod@algo@algo, "\n")
     cat("* number of iterations = ", x@initMethod@algo@nbIteration, "\n")
     cat("* epsilon              = ", x@initMethod@algo@epsilon, "\n")
@@ -253,7 +253,7 @@ setMethod(
     cat("****************************************\n")
     cat("*** Initialization :\n")
     cat("* method = ", object@initMethod@method, "\n")
-    cat("* number of init       = ", object@initMethod@nbInitRun, "\n")
+    cat("* number of init       = ", object@initMethod@nbInit, "\n")
     cat("* algorithm            = ", object@initMethod@algo@algo, "\n")
     cat("* number of iterations = ", object@initMethod@algo@nbIteration, "\n")
     cat("* epsilon              = ", object@initMethod@algo@epsilon, "\n")

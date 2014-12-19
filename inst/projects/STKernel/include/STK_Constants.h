@@ -62,7 +62,7 @@ const int UnknownSize = INT_MAX;
 
 /** @ingroup STKernel
  * This value means that when we unroll loops we go until MaxUnroll */
-const int MaxUnroll = 100;
+const int MaxUnroll = 20;
 
 /** @ingroup STKernel
  * This value means that when we unroll loops we go until MaxUnrollSquareRoot */

@@ -28,13 +28,13 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file RcppMatrix.h
+/** @file STK_RMatrix.h
  *  @brief In this file we define the wrapper of the the Rcpp matrices.
  **/
 
 
-#ifndef RCPPMATRIX_H
-#define RCPPMATRIX_H
+#ifndef STK_RMATRIX_H
+#define STK_RMATRIX_H
 
 #include "../../Arrays/include/STK_ExprBaseVisitor.h"
 #include "../../Arrays/include/STK_ExprBaseDot.h"
@@ -49,24 +49,24 @@ namespace STK
 {
 
 // forward declaration
-template <typename Type_> class RcppMatrix;
+template <typename Type_> class RMatrix;
 
 namespace hidden
 {
 /** @ingroup hidden
- *  @brief Specialization of the Traits class for the  STK::IntegerMatrix class.
+ *  @brief Specialization of the Traits class for the  STK::RMatrix class.
  **/
 template<typename Type_>
-struct Traits< RcppMatrix<Type_> >
+struct Traits< RMatrix<Type_> >
 {
   private:
     class Void {};
   public:
     typedef Type_ Type;
-    typedef RowOperator< RcppMatrix<Type_> > Row;
-    typedef RowOperator< RcppMatrix<Type_> > SubRow;
-    typedef ColOperator< RcppMatrix<Type_> > Col;
-    typedef ColOperator< RcppMatrix<Type_> > SubCol;
+    typedef RowOperator< RMatrix<Type_> > Row;
+    typedef RowOperator< RMatrix<Type_> > SubRow;
+    typedef ColOperator< RMatrix<Type_> > Col;
+    typedef ColOperator< RMatrix<Type_> > SubCol;
     typedef Void SubVector;
     typedef Void SubArray;
 
@@ -83,34 +83,53 @@ struct Traits< RcppMatrix<Type_> >
 } // namespace hidden
 
 template <typename Type_>
-class RcppMatrix : public ArrayBase< RcppMatrix<Type_> >
+class RMatrix : public ArrayBase< RMatrix<Type_> >
 {
   public:
-    typedef typename hidden::Traits<RcppMatrix >::Type Type;
-    typedef typename hidden::Traits<RcppMatrix >::Row Row;
-    typedef typename hidden::Traits<RcppMatrix >::Col Col;
-    typedef typename hidden::Traits<RcppMatrix >::SubRow SubRow;
-    typedef typename hidden::Traits<RcppMatrix >::SubCol SubCol;
+    typedef typename hidden::Traits<RMatrix >::Type Type;
+    typedef typename hidden::Traits<RMatrix >::Row Row;
+    typedef typename hidden::Traits<RMatrix >::Col Col;
+    typedef typename hidden::Traits<RMatrix >::SubRow SubRow;
+    typedef typename hidden::Traits<RMatrix >::SubCol SubCol;
     enum
     {
+      structure_ = hidden::Traits<RMatrix<Type_> >::structure_,
+      orient_    = hidden::Traits<RMatrix<Type_> >::orient_,
+      sizeRows_  = hidden::Traits<RMatrix<Type_> >::sizeRows_,
+      sizeCols_  = hidden::Traits<RMatrix<Type_> >::sizeCols_,
+      storage_   = hidden::Traits<RMatrix<Type_> >::storage_,
+
       Rtype_ = hidden::RcppTraits<Type_>::Rtype_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
+
     /** Default Constructor. */
-    inline RcppMatrix() : matrix_() {}
+    inline RMatrix() : matrix_(),rows_(), cols_() {}
     /** Constructor with SEXP. */
-    inline RcppMatrix(SEXP robj) : matrix_(robj) {}
+    inline RMatrix( SEXP robj)
+                     : matrix_(robj),rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
+    {}
     /** Constructor */
-    inline RcppMatrix( Rcpp::Matrix<Rtype_> matrix) : matrix_(matrix) {}
+    inline RMatrix( Rcpp::Matrix<Rtype_> matrix)
+                     : matrix_(matrix),rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
+    {}
     /** set Matrix .
      *  @param matrix the Rcpp matrix to wrap
      *  @note cannot be passed as const& due to a bug from the Rcpop side
      * */
-    inline void setMatrix( Rcpp::Matrix<Rtype_> matrix) { matrix_ = matrix;}
+    inline void setMatrix( Rcpp::Matrix<Rtype_> matrix)
+    { matrix_ = matrix;
+      rows_ = RowRange(0, matrix_.rows());
+      cols_ = RowRange(0, matrix_.cols());
+    }
     /** cast operator */
     inline operator Rcpp::Matrix<Rtype_>() const { return matrix_;}
 
-    /** @return the Vertical range */
-    inline Range rows() const { return Range(0, matrix_.rows());}
+    /** @return the range of the rows */
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the index of the first row */
     inline int beginRowsImpl() const { return 0;}
     /** @return the ending index of the rows */
@@ -118,8 +137,8 @@ class RcppMatrix : public ArrayBase< RcppMatrix<Type_> >
     /** @return the number of rows */
     inline int sizeRowsImpl() const { return matrix_.rows();}
 
-    /**@return the Horizontal range */
-    inline Range cols() const { return Range(0, matrix_.cols());}
+    /**@return the range of the columns */
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the index of the first column */
     inline int beginColsImpl() const { return 0;}
     /**  @return the ending index of the columns */
@@ -134,33 +153,35 @@ class RcppMatrix : public ArrayBase< RcppMatrix<Type_> >
    /** @return a constant reference on element (i,j) of the 2D container
      *  @param i, j indexes of the row and of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (matrix_(i,j));}
+    inline Type const& elt2Impl(int i, int j) const { return static_cast<Type const&>(matrix_(i,j));}
     /** @return a reference on the element (i,j) of the 2D container.
      *  @param i, j indexes of the row and of the column
      **/
     inline Type& elt2Impl(int i, int j) { return (matrix_(i,j));}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param T the container to copy
      **/
-    inline RcppMatrix& operator=( RcppMatrix const& T)
+    inline RMatrix& operator=( RMatrix const& T)
     { matrix_ = T.matrix_; return *this;}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param T the container to copy
      **/
     template<class OtherType>
-    inline RcppMatrix& operator=( RcppMatrix<OtherType> const& T)
+    inline RMatrix& operator=( RMatrix<OtherType> const& T)
     { matrix_ = T.matrix_; return *this;}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param T the container to copy
      **/
     template<int OtherRtype>
-    inline RcppMatrix& operator=( Rcpp::Matrix<OtherRtype> const& matrix)
+    inline RMatrix& operator=( Rcpp::Matrix<OtherRtype> const& matrix)
     { matrix_ = matrix; return *this;}
   private:
     Rcpp::Matrix<Rtype_> matrix_;
+    RowRange rows_;
+    ColRange cols_;
 };
 
 } // namespace STK
 
 
-#endif /* RCPPMATRIX_H */
+#endif /* STK_RMATRIX_H */

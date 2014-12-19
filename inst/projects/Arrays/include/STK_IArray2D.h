@@ -50,10 +50,37 @@ namespace STK
   * @brief Interface base class for two-dimensional arrays.
   *
   * A IArray2D is a specialized interface class for two-dimensional
-  * containers stored in columns. All derived class from @c IArray2D
-  * access to the column using a @c Type* ptr.
+  * arrays stored in columns. All derived class from @c IArray2D
+  * access to a column using a @c Type* ptr.
   *
   * All memory is allocated there using the @c rangeRowsInCol method.
+  *
+  * The available methods for manipulating the derived (2D) arrays are
+  * @code
+  *     void shift( int rbeg, int cbeg);
+  *     void pushBackRows( int n=1);
+  *     void pushBackRows( int n=1);
+  *     void pushFrontRows( int n=1);
+  *     void insertRows(int pos, int n=1);
+  *     void eraseRows(int pos, int n=1);
+  *     void pushBackCols( int n=1);
+  *     void pushFrontCols( int n=1);
+  *     void insertCols(int pos, int n=1);
+  *     void eraseCols(int pos, int n=1);
+  *     Derived& resize( Range const& I, Range const& J);
+  *     template<class Other>
+  *     Derived& pushFrontRows(ExprBase<Other> const& other);
+  *     template<class Other>
+  *     Derived& pushBackRows(ExprBase<Other> const& other);
+  *     template<class Other>
+  *     Derived& pushFrontCols(ExprBase<Other> const& other);
+  *     template<class Other>
+  *     Derived& pushBackCols(ExprBase<Other> const& other);
+  *     template<class Other>
+  *     Derived& pushFrontCols(ExprBase<Other> const& other);
+  *     template<class Other>
+  *     Derived& pushBackCols(ITContainer1D<Other> const& other);
+  * @endcode
   *
   * @tparam Derived is the name of the class implementing an @c IArray2D.
   * @sa Array2D, @sa Array2DDiagonal, @sa Array2DLowerTriangular,
@@ -68,13 +95,6 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     typedef typename hidden::Traits<Derived>::Type Type;
     typedef IArray2DBase< Type*, Derived> Base;
 
-    typedef typename hidden::Traits<Derived>::Row Row;
-    typedef typename hidden::Traits<Derived>::Col Col;
-    typedef typename hidden::Traits<Derived>::SubRow SubRow;
-    typedef typename hidden::Traits<Derived>::SubCol SubCol;
-    typedef typename hidden::Traits<Derived>::SubArray SubArray;
-    typedef typename hidden::Traits<Derived>::SubVector SubVector;
-
   protected:
     /** Default constructor */
     IArray2D() : Base() {}
@@ -85,21 +105,21 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     IArray2D( Range const& I, Range const& J) : Base(I, J)
     { initializeCols(J);}
     /** Copy constructor
-     *  @param T the container to copy
+     *  @param T the array to copy
      *  @param ref true if we wrap T
      **/
     IArray2D( const IArray2D& T, bool ref =false) : Base(T, ref)
     {
       if (!ref)
       {
-        // initialize the Cols and Rows
+        // initialize the Columns and Rows
         initializeCols(T.cols());
         for (int j=T.beginCols(); j<T.endCols(); j++)
         { copyColumnForward(T, j, j);}
       }
     }
     /** constructor by reference, ref_=1.
-     *  @param T the container to copy
+     *  @param T the array to copy
      *  @param I range of the Rows to wrap
      *  @param J range of the Col to wrap
      **/
@@ -110,7 +130,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     /** Wrapper constructor the Container is a ref.
      *  @param q pointer on data
      *  @param I range of the Rows to wrap
-     *  @param J range of the Cols to wrap
+     *  @param J range of the Columns to wrap
      **/
     IArray2D( Type** q, Range const& I, Range const& J) : Base(q, I, J) {}
     /** destructor.
@@ -120,69 +140,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     ~IArray2D() { if (!this->isRef()) this->freeCols(this->cols());}
 
   public:
-    /** access to one element.
-     *  @param i index of the row
-     *  @param j index of the col
-     *  @return a reference on the (i,j) element
-     **/
-    inline Type& elt2Impl( int i, int j)
-    { return this->data(j)[i];}
-    /** access to one element const.
-     *  @param i index of the row
-     *  @param j index of the col
-     *  @return a constant reference on the (i,j) element
-     **/
-    inline Type const& elt2Impl( int i, int j) const
-    { return this->data(j)[i];}
-    /** @return  many elements.
-     *  @param J Range of the elements
-     **/
-    inline SubVector subImpl(Range const& J) const
-    { return SubVector(this->asDerived(), J);}
-    /** access to a part of a column.
-     *  @param I range of the rows
-     *  @param j index of the col
-     *  @return a reference in the range I of the column j of this
-     **/
-    inline SubCol colImpl(Range const& I, int j) const
-    { return SubCol( this->asDerived(), Range::inf(I, this->asDerived().rangeRowsInCol(j)), j);}
-    /** access to a part of a column.
-     *  @param j index of the column
-     *  @return a reference in the range I of the column j of this
-     **/
-    inline Col colImpl( int j) const
-    { return Col( this->asDerived(), this->asDerived().rangeRowsInCol(j), j);}
-    /** access to a part of a row.
-     *  @param i index of the row
-     *  @param J range of the columns
-     *  @return a reference of the row i.
-     **/
-    inline SubRow rowImpl(int i, Range const& J) const
-    { return SubRow( this->asDerived(), Range::inf(J, this->asDerived().rangeColsInRow(i)), i);}
-    /** access to a part of a row.
-     *  @param i index of the row
-     *  @return a reference of the row i.
-     **/
-    inline Row rowImpl( int i) const
-    { return Row( this->asDerived(), this->asDerived().rangeColsInRow(i), i);}
-    /** access to many columns.
-     *  @param J range of the index of the cols
-     *  @return a 2D container containing the Container in the Horizontal range @c J
-     **/
-    inline SubArray colImpl(Range const& J) const { return subImpl(this->rows(), J);}
-    /** access to many rows.
-     *  @param I range of the index of the rows
-     *  @return a 2D container containing the Container in the vertical range @c I
-     **/
-    inline SubArray rowImpl(Range const& I) const { return subImpl(I, this->cols());}
-    /** access to a sub-array.
-     *  @param I range of the rows
-     *  @param J range of the columns
-     **/
-    inline SubArray subImpl(Range const& I, Range const& J) const
-    { return SubArray(this->asDerived(), I, J);}
-
-    /** set a value to the whole container */
+    /** set a value to the whole array */
     Derived& setValue(Type const& v)
     {
       for (int j=this->beginCols(); j<this->endCols(); j++)
@@ -194,14 +152,15 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     }
     /** move T to this.
      *  @note : T is not modified but just set as a reference of the data it was responsible.
-     *  @param T the container to move.
+     *  @param T the array to move.
      **/
-     void move(Derived const& T)
+     Derived& move(Derived const& T)
      {
-       if (this->asPtrDerived() == &T) return;
+       if (this->asPtrDerived() == &T) return this->asDerived();
        if (!this->isRef()) { freeCols(this->cols());}
        // move Base part
        Base::move(T);
+       return this->asDerived();
      }
     /** clear the object.
      *  This will free all allocated memory and reset all range to Range().
@@ -217,24 +176,23 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       this->mallocHo(this->cols());
       initializeCols(this->cols());
     }
-    /** New first indexes for the object.
-     *  @param rbeg the index of the first row to set
-     *  @param cbeg the index of the first column to set
+    /** @brief Set new beginning indexes to the array.
+     *  @param rbeg, cbeg the indexes of the first row and first column to set
      **/
     void shift( int rbeg, int cbeg)
     {
       // move begin of the columns
-      this->shiftbeginCols(cbeg);
+      this->shiftBeginCols(cbeg);
       // move begin of the rows
-      this->shiftFirstIdxRows(rbeg);
+      this->shiftBeginRows(rbeg);
     }
-    /** resize the container.
+    /** resize the array.
      *
      *  @note The implicit assumption made by this method is that it is easiest
-     *  and faster to add column than add rows to the 2D container.
+     *  and faster to add column than add rows to the 2D array.
      *
-     * @param I the new range for the rows of the container
-     * @param J the new range for the columns of the container
+     * @param I the new range for the rows of the array
+     * @param J the new range for the columns of the array
      **/
     Derived& resize( Range const& I, Range const& J)
     {
@@ -281,22 +239,22 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     /** New first index for the Rfws of the array.
      *  @param rbeg the index of the first row to set
      **/
-    void shiftFirstIdxRows( int rbeg)
+    void shiftBeginRows( int rbeg)
     {
-       // compute increment
-     int rinc = rbeg - this->beginRows();
+      // compute increment
+      int rinc = rbeg - this->beginRows();
       // if there is something to do
       if (rinc == 0) return;
       // is this structure just a pointer?
       if (this->isRef())
-      { STKRUNTIME_ERROR_1ARG(IArray2D::shiftFirstIdxRows,rbeg,cannot operate on reference);}
+      { STKRUNTIME_ERROR_1ARG(IArray2D::shiftBeginRows,rbeg,cannot operate on reference);}
       // translate rows_()
-      Base::shiftFirstIdxRows(rbeg);
+      Base::shiftBeginRows(rbeg);
       // For all cols, move begin
       for (int j=this->beginCols(); j<this->endCols(); j++)
       { shiftCol(j, this->rangeCols_[j].begin()+rinc);}
     }
-    /** Add n Rows to the container.
+    /** Add n Rows to the array.
      *  @param n number of Rows to add
      **/
     void pushBackRows( int n=1)
@@ -306,12 +264,12 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // is this structure just a pointer?
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(IArray2D::pushBackRows,n,cannot operate on reference);}
-      // If the container have no rows : create its
+      // If the array have no rows : create its
       if (this->sizeRows() <=0)
       {
-        // update the range of the container
+        // update the range of the array
         this->incLastIdxRows(n);
-        // initialize the container
+        // initialize the array
         this->initializeCols(this->cols());
       }
       else
@@ -323,7 +281,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         {
           // compute range from the leaf
           Range range(this->asDerived().rangeRowsInCol(j));
-          // if there is no column or the end is less than the container
+          // if there is no column or the end is less than the array
           // end
           if ((range.size()>0)&&(range.lastIdx()>this->lastIdxRows()-n))
           {
@@ -343,7 +301,29 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         }
       }
     }
-    /** Insert n Rows at the position pos of the container.
+    /** Insert n Rows in front of the array.
+     *  @param n number of elements to insert (default 1)
+     **/
+    void pushFrontRows(int n =1)
+    {
+      // if n<=0 nothing to do
+      if (n <= 0) return;
+      // is this structure just a pointer?
+      if (this->isRef())
+      { STKRUNTIME_ERROR_1ARG(IArray2D::pushFrontRows,n,cannot operate on reference);}
+      int pos = this->beginRows();      // update the range of the rows
+      this->incLastIdxRows(n);
+      // allocate new Rows for each Col
+      for (int j=this->beginCols(); j<this->endCols(); j++)
+      {
+        // check position
+        if ( (pos >= this->rangeCols_[j].begin())
+           ||(pos <= this->rangeCols_[j].end())
+           )
+        { insertRowsToCol(j, pos, n);}
+      }
+    }
+    /** Insert n Rows at the position pos of the array.
      *  If pos is outside the range of a column, then the
      *  method do nothing.
      *  @param pos index where to insert Rows
@@ -372,7 +352,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         { insertRowsToCol(j, pos, n);}
       }
     }
-    /** Delete last n latest rows of the container.
+    /** Delete n latest rows of the array.
      *  @param n number of rows to delete
      **/
     void popBackRows( int n = 1)
@@ -390,7 +370,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         eraseRowsToCol(j, this->endRows(), n);
     }
 
-    /** Delete n Rows at the pos index to the container.
+    /** Delete n Rows at the pos index to the array.
      *  @param pos index where to delete elements
      *  @param n number of elements to delete (default 1)
     **/
@@ -413,8 +393,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // update dimensions
       this->decLastIdxRows(n);
     }
-    /** Add n Cols to the container.
-     *  @param n the number of Cols to add
+    /** Add n Columns at the end of the array.
+     *  @param n the number of Columns to add
      **/
     void pushBackCols(int n = 1)
     {
@@ -423,18 +403,70 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // is this structure just a pointer?
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(IArray2D::pushBackCols,n,cannot operate on reference);}
-      // If the container have no Cols : create its
+      // If the array have no Columns : create its
       if (this->sizeCols() <=0)
       {
         this->incLastIdxCols(n);
         this->mallocHo( this->cols());
         initializeCols( this->cols());
       }
-      else // else insert to the end of the container
+      else // else insert to the end of the array
       { insertCols(this->lastIdxCols()+1, n);}
     }
-    /** Insert n Columns at the index pos to the container.
-     *  @param pos the position of the inserted Cols
+    /** Insert n Columns at the beginning of the array.
+     *  @param n the number of column to insert
+     **/
+    void pushFrontCols(int n =1)
+    {
+      // if n<=0 nothing to do
+      if (n <= 0) return;
+      // is this structure just a pointer?
+      if (this->isRef())
+      { STKRUNTIME_ERROR_1ARG(IArray2D::pushFrontCols,n,cannot operate on reference);}
+      // compute horizontal range of the array after insertion
+      Range range_ho(this->cols());
+      range_ho.incLast(n);
+      // allocate, if necessary, the mem for the Cols
+      if (this->availableCols() < range_ho.size()) //  not enough space
+      {
+        // exchange with Taux
+        Derived Taux;
+        this->exchange(Taux);
+        // initialize columns of the array
+        try
+        {
+          this->mallocHo(range_ho);
+        }
+        catch (Exception const& error)   // if an error occur
+        {
+          this->exchange(Taux);   // restore array
+          throw error;            // and send again the exception
+        }
+        // set the ranges
+        this->setCols(range_ho);
+        this->setRows(Taux.rows());
+        // translate and copy last Columns from Taux to this
+        for (int k=Taux.lastIdxCols(); k>=Taux.beginCols(); k--)
+          this->transferColumn(Taux, k+n, k);
+      }
+      else // enough space -> shift the last Cols
+      {
+        Range addRange(this->endCols(), n);
+        // insert default capacity for the new Columns
+        this->availableRows_.insert(addRange, 0);
+        // insert default range for the new Columns
+        this->rangeCols_.insert(addRange, Range());
+        // update range_
+        this->incLastIdxCols(n);
+        // translate data
+        for (int k=this->lastIdxCols()-n; k>=this->beginCols(); k--)
+          this->transferColumn( this->asDerived(), k+n, k);
+      }
+      // initialize the rows for n first Columns
+      this->initializeCols(Range(this->beginCols(), n));
+    }
+    /** Insert n Columns at the index pos to the array.
+     *  @param pos the position of the inserted Columns
      *  @param n the number of column to insert
      **/
     void insertCols(int pos, int n =1)
@@ -448,23 +480,23 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       { STKOUT_OF_RANGE_2ARG(IArray2D::insertCols,pos,n,beginCols() > pos);}
       if (this->endCols() < pos)
       { STKOUT_OF_RANGE_2ARG(IArray2D::insertCols,pos,n,endCols() < pos);}
-      // compute horizontal range of the container after insertion
+      // compute horizontal range of the array after insertion
       Range range_ho(this->cols());
       range_ho.incLast(n);
       // allocate, if necessary, the mem for the Cols
-      if (this->capacityHo() < range_ho.size()) //  not enough space
+      if (this->availableCols() < range_ho.size()) //  not enough space
       {
         // exchange with Taux
         Derived Taux;
         this->exchange(Taux);
-        // initialize columns of the container
+        // initialize columns of the array
         try
         {
           this->mallocHo(range_ho);
         }
         catch (Exception & error)   // if an error occur
         {
-          this->exchange(Taux);   // restore container
+          this->exchange(Taux);   // restore array
           throw error;        // and send again the exception
         }
         // set the ranges
@@ -473,7 +505,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         // move first Columns from Taux to this
         for (int k=Taux.beginCols(); k<pos; k++)
           this->transferColumn(Taux, k, k);
-        // translate and copy last Cols from Taux to this
+        // translate and copy last Columns from Taux to this
         for (int k=Taux.lastIdxCols(); k>=pos; k--)
           this->transferColumn(Taux, k+n, k);
       }
@@ -481,7 +513,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       {
         Range addRange(this->lastIdxCols()+1, n);
         // insert default capacity for the new Columns
-        this->capacityCols_.insert(addRange, 0);
+        this->availableRows_.insert(addRange, 0);
         // insert default range for the new Columns
         this->rangeCols_.insert(addRange, Range());
         // update range_
@@ -490,12 +522,12 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         for (int k=this->lastIdxCols()-n; k>=pos; k--)
           this->transferColumn( this->asDerived(), k+n, k);
       }
-      // initialize the rows for the Cols, this->capacityCols_, this->rangeCols_
+      // initialize the rows for the Cols, this->availableRows_, this->rangeCols_
       // in the range pos:pos+n-1
       this->initializeCols(Range(pos, n));
     }
-    /** Delete last Cols of the container
-     *  @param n the number of Cols to delete
+    /** Delete last Columns of the array
+     *  @param n the number of Columns to delete
      **/
     void popBackCols( int n =1)
     {
@@ -508,8 +540,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       { STKOUT_OF_RANGE_1ARG(IArray2D::popBackCols,n,sizeCol() < n);}
       // delete each col
       this->freeCols(Range(this->lastIdxCols()-n+1, this->lastIdxCols(), 0));
-      // update this->capacityCols_
-      this->capacityCols_.popBack(n);
+      // update this->availableRows_
+      this->availableRows_.popBack(n);
       // update this->rangeCols_
       this->rangeCols_.popBack(n);
       // update cols
@@ -517,8 +549,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // if there is no more Cols
       if (this->sizeCols() == 0) this->freeMem();
     }
-    /** Delete n Cols at the specified position of the container.
-     *  @param pos the position of the deleted Cols
+    /** Delete n Columns at the specified position of the array.
+     *  @param pos the position of the deleted Columns
      *  @param n the number of column to delete
      **/
     void eraseCols(int pos, int n = 1)
@@ -540,15 +572,15 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // shift Cols
       for (int k=pos; k<this->endCols(); k++)
         this->data(k) = this->data(k+n);
-      // update this->capacityCols_
-      this->capacityCols_.erase(pos, n);
+      // update this->availableRows_
+      this->availableRows_.erase(pos, n);
       // update this->rangeCols_
       this->rangeCols_.erase(pos, n);
       // if there is no more Cols
       if (this->sizeCols() == 0) this->freeMem();
     }
-    /** Update the columns of the container in the specified range.
-     *  @param J range of the column to udpate
+    /** Update the columns of the array in the specified range.
+     *  @param J range of the column to update
      **/
     void update(Range const& J)
     {
@@ -560,7 +592,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       { update(icol);}
     }
 
-    /** Update the column of the container in the specified position.
+    /** Update the column of the array in the specified position.
      *  @param col index of the column to update
      **/
     void update(int col)
@@ -576,7 +608,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     /** overwrite @c this with @c src.
      *  @note If the size match, @c this is not resized, and in this case,
      *  the method take care of the possibly of overlapping.
-     *  @param src the container to copy
+     *  @param src the array to copy
      **/
     Derived& copy( IArray2D const& src)
     {
@@ -611,8 +643,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     }
 
     /** overwrite @c this with @c src.
-     *  @note this méthod does not take care of the possibility of overlapping
-     *  @param src the container to copy
+     *  @note this method does not take care of the possibility of overlapping
+     *  @param src the array to copy
      **/
     template<class OtherDerived>
     Derived& copy( ExprBase<OtherDerived> const& src)
@@ -627,22 +659,48 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // return this
       return this->asDerived();
     }
-    /** merge (by value) the container other with this.
-     *  @param other the container to merge to this
+    /** merge (by value) the array other with this.
+     *  @param other the array to merge to this
      **/
     template<class Other>
-    void pushBackCols(ExprBase<Other> const& other)
+    Derived& pushFrontCols(ExprBase<Other> const& other)
     {
-      // check if the container is empty
+      // check if the array is empty
       if (this->empty())
       {
         this->asDerived() = other.asDerived();
-        return;
+        return this->asDerived();
       }
       // this is not empty
       if (other.rows() != this->rows())
-      { STKRUNTIME_ERROR_NO_ARG(TContainer2D::pushBackCols,range of the rows are different);}
-      // if the container is not empty we add the column and copy other inside
+      { STKRUNTIME_ERROR_NO_ARG(IArray2D::pushFrontCols,range of the rows are different);}
+      // if the array is not empty we add the column and copy other inside
+      int size = other.sizeCols(), first = this->beginCols();
+      insertCols(first,size);
+      for (int j0= first, j1= other.beginCols(); j1 < other.endCols(); ++j0, ++j1)
+      {
+        for (int i=other.beginRows(); i<other.endRows(); i++)
+          (*this)(i, j0) = other(i,j1);
+      }
+      // return this
+      return this->asDerived();
+    }
+    /** merge (by value) the array other with this.
+     *  @param other the array to merge to this
+     **/
+    template<class Other>
+    Derived& pushBackCols(ExprBase<Other> const& other)
+    {
+      // check if the array is empty
+      if (this->empty())
+      {
+        this->asDerived() = other.asDerived();
+        return this->asDerived();
+      }
+      // this is not empty
+      if (other.rows() != this->rows())
+      { STKRUNTIME_ERROR_NO_ARG(IArray2D::pushBackCols,range of the rows are different);}
+      // if the array is not empty we add the column and copy other inside
      int size = other.sizeCols(), first = this->lastIdxCols()+1;
       pushBackCols(size);
       for (int j0= first, j1= other.beginCols(); j1 < other.endCols(); ++j0, ++j1)
@@ -650,47 +708,79 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         for (int i=other.beginRows(); i<other.endRows(); i++)
           (*this)(i, j0) = other(i,j1);
       }
+      // return this
+      return this->asDerived();
     }
-    /** Specialization for Array1D. merge (by value) the container other with this
+    /** Specialization for Array1D. merge (by value) the array other with this
      *  @param other the column to add to this
      **/
     template<class Other>
-    void pushBackCols(ITContainer1D<Other> const& other)
+    Derived& pushBackCols(ITContainer1D<Other> const& other)
     {
-      // check if the container is empty
+      // check if the array is empty
       if (this->empty())
       {
         resize(other.rows(),1);
         for (int i=other.begin(); i<=other.lastIdx(); i++)
           (*this)(i, baseIdx) = other[i];
-        return;
+        return this->asDerived();
       }
       // not empty
       if (other.rows() != this->rows())
-      { STKRUNTIME_ERROR_NO_ARG(TContainer2D::pushBackCols(other),other.rows() != rows());}
-      // if the container is not empty we add the column and copy other inside
+      { STKRUNTIME_ERROR_NO_ARG(IArray2D::pushBackCols(other),other.rows() != rows());}
+      // if the array is not empty we add the column and copy other inside
       int size = other.sizeCols(), first = this->lastIdxCols()+1;
       pushBackCols(size);
       for (int i=other.begin(); i<other.end(); i++)
         (*this)(i, first) = other[i];
+      // return this
+      return this->asDerived();
     }
-    /** set other at the end of this (concatenate). Perform a copy of the
+    /** set other at the beginning of this (concatenate). Perform a copy of the
      *  values stored in other to this.
-     *  @param other the container to add back
+     *  @param other the array to add
      *  @note the size and the type have to match
      **/
     template<class Other>
-    void pushBackRows(ExprBase<Other> const& other)
+    Derived& pushFrontRows(ExprBase<Other> const& other)
     {
-      // check if the container is empty
+      // check if the array is empty
       if (this->empty())
       {
         this->asDerived() = other.asDerived();
-        return;
+        return this->asDerived();
       }
       // not empty
       if (other.cols() != this->cols())
-        STKRUNTIME_ERROR_NO_ARG(Iarrya2D::pushBackRows,range of the columns are different);
+        STKRUNTIME_ERROR_NO_ARG(IArray2D::pushBackRows,range of the columns are different);
+      // add nbRow to existing rows
+      int nbRow = other.sizeRows();
+      pushFrontRows(nbRow);
+      for (int j=this->beginCols(); j< this->endCols(); ++j)
+      {
+        for (int i=this->beginRows(), iOther= other.beginRows(); iOther<other.endRows(); ++i, ++iOther)
+        { this->elt(i,j) = other.elt(iOther,j);}
+      }
+      // return this
+      return this->asDerived();
+    }
+    /** set other at the end of this (concatenate). Perform a copy of the
+     *  values stored in other to this.
+     *  @param other the array to add back
+     *  @note the size and the type have to match
+     **/
+    template<class Other>
+    Derived& pushBackRows(ExprBase<Other> const& other)
+    {
+      // check if the array is empty
+      if (this->empty())
+      {
+        this->asDerived() = other.asDerived();
+        return this->asDerived();
+      }
+      // not empty
+      if (other.cols() != this->cols())
+        STKRUNTIME_ERROR_NO_ARG(IArray2D::pushBackRows,range of the columns are different);
       // add nbRow to existing rows
       int nbRow = other.sizeRows();
       pushBackRows(nbRow);
@@ -700,46 +790,91 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         for (int i=this->lastIdxRows(), iOther= other.lastIdxRows(); iOther>=other.beginRows(); --i, --iOther)
         { this->elt(i,j) = other.elt(iOther,j);}
       }
+      // return this
+      return this->asDerived();
     }
+    /** @brief function for reserving memory in all the columns
+     *  @param sizeRows the size to reserve for the rows
+     *  @param sizeCols the size to reserve for the columns
+     **/
+    void reserve(int sizeRows, int sizeCols)
+    {
+      this->reserveCols(sizeCols);
+      reserveRows(sizeRows);
+    }
+    /** @brief function for reserving memory in all the columns
+     *  @param size the size to reserve
+     **/
+    void reserveRows(int size)
+    { reserveRows(this->cols(), size);}
 
   protected:
     /** copy forward the column @c srcCol of @c src in the column @c dstCol of this. */
     void copyColumnForward(IArray2D const& src, int jDst, int jSrc)
     {
       Type *dp =this->data(jDst), *sp =src.data(jSrc);
-      const int tfirst(this->rangeCols_[jDst].begin())
-              , sfirst(src.rangeCols_[jSrc].begin())
-              , slast (src.rangeCols_[jSrc].lastIdx());
-      for ( int it=tfirst, is=sfirst; is<=slast; it++, is++) dp[it] = sp[is];
+      const int tfirst(this->rangeCols_[jDst].begin());
+      const int sfirst(src.rangeCols_[jSrc].begin());
+      const int send (src.rangeCols_[jSrc].end());
+      for ( int it=tfirst, is=sfirst; is<send; it++, is++) dp[it] = sp[is];
     }
     /** copy backward the column @c jSrc of @c src in the column @c jDst of this. */
     void copyColumnBackward(IArray2D const& src, int jDst, int jSrc)
     {
       Type *dp =this->data(jDst), *sp =src.data(jSrc);
       const int tlast (this->rangeCols_[jDst].lastIdx())
-                  , sfirst(src.rangeCols_[jSrc].begin())
-                  , slast (src.rangeCols_[jSrc].lastIdx());
+              , sfirst(src.rangeCols_[jSrc].begin())
+              , slast (src.rangeCols_[jSrc].lastIdx());
 
       for ( int it=tlast, is=slast; is>=sfirst; it--, is--) dp[it] = sp[is];
     }
+    /** Memory deallocation.
+     *  This method clear all allocated memory. The range of the Cols
+     *  is set to (beginHo_:beginHo_-1). The range of the Rows remain
+     *  unmodified.
+     **/
+    void freeMem()
+    {
+      // Nothing to do for reference
+      if (this->isRef()) return;
+      // free the Rows memory
+      this->freeCols(this->cols());
+      // liberate horizontally
+      this->freeRows();
+    }
 
   private:
-    /** Function for memory allocation and initialization.
-     *  The capacity for the Rows have to be set before calling this method.
-     *  @param J vertical range of the Cols to initialize
+    /** @brief internal function for reserving memory in a range of columns.
+     *  @param J range of the Columns to initialize
+     *  @param size the size to reserve
      **/
-    void initializeCols(Range const& J)
+    void reserveRows(Range const& J, int size)
     {
-      // set the ranges
-      if (this->beginCols() > J.begin())
-      { STKOUT_OF_RANGE_1ARG(IArray2D::initializeCols,J,beginCols() > J.begin());}
-      if (this->endCols() < J.end())
-      { STKOUT_OF_RANGE_1ARG(IArray2D::initializeCols,J,endCols() < J.end());}
       for (int j=J.begin(); j<J.end(); j++)
       {
         try
         {
-          // initialize the column with the range specific to the container
+          this->reserveRowsToCol(j, size);
+        }
+        catch(Exception const& error)// if an error occur just stop iterations
+        {
+          stk_cout << "J=" << J << "\n";
+          stk_cout << "size=" << size << "\n";
+          stk_cout << "this->cols()=" << this->cols() << "\n";
+        }
+      }
+    }
+    /** @brief main function for memory allocation and initialization of the columns.
+     *  The capacity for the Rows have to be set before calling this method.
+     *  @param J vertical range of the Columns to initialize
+     **/
+    void initializeCols(Range const& J)
+    {
+      for (int j=J.begin(); j<J.end(); j++)
+      {
+        try
+        {
+          // initialize the column with the range specific to the array
           this->initializeCol(j, this->rangeRowsInCol(j));
         }
         catch (Exception const& error)   // if an error occur
@@ -766,15 +901,15 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       {
         // set default for ptr
         this->data(pos) = 0;
-        // set default value for this->capacityCols_[pos]
-        this->capacityCols_[pos] = 0;
+        // set default value for this->availableRows_[pos]
+        this->availableRows_[pos] = 0;
         // set default value for this->rangeCols_[pos]
         this->rangeCols_[pos] = I;
         // return
         return;
       }
       // compute the size necessary (cannot be 0)
-     int size = Arrays::evalSizeCapacity(I.size());
+      int size = Arrays::evalSizeCapacity(I.size());
       // try to allocate memory
       try
       {
@@ -784,8 +919,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       {
         // set default for ptr
         this->data(pos) = 0;
-        // set default value for this->capacityCols_[pos]
-        this->capacityCols_[pos] = 0;
+        // set default value for this->availableRows_[pos]
+        this->availableRows_[pos] = 0;
         // set default value for this->rangeCols_[pos]
         this->rangeCols_[pos] = Range();
         // and throw an exception
@@ -793,34 +928,16 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       }
       // increment ptr of the column
       this->data(pos) -= I.begin();
-      // set size for this->capacityCols_[pos]
-      this->capacityCols_[pos] = size;
+      // set size for this->availableRows_[pos]
+      this->availableRows_[pos] = size;
       // set value for this->rangeCols_[pos]
       this->rangeCols_[pos] = I;
-    }
-    /** Memory deallocation.
-     *  This method clear all allocated memory. The range of the Cols
-     *  is set to (beginHo_:beginHo_-1). The range of the Rows remain
-     *  unmodified.
-     **/
-    void freeMem()
-    {
-      // Nothing to do for reference
-      if (this->isRef()) return;
-      // free the Rows memory
-      this->freeCols(this->cols());
-      // liberate horizontally
-      this->freeRows();
     }
     /** vertical memory deallocation.
      *  @param J the range of the columns to liberate.
      **/
     void freeCols(Range const& J)
     {
-      if (this->beginCols() > J.begin())
-      { STKOUT_OF_RANGE_1ARG(IArray2D::freeCols,J,beginCols() > J.begin());}
-      if (this->endCols() < J.end())
-      { STKOUT_OF_RANGE_1ARG(IArray2D::freeCols,J,endCols() < J.end());}
       for (int j=J.begin(); j<J.end(); j++) { this->freeCol(j);}
     }
     /** @brief Internal method for memory deallocation.
@@ -836,8 +953,8 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
         delete [] this->data(col);
         // set default value for ptr
         this->data(col) =0;
-        // set default value for this->capacityCols_[col]
-        this->capacityCols_[col] = 0;
+        // set default value for this->availableRows_[col]
+        this->availableRows_[col] = 0;
         // set default value for this->rangeCols_[col]
         this->rangeCols_[col] = Range();
       }
@@ -852,15 +969,51 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     void shiftCol( int col, int beg)
     {
       // check if there is data
-      if (this->data(col)) { this->data(col) -= (beg - this->rangeCols_[col].begin());}
+      if (this->data(col))
+      { this->data(col) -= (beg - this->rangeCols_[col].begin());}
       // translate this->rangeCols_
       this->rangeCols_[col].shift(beg);
     }
-    /** @brief Internal method for resizing a column with a specified
-     *  range.
+    /** @brief Internal method for reserving rows to a specified column.
      *
-     *  This method resize the column @c pos to the desired range
-     *  using:
+     *  reserve @c size memory place to the column @c col of the array.
+     *  @param col index of the column
+     *  @param size to reserve
+     **/
+    void reserveRowsToCol( int col, int size)
+    {
+      // nothing to do
+      if (this->availableRows_[col] > size) return;
+      // wrap old Col
+      Type* p_oldCol(this->data(col));
+      // create new Col
+      try
+      {
+        this->data(col) = new Type[size];
+        this->availableRows_[col] = size;
+      }
+      catch (std::bad_alloc & error)  // if an alloc error occur
+      {
+        this->data(col) = p_oldCol;
+        STKRUNTIME_ERROR_2ARG(IArray2D::reserveRowsToCol,col,size,memory allocation failed.);
+      }
+      // increment ptr of the column
+      this->data(col) -= this->rangeCols_[col].begin();
+      // ger ptr on the new col
+      Type* p_newCol = this->data(col);
+      // copy Elts
+      for (int i=this->rangeCols_[col].begin(); i<this->rangeCols_[col].end(); i++)
+        p_newCol[i] = p_oldCol[i];
+      // if there is allocated memory, liberate it
+      if (p_oldCol)
+      {
+        p_oldCol += this->rangeCols_[col].begin();
+        delete [] p_oldCol;
+      }
+    }
+    /** @brief Internal method for resizing a column with a specified range.
+     *
+     *  This method resize the column @c col to the desired range using:
      * - @c shiftCol
      * - either @c popBackRowsToCol or @c pushBackRowsToCol if needed.
      *  @param col index of the column
@@ -873,7 +1026,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // shift to the desired first index
       shiftCol(col, I.begin());
       // compute difference of size
-     int inc = this->rangeCol(col).size() - I.size();
+      int inc = this->rangeCol(col).size() - I.size();
       // nothing to do
       if (inc == 0) return;
       // add row
@@ -883,21 +1036,21 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     /** @brief Internal method for inserting rows to a specified column.
      *
      *  Insert n Rows at the position pos to the column column of the
-     *  container. No check is done about the index.
+     *  array. No check is done about the index.
      *  @param col column index
      *  @param pos index where to insert Rows
      *  @param n number of elements to insert (default 1)
      **/
     void insertRowsToCol( int col, int pos, int n =1)
     {
-      // wrap old Col
+      // wrap old Column
       Type* p_oldCol(this->data(col));
-      // get vertical range of the Col
+      // get vertical range of the Column
       Range oldRange(this->rangeCols_[col]);
       // update range
       this->rangeCols_[col].incLast(n);
       // allocate if necessary the Col
-      if (this->capacityCols_[col] < this->rangeCols_[col].size())
+      if (this->availableRows_[col] < this->rangeCols_[col].size())
       {
         // create new Col
         this->initializeCol(col, this->rangeCols_[col]);
@@ -925,7 +1078,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     }
     /** @brief Internal method for appending rows to a specified column.
      *
-     *  Push back n Rows at the end of the column @c col of the container.
+     *  Push back n Rows at the end of the column @c col of the array.
      *  @param col column index
      *  @param n number of elements to append (default 1)
      **/
@@ -938,7 +1091,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       // compute vertical range of the Col after insertion
       this->rangeCols_[col].incLast(n);
       // allocate if necessary the Col
-      if (this->capacityCols_[col] < this->rangeCols_[col].size())
+      if (this->availableRows_[col] < this->rangeCols_[col].size())
       {
         // create new Col
         this->initializeCol(col, this->rangeCols_[col]);
@@ -956,13 +1109,13 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     }
     /** @brief Internal method for deleting rows from a specified column.
      *
-     *  Delete n Rows at the position pos to the column col of the container.
+     *  Delete n Rows at the position @c pos to the column @c col of the array.
      *  No check is done about indexes. It is possible to remove data
      *  outside the range of the column. In this case it is assumed
      *  that the data are known and there was no necessity to store
-     *  them inside the container (think to a triangular matrix).
+     *  them inside the array (think to a triangular matrix).
      *
-     *  @param col index of the Col
+     *  @param col index of the Column
      *  @param pos index where to delete elements
      *  @param n number of elements to delete (default 1)
     **/
@@ -988,9 +1141,9 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
     }
     /** @brief Internal method for deleting last rows to a specified column.
      *
-     *  Delete the  n lastest Rows to the container.
+     *  Delete the  n latest Rows to the array.
      *
-     *  @param col index of the Col
+     *  @param col index of the Column
      *  @param n number of elements to delete (default is 1)
     **/
     void popBackRowsToCol( int col, int n=1)

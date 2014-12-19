@@ -8,6 +8,7 @@
 \alias{[,ClusterDiagGaussianComponent-method}
 \alias{[,ClusterGammaComponent-method}
 \alias{[,ClusterInit-method}
+\alias{[,ClusterPoissonComponent-method}
 \alias{[,ClusterStrategy-method}
 \alias{[<-,ClusterAlgo-method}
 \alias{[<-,ClusterInit-method}
@@ -27,6 +28,8 @@
 \S4method{[}{ClusterInit}(x, i, j, drop)
 
 \S4method{[}{ClusterInit}(x, i, j) <- value
+
+\S4method{[}{ClusterPoissonComponent}(x, i, j, drop)
 
 \S4method{[}{ClusterStrategy}(x, i, j, drop)
 

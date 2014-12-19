@@ -36,6 +36,7 @@
 #define STK_EXPRBASEVISITOR_H
 
 #include "visitors/STK_Visitors.h"
+#include "visitors/STK_SlicingVisitors.h"
 
 namespace STK
 {
@@ -56,10 +57,11 @@ namespace STK
   */
 template<typename Derived>
 template<typename Visitor>
-void ExprBase<Derived>::visit(Visitor& visitor) const
+typename Visitor::return_type ExprBase<Derived>::visit(Visitor& visitor) const
 {
   typedef typename hidden::VisitorSelector<Visitor, Derived>::Impl Impl;
   Impl::run(this->asDerived(), visitor);
+  return visitor.result();
 }
 
 /* count the number of not-zero values in the expression */
@@ -67,16 +69,31 @@ template<typename Derived>
 int const ExprBase<Derived>::count() const
 {
   hidden::CountVisitor<Type> visitor;
-  visit(visitor);
-  return visitor.res_;
+  return visit(visitor);
+}
+
+/* return true if one element is not zero */
+template<typename Derived>
+bool const ExprBase<Derived>::any() const
+{
+  hidden::AnyVisitor<Type> visitor;
+  return visit(visitor);
+}
+
+/* count the number of not-zero values in the expression */
+template<typename Derived>
+bool const ExprBase<Derived>::all() const
+{
+  hidden::AllVisitor<Type> visitor;
+  return visit(visitor);
 }
 
 /* count the number values in the expression */
 template<typename Derived>
 int const ExprBase<Derived>::nbAvailableValues() const
-{ return isFinite().template cast<int>().sum();}
+{ return isFinite().count();}
 
-
+// general min elt
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt( int& row, int& col) const
 {
@@ -84,53 +101,8 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt( int& row
   visit(visitor);
   row = visitor.row_;
   col = visitor.col_;
-  return visitor.res_;
+  return visitor.result();
 }
-template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt( int& row, int& col) const
-{
-  typedef hidden::MaxEltVisitor<Type> Visitor;
-  Visitor visitor;
-  visit(visitor);
-  row = visitor.row_;
-  col = visitor.col_;
-  return visitor.res_;
-}
-template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt( int& idx) const
-{
-  typedef hidden::MinEltVisitor<Type> Visitor;
-  Visitor visitor;
-  visit(visitor);
-  idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
-  return visitor.res_;
-}
-template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt( int& idx) const
-{
-  typedef hidden::MaxEltVisitor<Type> Visitor;
-  Visitor visitor;
-  visit(visitor);
-  idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
-  return visitor.res_;
-}
-template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt() const
-{
-  typedef hidden::MinEltVisitor<Type> Visitor;
-  Visitor visitor;
-  visit(visitor);
-  return visitor.res_;
-}
-template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt() const
-{
-  typedef hidden::MaxEltVisitor<Type> Visitor;
-  Visitor visitor;
-  visit(visitor);
-  return visitor.res_;
-}
-
 
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minEltSafe( int& row, int& col) const
@@ -140,8 +112,20 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minEltSafe( int&
   visit(visitor);
   row = visitor.row_;
   col = visitor.col_;
-  return visitor.res_;
+  return visitor.result();
 }
+// general max elt
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt( int& row, int& col) const
+{
+  typedef hidden::MaxEltVisitor<Type> Visitor;
+  Visitor visitor;
+  visit(visitor);
+  row = visitor.row_;
+  col = visitor.col_;
+  return visitor.result();
+}
+//
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxEltSafe( int& row, int& col) const
 {
@@ -150,7 +134,17 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxEltSafe( int&
   visit(visitor);
   row = visitor.row_;
   col = visitor.col_;
-  return visitor.res_;
+  return visitor.result();
+}
+// min elt with one index
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt( int& idx) const
+{
+  typedef hidden::MinEltVisitor<Type> Visitor;
+  Visitor visitor;
+  visit(visitor);
+  idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
+  return visitor.result();
 }
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minEltSafe( int& idx) const
@@ -159,7 +153,17 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minEltSafe( int&
   Visitor visitor;
   visit(visitor);
   idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
-  return visitor.res_;
+  return visitor.result();
+}
+// max elt with one index
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt( int& idx) const
+{
+  typedef hidden::MaxEltVisitor<Type> Visitor;
+  Visitor visitor;
+  visit(visitor);
+  idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
+  return visitor.result();
 }
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxEltSafe( int& idx) const
@@ -168,64 +172,108 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxEltSafe( int&
   Visitor visitor;
   visit(visitor);
   idx = hidden::GetIdx<Visitor, hidden::Traits<Derived>::structure_ >::idx(visitor);
-  return visitor.res_;
+  return visitor.result();
+}
+// min without index
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minElt() const
+{
+  typedef hidden::MinVisitor<Type> Visitor;
+  Visitor visitor;
+  return visit(visitor);
 }
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::minEltSafe() const
 {
-  typedef hidden::MinEltSafeVisitor<Type> Visitor;
+  typedef hidden::MinSafeVisitor<Type> Visitor;
   Visitor visitor;
-  visit(visitor);
-  return visitor.res_;
+  return visit(visitor);
+}
+// max elt without index
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxElt() const
+{
+  typedef hidden::MaxVisitor<Type> Visitor;
+  Visitor visitor;
+  return visit(visitor);
 }
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::maxEltSafe() const
 {
-  typedef hidden::MaxEltSafeVisitor<Type> Visitor;
+  typedef hidden::MaxSafeVisitor<Type> Visitor;
   Visitor visitor;
-  visit(visitor);
-  return visitor.res_;
+  return visit(visitor);
 }
-
 
 /* sum the values of all the array */
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::sum() const
 {
   hidden::SumVisitor<Type> visitor;
-  visit(visitor);
-  return visitor.res_;
+  return visit(visitor);
+}
+/* sum safely the values of all the array */
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::sumSafe() const
+{
+  hidden::SumVisitor<Type> visitor;
+  return safe().visit(visitor);
 }
 /* @return the norm of this*/
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::norm() const
 { return Type(std::sqrt(norm2()));}
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::normSafe() const
+{ return static_cast<Type>(std::sqrt(safe().norm2()));}
 /* @return the square norm of this*/
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::norm2() const
 { return square().sum();}
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::norm2Safe() const
+{ return safe().square().sum();}
 /* @return the norm of this*/
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::normInf() const
 { return abs().maxElt();}
 
-/* sum the values of all the array */
+/* average the values of all the array */
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::mean() const
-{ return (this->sizeArray() >0) ? sum()/Type(this->sizeArray()) : Arithmetic<Type>::NA();}
-/* compute the variance  of all the array */
+{
+  hidden::MeanVisitor<Type> visitor;
+  return visit(visitor);
+}
+/* sum safely the values of all the array */
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::meanSafe() const
+{
+  hidden::MeanSafeVisitor<Type> visitor;
+  return visit(visitor);
+}
+
+/* compute the variance of all the array */
 template<typename Derived>
 typename hidden::Traits<Derived>::Type const ExprBase<Derived>::variance() const
-{ if (this->sizeArray()<=0) return Arithmetic<Type>::NA();
+{
   Type mu = mean();
-  return (*this-mu).square().sum()/Type(this->sizeArray());
+  return (*this-mu).square().mean();
+}
+/* compute the variance of all the array */
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::varianceSafe() const
+{
+  Type mu = meanSafe();
+  return (*this-mu).square().meanSafe();
 }
 /* compute the variance with given mean of all the elements of this*/
 template<typename Derived>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::variance(Type const mean) const
-{ if (this->sizeArray()<=0) return Arithmetic<Type>::NA();
-  return (*this-mean).square().sum()/Type(this->sizeArray());
-}
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::variance(Type const& mean) const
+{ return (*this-mean).square().mean();}
+template<typename Derived>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::varianceSafe(Type const& mean) const
+{ return (*this-mean).square().meanSafe();}
 
 /* @return the weighted sum of all the elements of this using a Visitor*/
 template<typename Derived>
@@ -236,6 +284,14 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wsum(ExprBase<Rh
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
   return dot(weights);
 }
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wsumSafe(ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  return dotSafe(weights);
+}
 /* @return the norm of this*/
 template<typename Derived>
 template<typename Rhs>
@@ -243,7 +299,15 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wnorm(ExprBase<R
 {
   STK_STATICASSERT_VECTOR_ONLY(Derived);
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
-  return Type(std::sqrt(wnorm2(weights)));
+  return static_cast<Type>(std::sqrt(wnorm2(weights)));
+}
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wnormSafe(ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  return static_cast<Type>(std::sqrt(wnorm2Safe(weights)));
 }
 /* @return the square norm of this*/
 template<typename Derived>
@@ -252,8 +316,17 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wnorm2(ExprBase<
 {
   STK_STATICASSERT_VECTOR_ONLY(Derived);
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
- return square().dot(weights);
+  return square().dot(weights);
 }
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wnorm2Safe(ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  return square().dotSafe(weights);
+}
+
 /* @return the weighted mean */
 template<typename Derived>
 template<typename Rhs>
@@ -262,9 +335,21 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wmean(ExprBase<R
   STK_STATICASSERT_VECTOR_ONLY(Derived);
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
   Type size = weights.sum();
+  if (size <= 0 || !STK::isFinite(size)) return Arithmetic<Type>::NA();
+  return wsumSafe(weights)/size;
+}
+
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wmeanSafe(ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  Type size = weights.sumSafe();
   if (size <= 0) return Arithmetic<Type>::NA();
   return wsum(weights)/size;
 }
+
 /* @return the variance of all the elements of this using a Visitor*/
 template<typename Derived>
 template<typename Rhs>
@@ -272,22 +357,37 @@ typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wvariance(ExprBa
 {
   STK_STATICASSERT_VECTOR_ONLY(Derived);
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
-  Type size = weights.sum();
-  if (size <= 0) return Arithmetic<Type>::NA();
-  Type mean = wsum(weights)/size;
-  return (*this-mean).square().wsum(weights)/size;
+  Type mean = wmean(weights);
+  if (!STK::isFinite(mean)) return Arithmetic<Type>::NA();
+  return (*this-mean).square().wmean(weights);
 }
-
-/** @return the variance with given mean of all the elements of this*/
 template<typename Derived>
 template<typename Rhs>
-typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wvariance(Type const wmean, ExprBase<Rhs> const& weights) const
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wvarianceSafe(ExprBase<Rhs> const& weights) const
 {
   STK_STATICASSERT_VECTOR_ONLY(Derived);
   STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
-  Type size = weights.sum();
-  if (size <= 0) return Arithmetic<Type>::NA();
-  return (*this-wmean).square().wsum(weights)/size;
+  Type mean = wmeanSafe(weights);
+  if (!STK::isFinite(mean)) return Arithmetic<Type>::NA();
+  return (*this-mean).square().wmeanSafe(weights);
+}
+
+/* @return the variance with given mean of all the elements of this*/
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wvariance(Type const& mean, ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  return (*this-mean).square().wmean(weights);
+}
+template<typename Derived>
+template<typename Rhs>
+typename hidden::Traits<Derived>::Type const ExprBase<Derived>::wvarianceSafe(Type const& mean, ExprBase<Rhs> const& weights) const
+{
+  STK_STATICASSERT_VECTOR_ONLY(Derived);
+  STK_STATICASSERT_ONE_DIMENSION_ONLY(Rhs);
+  return (*this-mean).square().wmeanSafe(weights);
 }
 
 } // namespace STK

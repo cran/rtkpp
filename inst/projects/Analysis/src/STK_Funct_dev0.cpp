@@ -37,7 +37,7 @@
 // for int and Real
 #include "STKernel/include/STK_Misc.h"
 
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 
 namespace STK
 {

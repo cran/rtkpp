@@ -77,7 +77,7 @@ Real Cauchy::rand( Real const& location, Real const& scale)
 Real Cauchy::pdf( Real const& x) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial case
   if (Arithmetic<Real>::isInfinite(x)) return 0.0;
 
@@ -95,7 +95,7 @@ Real Cauchy::pdf( Real const& x, Real const& location, Real const& scale)
     STKDOMAIN_ERROR_2ARG(Cauchy::pdf,location, scale,argument error);
 #endif
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial case
   if (Arithmetic<Real>::isInfinite(x)) return 0.0;
 
@@ -108,7 +108,7 @@ Real Cauchy::pdf( Real const& x, Real const& location, Real const& scale)
 Real Cauchy::lpdf( Real const& x) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial case
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
 
@@ -126,7 +126,7 @@ Real Cauchy::lpdf( Real const& x, Real const& location, Real const& scale)
     STKDOMAIN_ERROR_2ARG(Cauchy::lpdf,location, scale,argument error);
 #endif
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial case
   if (Arithmetic<Real>::isInfinite(x))
     return -Arithmetic<Real>::infinity();
@@ -141,7 +141,7 @@ Real Cauchy::lpdf( Real const& x, Real const& location, Real const& scale)
 Real Cauchy::cdf( Real const& t) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(t)) return Arithmetic<Real>::NA();
+  if (isNA(t)) return Arithmetic<Real>::NA();
   // check parameter
   if (Arithmetic<Real>::isInfinite(t))
    return (t < 0.) ? 0.0 : 1.0;
@@ -166,7 +166,7 @@ Real Cauchy::cdf( Real const& t) const
 Real Cauchy::icdf( Real const& p) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(p)) return Arithmetic<Real>::NA();
+  if (isNA(p)) return Arithmetic<Real>::NA();
   // check parameter
   if ((p > 1.) || (p < 0.))
     STKDOMAIN_ERROR_1ARG(Cauchy::icdf,p,p must be a probability);

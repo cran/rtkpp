@@ -49,7 +49,7 @@ namespace hidden
 template<typename Type>
 struct DataHandlerTraits<RDataHandler, Type>
 {
-  typedef RcppMatrix<Type> Data;
+  typedef RMatrix<Type> Data;
 };
 
 } // namespace hidden
@@ -64,9 +64,8 @@ class RDataHandler : public IDataHandler
   public:
     typedef STK::IDataHandler::InfoMap InfoMap;
     typedef std::map<std::string, int> InfoType;
-    /** default constructor
-     **/
-    inline RDataHandler() : IDataHandler(), nbSample_(0), nbVariable_(0) {}
+    /** default constructor */
+    RDataHandler();
     /** constructor with a Matrix data set
      *  @param data a R Matrix with elements of type type
      *  @note cannot be passed as const& due to a bug from the Rcpop side (fixed
@@ -103,12 +102,12 @@ class RDataHandler : public IDataHandler
     inline virtual ~RDataHandler() {}
     /** @return the number of sample (the number of rows of the data) */
     inline virtual int nbSample() const { return nbSample_;}
-    /** @return the number of sample (the number of columns of the data) */
+    /** @return the number of variables (the number of columns of the data) */
     inline virtual int nbVariable() const { return nbVariable_;}
 
-    /** return in an RcppMatrix the (cloned) data with the given idModel */
+    /** return in an RMatrix the (cloned) data with the given idData */
     template<typename Type>
-    void getData(std::string const& idData, RcppMatrix<Type>& data, int& nbVariable) const
+    void getData(std::string const& idData, RMatrix<Type>& data, int& nbVariable) const
     {
       enum
       {
@@ -119,11 +118,11 @@ class RDataHandler : public IDataHandler
       nbVariable = data.sizeCols();
     }
   private:
-    /** @brief Add the Rtype associated with de the current data set.
+    /** @brief Add the Rtype associated to a data set identified by an Id.
      *  @param idData can be any string given by the user
-     *  @param Rtype represent the id of a Rtype
+     *  @param Rtype represent the id of a Rtype (as defined in Rinternal.h)
      *
-     *  @return @c false if there exists already an idData matched with an other
+     *  @return @c false if there exists already idData associated to an other
      *  Rtype, @c true otherwise.
      **/
     bool addType(std::string const& idData, int Rtype);

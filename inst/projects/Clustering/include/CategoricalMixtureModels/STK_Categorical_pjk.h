@@ -52,7 +52,6 @@ struct MixtureTraits< Categorical_pjk<_Array> >
 {
   typedef _Array Array;
   typedef typename Array::Type Type;
-  typedef MixtureComponent<_Array, Categorical_pjkParameters> Component;
   typedef Categorical_pjkParameters        Parameters;
   typedef Array2D<Real>        Param;
 };
@@ -64,8 +63,7 @@ struct MixtureTraits< Categorical_pjk<_Array> >
  *  the most general diagonal Categorical model and have a probability
  *  function of the form
  * \f[
- *    P(\mathbf{x}=(l_1,\ldots,l_d)|\theta)
- *      = \sum_{k=1}^K p_k \prod_{j=1}^d p_{kl_j}^j.
+ *    P(\mathbf{x}=(l_1,\ldots,l_d)|\theta) = \sum_{k=1}^K p_k \prod_{j=1}^d p_{kl_j}^j.
  * \f]
  **/
 template<class Array>
@@ -73,15 +71,14 @@ class Categorical_pjk : public CategoricalBase<Categorical_pjk<Array> >
 {
   public:
     typedef CategoricalBase<Categorical_pjk<Array> > Base;
-    typedef typename Clust::MixtureTraits< Categorical_pjk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Categorical_pjk<Array> >::Parameters Parameters;
 
-    typedef Array2D<Real>::ColVector ColVector;
-
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
+    using Base::modalities_;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -93,8 +90,6 @@ class Categorical_pjk : public CategoricalBase<Categorical_pjk<Array> >
     Categorical_pjk( Categorical_pjk const& model) : Base(model) {}
     /** destructor */
     ~Categorical_pjk() {}
-    /** Compute the initial weighted probabilities of the mixture */
-    bool initializeStep();
     /** Initialize randomly the parameters of the Categorical mixture. */
     void randomInit();
     /** Compute the weighted probabilities. */
@@ -104,17 +99,11 @@ class Categorical_pjk : public CategoricalBase<Categorical_pjk<Array> >
     { return this->nbCluster()*((this->nbModalities_-1).sum());}
 };
 
-/* Initialize the parameters using mStep. */
-template<class Array>
-bool Categorical_pjk<Array>::initializeStep()
-{ return mStep();}
-
-/* Initialize randomly the parameters of the Categorical mixture.
- */
+/* Initialize randomly the parameters of the Categorical mixture. */
 template<class Array>
 void Categorical_pjk<Array>::randomInit()
 {
-  for (int k = baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k = baseIdx; k < components().end(); ++k)
   {
     for (int j=baseIdx; j< p_param(k)->proba_.end(); ++j)
     {
@@ -129,10 +118,11 @@ void Categorical_pjk<Array>::randomInit()
 template<class Array>
 bool Categorical_pjk<Array>::mStep()
 {
-  for (int k = baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k = baseIdx; k < components().end(); ++k)
   {
     for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
+      // count the number of modalities weighted by the tik
       p_param(k)->proba_[j] = 0.;
       for (int i = p_tik()->beginRows(); i < p_tik()->endRows(); ++i)
       { p_param(k)->proba_[j][(*p_data())(i, j)] += (*p_tik())(i, k);}

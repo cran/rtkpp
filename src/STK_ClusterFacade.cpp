@@ -56,7 +56,7 @@ void ClusterFacade::createFullStrategy(Rcpp::S4 R_strategy)
   // get fields of the initMethod
   std::string method = R_initMethod.slot("method");
   Clust::initType init = Clust::stringToInit(method);
-  int nbInitRun = R_initMethod.slot("nbInitRun");
+  int nbInit = R_initMethod.slot("nbInit");
   Rcpp::S4 R_initAlgo = R_initMethod.slot("algo");
 
   // get fields of the initAlgo
@@ -81,7 +81,7 @@ void ClusterFacade::createFullStrategy(Rcpp::S4 R_strategy)
   IMixtureInit* p_init = Clust::createInit(init, 1, initAlgo, nbInitIter, initEpsilon);
   IMixtureAlgo* p_shortAlgo = Clust::createAlgo(shortAlgo, nbShortIter, shortEpsilon);
   IMixtureAlgo* p_longAlgo = Clust::createAlgo(longAlgo, nbLongIter, longEpsilon);
-  p_strategy_ = Clust::createFullStrategy(p_model_, nbTry, nbInitRun, p_init, nbShortRun, p_shortAlgo, p_longAlgo);
+  p_strategy_ = Clust::createFullStrategy(p_model_, nbTry, nbInit, p_init, nbShortRun, p_shortAlgo, p_longAlgo);
 }
 
 bool ClusterFacade::run()

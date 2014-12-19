@@ -80,7 +80,7 @@ struct ProductTraitsBase
  *  @brief Traits class to get the correct returned Structure, Type, allocator,...
  *  of operator*. This Traits class is used by the functors classes operating
  *  on the Array2D  classes.
- *  @note the impossible cases are tracked in MatrixByMatrixProduct class.
+ *  @note the impossible cases are tracked in ArrayByArrayProduct class.
  **/
 template<typename Lhs, typename Rhs, int LStructure_, int RStructure_>
 struct ProductTraits;
@@ -306,7 +306,7 @@ struct ProductTraits<Lhs, Rhs, Arrays::point_, RStructure_>
 } // namespace hidden
 
 /** @ingroup Arrays
-  * @class PointByMatrixProduct
+  * @class PointByArrayProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -317,7 +317,7 @@ struct ProductTraits<Lhs, Rhs, Arrays::point_, RStructure_>
   * two expressions. The left hand Side is a point, the Right Hand Side
   * is any compatible exprssion or matrix.
   **/
-template<typename Lhs, typename Rhs> class PointByMatrixProduct;
+template<typename Lhs, typename Rhs> class PointByArrayProduct;
 
 namespace hidden {
 
@@ -325,7 +325,7 @@ namespace hidden {
  *  @brief Traits class for the BinaryOperator
  */
 template< typename Lhs, typename Rhs>
-struct Traits< PointByMatrixProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
+struct Traits< PointByArrayProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
 {
   typedef typename ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>::Type Type;
   typedef typename ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>::Allocator Allocator;
@@ -335,34 +335,38 @@ struct Traits< PointByMatrixProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, R
 
 
 template<typename Lhs, typename Rhs>
-class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
+class PointByArrayProduct : public ExprBase< PointByArrayProduct<Lhs, Rhs> >
                            , public TRef<1>
 {
   public:
-    typedef ExprBase< PointByMatrixProduct<Lhs, Rhs> > Base;
-    typedef typename hidden::Traits<PointByMatrixProduct>::Type Type;
-    typedef typename hidden::Traits<PointByMatrixProduct>::Allocator Allocator;
+    typedef ExprBase< PointByArrayProduct<Lhs, Rhs> > Base;
+    typedef typename hidden::Traits<PointByArrayProduct>::Type Type;
+    typedef typename hidden::Traits<PointByArrayProduct>::Allocator Allocator;
 
     enum
     {
-      structure_ = hidden::Traits<PointByMatrixProduct>::structure_,
-      orient_    = hidden::Traits<PointByMatrixProduct>::orient_,
-      sizeRows_  = hidden::Traits<PointByMatrixProduct>::sizeRows_,
-      sizeCols_  = hidden::Traits<PointByMatrixProduct>::sizeCols_,
-      storage_   = hidden::Traits<PointByMatrixProduct>::storage_
+      structure_ = hidden::Traits<PointByArrayProduct>::structure_,
+      orient_    = hidden::Traits<PointByArrayProduct>::orient_,
+      sizeRows_  = hidden::Traits<PointByArrayProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<PointByArrayProduct>::sizeCols_,
+      storage_   = hidden::Traits<PointByArrayProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    inline PointByMatrixProduct( const Lhs& lhs, const Rhs& rhs)
+    inline PointByArrayProduct( const Lhs& lhs, const Rhs& rhs)
                               : Base(), lhs_(lhs), rhs_(rhs)
                               , result_(1, rhs.sizeCols(), Type(0))
     {
       if (lhs.range() != rhs.rows())
-      { STKRUNTIME_ERROR_NO_ARG(PointByMatrixProduct, sizes mismatch);}
+      { STKRUNTIME_ERROR_NO_ARG(PointByArrayProduct, sizes mismatch);}
       result_.shift(rhs_.beginCols());
       hidden::ProductImpl<Lhs, Rhs, Allocator>::run(lhs, rhs, result_);
     }
     /**  @return the range of the rows */
-    inline Range rows() const { return result_.rows();}
+    inline RowRange const& rowsImpl() const { return result_.rows();}
     /** @return the first index of the rows */
     inline int const beginRowsImpl() const { return result_.beginRows();}
     /** @return the ending index of the rows */
@@ -371,7 +375,7 @@ class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
     inline int const sizeRowsImpl() const { return 1;}
 
     /** @return the range of the columns */
-    inline Range cols() const { return result_.cols();}
+    inline ColRange const& colsImpl() const { return result_.cols();}
     /** @return the first index of the columns */
     inline int const beginColsImpl() const { return result_.beginCols();}
     /** @return the ending index of the columns */
@@ -386,7 +390,7 @@ class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
     /** @return the right hand side nested expression */
     inline Rhs const& result() const { return result_; }
     /** @return the ith element */
-    inline Type const elt1Impl(int i) const { return result_.elt(i);}
+    inline Type const& elt1Impl(int i) const { return result_.elt(i);}
 
   protected:
     Lhs const& lhs_;
@@ -397,7 +401,7 @@ class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
 };
 
 /** @ingroup Arrays
-  * @class MatrixByVectorProduct
+  * @class ArrayByVectorProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -408,15 +412,15 @@ class PointByMatrixProduct : public ExprBase< PointByMatrixProduct<Lhs, Rhs> >
   * two expressions. The left hand Side can be of any kind, the Right Hand Side
   * is a vector or vectorial expression.
   **/
-template<typename Lhs, typename Rhs> class MatrixByVectorProduct;
+template<typename Lhs, typename Rhs> class ArrayByVectorProduct;
 
 namespace hidden {
 
 /** @ingroup hidden
- *  @brief Traits class for the MatrixByVectorProduct class
+ *  @brief Traits class for the ArrayByVectorProduct class
  */
 template< typename Lhs, typename Rhs>
-struct Traits< MatrixByVectorProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
+struct Traits< ArrayByVectorProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
 {
   typedef ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_> Base;
   typedef typename Base::Type Type;
@@ -427,33 +431,37 @@ struct Traits< MatrixByVectorProduct < Lhs, Rhs> >  : public ProductTraits<Lhs, 
 
 
 template<typename Lhs, typename Rhs>
-class MatrixByVectorProduct : public ExprBase< MatrixByVectorProduct<Lhs, Rhs> >
+class ArrayByVectorProduct : public ExprBase< ArrayByVectorProduct<Lhs, Rhs> >
                             , public TRef<1>
 {
   public:
-    typedef ExprBase< MatrixByVectorProduct<Lhs, Rhs> > Base;
-    typedef typename hidden::Traits<MatrixByVectorProduct>::Type Type;
-    typedef typename hidden::Traits<MatrixByVectorProduct>::Allocator Allocator;
+    typedef ExprBase< ArrayByVectorProduct<Lhs, Rhs> > Base;
+    typedef typename hidden::Traits<ArrayByVectorProduct>::Type Type;
+    typedef typename hidden::Traits<ArrayByVectorProduct>::Allocator Allocator;
     enum
     {
-      structure_ = hidden::Traits<MatrixByVectorProduct>::structure_,
-      orient_    = hidden::Traits<MatrixByVectorProduct>::orient_,
-      sizeRows_  = hidden::Traits<MatrixByVectorProduct>::sizeRows_,
-      sizeCols_  = hidden::Traits<MatrixByVectorProduct>::sizeCols_,
-      storage_   = hidden::Traits<MatrixByVectorProduct>::storage_
+      structure_ = hidden::Traits<ArrayByVectorProduct>::structure_,
+      orient_    = hidden::Traits<ArrayByVectorProduct>::orient_,
+      sizeRows_  = hidden::Traits<ArrayByVectorProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<ArrayByVectorProduct>::sizeCols_,
+      storage_   = hidden::Traits<ArrayByVectorProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    inline MatrixByVectorProduct( const Lhs& lhs, const Rhs& rhs)
+    inline ArrayByVectorProduct( const Lhs& lhs, const Rhs& rhs)
                               : Base(), lhs_(lhs), rhs_(rhs)
                               , result_(lhs.sizeRows(), 1, Type(0))
     {
       if (lhs.cols() != rhs.range())
-      { STKRUNTIME_ERROR_NO_ARG(MatrixByVectorProduct, sizes mismatch);}
+      { STKRUNTIME_ERROR_NO_ARG(ArrayByVectorProduct, sizes mismatch);}
       result_.shift(lhs_.beginRows());
       hidden::ProductImpl<Lhs, Rhs, Allocator>::run(lhs, rhs, result_);
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return result_.rows();}
+    inline RowRange const& rowsImpl() const { return result_.rows();}
     /** @return the first index of the rows */
     inline int const beginRowsImpl() const { return(result_.beginRows());}
     /** @return the ending index of the rows */
@@ -462,7 +470,7 @@ class MatrixByVectorProduct : public ExprBase< MatrixByVectorProduct<Lhs, Rhs> >
     inline int const sizeRowsImpl() const { return result_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return result_.cols();}
+    inline ColRange const& colsImpl() const { return result_.cols();}
     /** @return the first index of the columns */
     inline int const beginColsImpl() const { return(result_.beginCols());}
     /** @return the ending index of the columns */
@@ -488,7 +496,7 @@ class MatrixByVectorProduct : public ExprBase< MatrixByVectorProduct<Lhs, Rhs> >
 };
 
 /** @ingroup Arrays
-  * @class MatrixByDiagonalProduct
+  * @class ArrayByDiagonalProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -499,7 +507,7 @@ class MatrixByVectorProduct : public ExprBase< MatrixByVectorProduct<Lhs, Rhs> >
   * two expressions. The left hand Side can be of any kind, the Left Hand Side
   * is a diagonal matrix or expression.
   **/
-template<typename Lhs, typename Rhs> class MatrixByDiagonalProduct;
+template<typename Lhs, typename Rhs> class ArrayByDiagonalProduct;
 
 namespace hidden {
 
@@ -507,7 +515,7 @@ namespace hidden {
  *  @brief Traits class for the BinaryOperator
  */
 template< typename Lhs, typename Rhs>
-struct Traits< MatrixByDiagonalProduct < Lhs, Rhs> >
+struct Traits< ArrayByDiagonalProduct < Lhs, Rhs> >
 {
   enum
   {
@@ -526,30 +534,34 @@ struct Traits< MatrixByDiagonalProduct < Lhs, Rhs> >
 
 
 template<typename Lhs, typename Rhs>
-class MatrixByDiagonalProduct : public ExprBase< MatrixByDiagonalProduct<Lhs, Rhs> >
+class ArrayByDiagonalProduct : public ExprBase< ArrayByDiagonalProduct<Lhs, Rhs> >
                               , public TRef<1>
 {
   public:
-    typedef ExprBase< MatrixByDiagonalProduct<Lhs, Rhs> > Base;
-    typedef typename hidden::Traits<MatrixByDiagonalProduct>::Type Type;
+    typedef ExprBase< ArrayByDiagonalProduct<Lhs, Rhs> > Base;
+    typedef typename hidden::Traits<ArrayByDiagonalProduct>::Type Type;
 
     enum
     {
-      structure_ = hidden::Traits<MatrixByDiagonalProduct>::structure_,
-      orient_    = hidden::Traits<MatrixByDiagonalProduct>::orient_,
-      sizeRows_  = hidden::Traits<MatrixByDiagonalProduct>::sizeRows_,
-      sizeCols_  = hidden::Traits<MatrixByDiagonalProduct>::sizeCols_,
-      storage_   = hidden::Traits<MatrixByDiagonalProduct>::storage_
+      structure_ = hidden::Traits<ArrayByDiagonalProduct>::structure_,
+      orient_    = hidden::Traits<ArrayByDiagonalProduct>::orient_,
+      sizeRows_  = hidden::Traits<ArrayByDiagonalProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<ArrayByDiagonalProduct>::sizeCols_,
+      storage_   = hidden::Traits<ArrayByDiagonalProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    inline MatrixByDiagonalProduct( const Lhs& lhs, const Rhs& rhs)
+    inline ArrayByDiagonalProduct( const Lhs& lhs, const Rhs& rhs)
                                   : Base(), lhs_(lhs), rhs_(rhs)
     {
       if (lhs.cols() != rhs.rows())
-      { STKRUNTIME_ERROR_NO_ARG(MatrixByDiagonalProduct, sizes mismatch);}
+      { STKRUNTIME_ERROR_NO_ARG(ArrayByDiagonalProduct, sizes mismatch);}
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
     inline int beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
@@ -558,7 +570,7 @@ class MatrixByDiagonalProduct : public ExprBase< MatrixByDiagonalProduct<Lhs, Rh
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return rhs_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
     inline int beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
@@ -580,7 +592,7 @@ class MatrixByDiagonalProduct : public ExprBase< MatrixByDiagonalProduct<Lhs, Rh
 };
 
 /** @ingroup Arrays
-  * @class PointByMatrixProduct
+  * @class PointByArrayProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -634,6 +646,10 @@ class PointByDiagonalProduct : public ExprBase< PointByDiagonalProduct<Lhs, Rhs>
       sizeCols_  = hidden::Traits<PointByDiagonalProduct>::sizeCols_,
       storage_   = hidden::Traits<PointByDiagonalProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
     inline PointByDiagonalProduct( const Lhs& lhs, const Rhs& rhs)
                                  : Base(), lhs_(lhs), rhs_(rhs)
@@ -642,7 +658,7 @@ class PointByDiagonalProduct : public ExprBase< PointByDiagonalProduct<Lhs, Rhs>
       { STKRUNTIME_ERROR_NO_ARG(PointByDiagonalProduct, sizes mismatch);}
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
     inline int beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
@@ -651,7 +667,7 @@ class PointByDiagonalProduct : public ExprBase< PointByDiagonalProduct<Lhs, Rhs>
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return rhs_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
     inline int beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
@@ -726,6 +742,10 @@ class DiagonalByVectorProduct : public ExprBase< DiagonalByVectorProduct<Lhs, Rh
       sizeCols_  = hidden::Traits<DiagonalByVectorProduct>::sizeCols_,
       storage_   = hidden::Traits<DiagonalByVectorProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
     inline DiagonalByVectorProduct( const Lhs& lhs, const Rhs& rhs)
                                   : Base(), lhs_(lhs), rhs_(rhs)
@@ -734,7 +754,7 @@ class DiagonalByVectorProduct : public ExprBase< DiagonalByVectorProduct<Lhs, Rh
       { STKRUNTIME_ERROR_NO_ARG(DiagonalByVectorProduct, sizes mismatch);}
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
     inline int beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
@@ -743,7 +763,7 @@ class DiagonalByVectorProduct : public ExprBase< DiagonalByVectorProduct<Lhs, Rh
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return rhs_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
     inline int beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
@@ -816,12 +836,16 @@ class VectorByPointProduct : public ExprBase< VectorByPointProduct<Lhs, Rhs> >
       sizeCols_  = hidden::Traits<VectorByPointProduct>::sizeCols_,
       storage_   = hidden::Traits<VectorByPointProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
     inline VectorByPointProduct( const Lhs& lhs, const Rhs& rhs)
                                : Base(), lhs_(lhs), rhs_(rhs)
     {}
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
     inline int beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
@@ -830,7 +854,7 @@ class VectorByPointProduct : public ExprBase< VectorByPointProduct<Lhs, Rhs> >
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return rhs_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
     inline int beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
@@ -852,7 +876,7 @@ class VectorByPointProduct : public ExprBase< VectorByPointProduct<Lhs, Rhs> >
 };
 
 /** @ingroup Arrays
-  * @class DiagonalByMatrixProduct
+  * @class DiagonalByArrayProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -863,7 +887,7 @@ class VectorByPointProduct : public ExprBase< VectorByPointProduct<Lhs, Rhs> >
   * two expressions. The left hand Side is a diagonal matrix or expression,
   * the Right Hand Side is of any kind.
   **/
-template<typename Lhs, typename Rhs> class DiagonalByMatrixProduct;
+template<typename Lhs, typename Rhs> class DiagonalByArrayProduct;
 
 namespace hidden {
 
@@ -871,7 +895,7 @@ namespace hidden {
  *  @brief Traits class for the BinaryOperator
  */
 template< typename Lhs, typename Rhs>
-struct Traits< DiagonalByMatrixProduct < Lhs, Rhs> >
+struct Traits< DiagonalByArrayProduct < Lhs, Rhs> >
 {
   enum
   {
@@ -879,7 +903,7 @@ struct Traits< DiagonalByMatrixProduct < Lhs, Rhs> >
     sizeRows_  = Rhs::sizeRows_,
     sizeCols_  = Rhs::sizeCols_,
     // preserve the Rhs storage orientation
-    orient_    = Rhs::orient_,
+    orient_    = Lhs::orient_,
     storage_   = Rhs::storage_
   };
   typedef typename Lhs::Type Type;
@@ -889,30 +913,34 @@ struct Traits< DiagonalByMatrixProduct < Lhs, Rhs> >
 
 
 template<typename Lhs, typename Rhs>
-class DiagonalByMatrixProduct : public ExprBase< DiagonalByMatrixProduct<Lhs, Rhs> >
+class DiagonalByArrayProduct : public ExprBase< DiagonalByArrayProduct<Lhs, Rhs> >
                               , public TRef<1>
 {
   public:
-    typedef ExprBase< DiagonalByMatrixProduct<Lhs, Rhs> > Base;
-    typedef typename hidden::Traits<DiagonalByMatrixProduct>::Type Type;
+    typedef ExprBase< DiagonalByArrayProduct<Lhs, Rhs> > Base;
+    typedef typename hidden::Traits<DiagonalByArrayProduct>::Type Type;
 
     enum
     {
-      structure_ = hidden::Traits<DiagonalByMatrixProduct>::structure_,
-      orient_    = hidden::Traits<DiagonalByMatrixProduct>::orient_,
-      sizeRows_  = hidden::Traits<DiagonalByMatrixProduct>::sizeRows_,
-      sizeCols_  = hidden::Traits<DiagonalByMatrixProduct>::sizeCols_,
-      storage_   = hidden::Traits<DiagonalByMatrixProduct>::storage_
+      structure_ = hidden::Traits<DiagonalByArrayProduct>::structure_,
+      orient_    = hidden::Traits<DiagonalByArrayProduct>::orient_,
+      sizeRows_  = hidden::Traits<DiagonalByArrayProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<DiagonalByArrayProduct>::sizeCols_,
+      storage_   = hidden::Traits<DiagonalByArrayProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    inline DiagonalByMatrixProduct( const Lhs& lhs, const Rhs& rhs)
+    inline DiagonalByArrayProduct( const Lhs& lhs, const Rhs& rhs)
                                   : Base(), lhs_(lhs), rhs_(rhs)
     {
       if (lhs.cols() != rhs.rows())
-      { STKRUNTIME_ERROR_NO_ARG(DiagonalByMatrixProduct, sizes mismatch);}
+      { STKRUNTIME_ERROR_NO_ARG(DiagonalByArrayProduct,sizes mismatch);}
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
     inline int beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
@@ -921,7 +949,7 @@ class DiagonalByMatrixProduct : public ExprBase< DiagonalByMatrixProduct<Lhs, Rh
     inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return rhs_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
     inline int beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
@@ -943,7 +971,7 @@ class DiagonalByMatrixProduct : public ExprBase< DiagonalByMatrixProduct<Lhs, Rh
 };
 
 /** @ingroup Arrays
-  * @class MatrixByMatrixProduct
+  * @class ArrayByArrayProduct
   * @brief Generic expression where a product operator is
   * applied to two expressions.
   *
@@ -958,18 +986,18 @@ class DiagonalByMatrixProduct : public ExprBase< DiagonalByMatrixProduct<Lhs, Rh
   * ProductOperator. The return type of number*matrix is a unary operator.
   *
   * Most of the time, this is the only way that it is used, so you typically
-  * don't have to name MatrixByMatrixProduct types explicitly.
+  * don't have to name ArrayByArrayProduct types explicitly.
   **/
-template<typename Lhs, typename Rhs> class MatrixByMatrixProduct;
+template<typename Lhs, typename Rhs> class ArrayByArrayProduct;
 
 namespace hidden
 {
 
 /** @ingroup hidden
- *  @brief Traits class for the MatrixByMatrixProduct class
+ *  @brief Traits class for the ArrayByArrayProduct class
  */
 template< typename Lhs, typename Rhs>
-struct Traits< MatrixByMatrixProduct < Lhs, Rhs> > : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
+struct Traits< ArrayByArrayProduct < Lhs, Rhs> > : public ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_>
 {
   typedef ProductTraits<Lhs, Rhs, Lhs::structure_, Rhs::structure_> Base;
   typedef typename Base::Type Type;
@@ -979,21 +1007,20 @@ struct Traits< MatrixByMatrixProduct < Lhs, Rhs> > : public ProductTraits<Lhs, R
 } // end namespace hidden
 
 // forward declaration
-template< typename Lhs, typename Rhs, int LhsStructure_ = Lhs::structure_, int RhsStructure_ = Rhs::structure_>
-class ProductBase;
+template< typename Lhs, typename Rhs> class ProductBase;
 
 template<typename Lhs, typename Rhs>
-class MatrixByMatrixProduct : public ProductBase< Lhs, Rhs >
+class ArrayByArrayProduct : public ProductBase< Lhs, Rhs >
                             , public TRef<1>
 {
   public:
     typedef ProductBase< Lhs, Rhs> Base;
-    typedef typename hidden::Traits<MatrixByMatrixProduct>::Type Type;
-    typedef typename hidden::Traits<MatrixByMatrixProduct < Lhs, Rhs> >::Allocator Allocator;
+    typedef typename hidden::Traits<ArrayByArrayProduct>::Type Type;
+    typedef typename hidden::Traits<ArrayByArrayProduct < Lhs, Rhs> >::Allocator Allocator;
 
     enum
     {
-      // All the valid cases for MatrixByMatrix operator
+      // All the valid cases for ArrayByArray operator
      isValid_ =(  (EGAL(Lhs,array2D_) && !EGAL(Rhs,point_)  && !EGAL(Rhs,number_) && !EGAL(Rhs,diagonal_) )
                || (EGAL(Lhs,square_)  && !EGAL(Rhs,point_)  && !EGAL(Rhs,number_) && !EGAL(Rhs,diagonal_) )
                || (EGAL(Lhs,lower_triangular_) && !EGAL(Rhs,point_)  && !EGAL(Rhs,number_) && !EGAL(Rhs,diagonal_) )
@@ -1002,41 +1029,45 @@ class MatrixByMatrixProduct : public ProductBase< Lhs, Rhs >
                || (EGAL(Lhs,point_)  && !EGAL(Rhs,point_) && !EGAL(Rhs,vector_) && !EGAL(Rhs,number_) && !EGAL(Rhs,diagonal_) )
                ),
 
-      structure_ = hidden::Traits<MatrixByMatrixProduct>::structure_,
-      orient_    = hidden::Traits<MatrixByMatrixProduct>::orient_,
-      sizeRows_  = hidden::Traits<MatrixByMatrixProduct>::sizeRows_,
-      sizeCols_  = hidden::Traits<MatrixByMatrixProduct>::sizeCols_,
-      storage_   = hidden::Traits<MatrixByMatrixProduct>::storage_
+      structure_ = hidden::Traits<ArrayByArrayProduct>::structure_,
+      orient_    = hidden::Traits<ArrayByArrayProduct>::orient_,
+      sizeRows_  = hidden::Traits<ArrayByArrayProduct>::sizeRows_,
+      sizeCols_  = hidden::Traits<ArrayByArrayProduct>::sizeCols_,
+      storage_   = hidden::Traits<ArrayByArrayProduct>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    inline MatrixByMatrixProduct( const Lhs& lhs, const Rhs& rhs)
+    inline ArrayByArrayProduct( const Lhs& lhs, const Rhs& rhs)
                               : Base(), lhs_(lhs), rhs_(rhs)
                               , result_(lhs.sizeRows(), rhs.sizeCols(), Type())
     {
       STK_STATICASSERT_PRODUCT_OPERATOR_MISMATCH( isValid_ );
       if (lhs.cols() != rhs.rows())
-      { STKRUNTIME_ERROR_NO_ARG(MatrixByMatrixProduct, sizes mismatch for 2D array);}
+      { STKRUNTIME_ERROR_NO_ARG(ArrayByArrayProduct,sizes mismatch for 2D array);}
       result_.shift(lhs_.beginRows(), rhs_.beginCols());
-      orient_ ? hidden::ProductImpl<Lhs, Rhs, Allocator>::runbp(lhs, rhs, result_)
-              : hidden::ProductImpl<Lhs, Rhs, Allocator>::runpb(lhs, rhs, result_);
+      (orient_) ? hidden::ProductImpl<Lhs, Rhs, Allocator>::runpb(lhs, rhs, result_)
+                : hidden::ProductImpl<Lhs, Rhs, Allocator>::runbp(lhs, rhs, result_);
     }
     /**  @return the range of the rows */
-    inline Range const rows() const { return result_.rows();}
+    inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return(result_.beginRows());}
+    inline int const beginRowsImpl() const { return(lhs_.beginRows());}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return(result_.endRows());}
+    inline int const endRowsImpl() const { return(lhs_.endRows());}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return result_.sizeRows();}
+    inline int const sizeRowsImpl() const { return(lhs_.sizeRows());}
 
     /** @return the range of the columns */
-    inline Range const cols() const { return result_.cols();}
+    inline ColRange const& colsImpl() const { return rhs_.cols();}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return(result_.beginCols());}
+    inline int const beginColsImpl() const { return(rhs_.beginCols());}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return(result_.endCols());}
+    inline int const endColsImpl() const { return(rhs_.endCols());}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return result_.sizeCols();}
+    inline int const sizeColsImpl() const { return rhs_.sizeCols();}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
@@ -1056,23 +1087,23 @@ class MatrixByMatrixProduct : public ProductBase< Lhs, Rhs >
 /** @ingroup Arrays
   * @brief implement the access to the elements in the (2D) general case.
   **/
-template< typename Lhs, typename Rhs, int LhsStructure_, int RhsStructure_>
-class ProductBase : public ExprBase< MatrixByMatrixProduct<Lhs, Rhs> >
+template< typename Lhs, typename Rhs>
+class ProductBase : public ExprBase< ArrayByArrayProduct<Lhs, Rhs> >
 {
   public:
-    typedef ExprBase< MatrixByMatrixProduct< Lhs, Rhs> > Base;
+    typedef ExprBase< ArrayByArrayProduct< Lhs, Rhs> > Base;
     typedef typename Base::Type Type;
 
     /** constructor. */
     inline ProductBase() : Base() {}
     /** access to the element (i,j) */
-    inline Type const elt2Impl(int i, int j) const
+    inline Type const& elt2Impl(int i, int j) const
     { return this->asDerived().result().elt(i,j);}
     /** access to the element i */
-    inline Type const elt1Impl(int i) const
+    inline Type const& elt1Impl(int i) const
     { return this->asDerived().result().elt(i);}
     /** access to the element */
-    inline Type const elt0Impl() const
+    inline Type const& elt0Impl() const
     { return this->asDerived().result().elt();}
 };
 

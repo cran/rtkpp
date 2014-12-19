@@ -30,12 +30,14 @@ STKPP_LIB = $(STKPP_LIB_DIR)/$(R_ARCH)/$(LIB_STKPP_A)
 STK_FLAGS =
 
 ## Use the R_HOME indirection to support installations of multiple R version
-PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` $(STK_FLAGS)
-PKG_CPPFLAGS = -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB
-PKG_LIBS     = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(STKPP_LIB)
+## define PKG_CPPFLAGS (preprocessor & includes) and PKG_CXXFLAGS (compiler flags)
+PKG_CPPFLAGS = -I../inst/projects/ -I../inst/include/ -DIS_RTKPP_LIB  -DSTKUSELAPACK
+PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` $(STK_FLAGS) $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS     = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(STKPP_LIB) $(SHLIB_OPENMP_CXXFLAGS)
 
-## Define STK flags here
-STK_CXXFLAGS = $(PKG_CXXFLAGS) -DIS_RTKPP_LIB -DSTKUSELAPACK
+## Define STK_CPPFLAGS flags and STK_CXXFLAGS here (moved from inst/makevars)
+STK_CXXFLAGS = $(PKG_CXXFLAGS)
+STK_CPPFLAGS = -DIS_RTKPP_LIB -DSTKUSELAPACK
 
 ## And export
 export

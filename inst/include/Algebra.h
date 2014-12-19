@@ -39,8 +39,8 @@
  *
  * The Algebra project propose some set of templated function for computing
  * dot product,  weighted dot product, vector norm, weighted vector norm
- * and so on... It proposes three linear algebra methods for the Matrix
- * and the MatrixSquare classes:
+ * and so on... It proposes three linear algebra methods for the ArrayXX
+ * and the ArraySquareX classes:
  *    @li The Qr decomposition of an arbitrary matrix of Real, @sa Qr
  *    @li The svd decomposition of an arbitrary matrix of real, @sa Svd
  *    @li An Eigenvalue decomposition for symmetric (square) matrices and a
@@ -48,8 +48,8 @@
  *
  * It propose also some set of method for performing
  * @li Givens rotation on a matrix
- * @li GramScmidt orthogonalization of the column of a Matrix
- * @li Householder rotation of a Matrix.
+ * @li GramScmidt orthogonalization of the column of a ArrayXX
+ * @li Householder rotation of a ArrayXX.
  *
  * @note these classes will be abandoned soon and replaced by lapack wrappers.
  * They can only be used (except @sa SymEigen) with 1-based arrays.

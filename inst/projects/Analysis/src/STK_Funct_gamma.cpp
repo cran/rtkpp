@@ -628,7 +628,7 @@ Real factorial(int const& n)
 Real factorial(Real const& z)
 {
   // Check if z is Available and finite
-  if (Arithmetic<Real>::isNA(z)) return z;
+  if (isNA(z)) return z;
   Real n = floor(z);
   // Negative integers or reals arguments not allowed
   if ((n < 0)||(n != z))
@@ -668,7 +668,7 @@ Real factorialLn(int const& n)
 Real factorialLn(Real const& z)
 {
   // Check if z is Available and finite
-  if (Arithmetic<Real>::isNA(z)) return z;
+  if (isNA(z)) return z;
   Real n = floor(z);
   // Negative integers or reals arguments not allowed
   if ((n < 0)||(n != z))
@@ -693,7 +693,7 @@ Real factorialLn(Real const& z)
 Real gamma(Real const& z)
 {
   // Check if z is Available and finite
-  if (Arithmetic<Real>::isNA(z)) return z;
+  if (isNA(z)) return z;
   // Negative integer argument not allowed
   if (( z<=0 && z == floor(z))||(Arithmetic<Real>::isInfinite(z)))
     throw domain_error("Funct::gamma(z) "
@@ -759,7 +759,7 @@ Real gamma(Real const& z)
 Real gammaLn(Real const& z)
 {
   // Check if z is Available and finite
-  if (Arithmetic<Real>::isNA(z)) return z;
+  if (isNA(z)) return z;
   // Negative integer argument not allowed
   if (( z<=0 && z == floor(z))||(Arithmetic<Real>::isInfinite(z)))
     throw domain_error("Funct::gammaLn(z) "
@@ -805,7 +805,7 @@ Real gammaLn(Real const& z)
 Real gammaLnStirlingError(Real const& z)
 {
   // Check if z is Available and finite
-  if (Arithmetic<Real>::isNA(z)) return z;
+  if (isNA(z)) return z;
   // Negative integer argument not allowed
   if ( z<=0 || Arithmetic<Real>::isInfinite(z))
     throw domain_error("Funct::gammaLnStirlingError(z) "

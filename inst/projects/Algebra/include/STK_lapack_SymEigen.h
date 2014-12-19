@@ -76,7 +76,7 @@ class SymEigen : public ISymEigen<SymEigen>
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    inline SymEigen( CArraySquareXX const& data, bool ref =false)
+    inline SymEigen( CSquareXd const& data, bool ref =false)
                    : Base(data, ref), range_(data.range())
                    , JOBZ_('V'), RANGE_('A'), UPLO_('U')
                    , VL_(0.0), VU_(0.0), IL_(0), IU_(0)
@@ -308,7 +308,7 @@ class SymEigen : public ISymEigen<SymEigen>
     Real VL_, VU_;
     int IL_, IU_;
     /** Square matrix with the original data set. */
-    CArraySquareXX data_;
+    CSquareXd data_;
 };
 
 

@@ -51,7 +51,7 @@ CPP_OBJS = $(CXX_SRCS:%.cpp=$(BIN_DIR)%.o)
 # Compilation rules
 $(BIN_DIR)%.o: $(CXX_INCS) makefile
 $(BIN_DIR)%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CXXPICFLAGS) $(STK_CXXFLAGS) -I$(PROJECTS_DIR) $< -c -o $@
+	$(CXX) $(STK_CPPFLAGS) $(CXXPICFLAGS) $(STK_CXXFLAGS) -I$(PROJECTS_DIR) $< -c -o $@
 
 #-----------------------------------------------------------------------
 # Targets

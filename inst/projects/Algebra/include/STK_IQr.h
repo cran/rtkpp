@@ -54,13 +54,10 @@ void print(Container2D const& A, STK::String const& name)
 {
   stk_cout << "print: " << name << _T("\n";);
   stk_cout << name << _T(".isRef() =")        << A.isRef()  << _T("\n");
-  stk_cout << name << _T(".capacityHo() =")   << A.capacityHo()  << _T("\n");
   stk_cout << name << _T(".cols() =")      << A.cols()  << _T("\n");
   stk_cout << name << _T(".rows() =")      << A.rows()  << _T("\n\n");
   stk_cout << name << _T(".rangeCols().isRef() =")  << A.rangeCols().isRef() << _T("\n");
   stk_cout << name << _T(".rangeCols() =\n")  << A.rangeCols() << _T("\n");
-  stk_cout << name << _T(".capacityCols().isRef() =") << A.capacityCols().isRef()  << _T("\n");
-  stk_cout << name << _T(".capacityCols() =\n") << A.capacityCols()  << _T("\n");
 }
 #endif
 
@@ -68,12 +65,12 @@ namespace STK
 {
 /** @ingroup Algebra
  *  @brief The class IQr is an interface class for the method
- *  computing the QR Decomposition of a Matrix.
+ *  computing the QR Decomposition of a ArrayXX.
  * 
  *  The QR decomposition of a matrix require
  *  - Input:  A matrix of size M-by-N
  *  - Output:
- *     -# Q Matrix of size M-by-N.
+ *     -# Q Array of size M-by-N.
  *     -# R Upper Triangular matrix of dimension min(M,N)-by-N
  *     -# \f$ A = QR \f$
  **/
@@ -127,7 +124,7 @@ class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
     /** give the matrix Q of the QR decomposition.
      * @return the matrix Q of the QR decomposition
      **/
-    inline Matrix const& Q() const  { return Q_;}
+    inline ArrayXX const& Q() const  { return Q_;}
     /** Compute the QR decomposition. **/
     virtual bool run()
     {
@@ -137,7 +134,7 @@ class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
     /** give the matrix R of the QR decomposition.
      * @return the matrix R of the QR decomposition
      **/
-    inline MatrixUpperTriangular const& R() const { return R_;}
+    inline ArrayUpperTriangularXX const& R() const { return R_;}
     /** Compute Q (to use after run). After the run process, Q_ store
      *  the householder vector in its column. Call compQ, if you want to
      *  obtain Q in its true form.
@@ -185,10 +182,10 @@ class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
     { Q_ = data.asDerived(); R_.clear(); compq_ = false;}
 
   protected :
-    /** Q Matrix of the QR decomposition */
-    Matrix Q_;
-    /** R Matrix of th QR decomposition */
-    MatrixUpperTriangular R_;
+    /** Q Array of the QR decomposition */
+    ArrayXX Q_;
+    /** R Array of th QR decomposition */
+    ArrayUpperTriangularXX R_;
     /// is Q computed ?
     bool compq_;
 };
@@ -266,8 +263,8 @@ void IQr<Derived>::eraseCol(int pos)
     // if necessary update R_ and Q_
     if (sinus)
     {
-      // create a reference on the sub-Matrix
-      MatrixUpperTriangular Rsub(R_.col( _R(iter+1, R_.lastIdxCols()) ), true);
+      // create a reference on the sub-ArrayXX
+      ArrayUpperTriangularXX Rsub(R_.col( _R(iter+1, R_.lastIdxCols()) ), true);
       // Update the next rows (iter1:ncolr_) of R_
       leftGivens(Rsub, iter-1, iter, cosinus, sinus);
       // Update the cols of Q_
@@ -345,8 +342,8 @@ void IQr<Derived>::insertCol(ColVector const& T, int pos)
     // apply Givens rotation if necessary
     if (sinus)
     {
-      // create a reference on the sub-Matrix
-      MatrixUpperTriangular Rsub(R_.col(_R(iter, R_.lastIdxCols())), true);
+      // create a reference on the sub-ArrayXX
+      ArrayUpperTriangularXX Rsub(R_.col(_R(iter, R_.lastIdxCols())), true);
       // Update the next rows (iter:ncolr_) of R_
       leftGivens( Rsub, iterm1, iter, cosinus, sinus);
       // Update the cols of Q_

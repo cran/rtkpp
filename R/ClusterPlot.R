@@ -40,12 +40,12 @@
     if (is.numeric(y)) # numbers of the columns to plot are given
     {
       if (max(y)>nbVariable)
-        stop("y indices mismatch the data dimension")
+        stop("In .clusterPlot, y indices mismatch the data dimension")
     }
     else # names of the variables to plot are given
     {
       if ( sum(y %in% colnames(model@component@data))!= length(y) )
-      { stop(cat("unknown variable: ", paste(y[which(!(y %in% colnames(model@component@data)))]),"\n"))}
+      { stop(cat("In .clusterPlot, unknown variable: ", paste(y[which(!(y %in% colnames(model@component@data)))]),"\n"))}
     }
   }
   # get old par

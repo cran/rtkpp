@@ -39,23 +39,33 @@
 
 namespace STK
 {
-template< typename Type_, int Size_ = UnknownSize, bool Orient_ = Arrays::by_col_>
-class CArraySquare;
+// forward declarations
+template< typename Type_, int Size_ = UnknownSize, bool Orient_ = Arrays::by_col_> class CArraySquare;
+template< typename Type, int SizeRows_, int SizeCols_, bool Orient_> class CArray;
+template< typename Type, int SizeCols_, bool Orient_> class CArrayPoint;
+template< typename Type, int SizeRows_, bool Orient_> class CArrayVector;
+template< typename Type, bool Orient_> class CArrayNumber;
 
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArray;
-template< typename Type, int SizeCols_, bool Orient_>
-class CArrayPoint;
-template< typename Type, int SizeRows_, bool Orient_>
-class CArrayVector;
-template< typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArrayNumber;
+// useful typedef
+typedef CArraySquare<Real, UnknownSize, Arrays::by_col_>   CSquareX;
+typedef CArraySquare<Real, 2, Arrays::by_col_>             CSquare2;
+typedef CArraySquare<Real, 3, Arrays::by_col_>             CSquare3;
+typedef CArraySquare<double, UnknownSize, Arrays::by_col_> CSquareXd;
+typedef CArraySquare<double, 2, Arrays::by_col_>           CSquare2d;
+typedef CArraySquare<double, 3, Arrays::by_col_>           CSquare3d;
+typedef CArraySquare<int, UnknownSize, Arrays::by_col_>    CSquareXi;
+typedef CArraySquare<int, 2, Arrays::by_col_>              CSquare2i;
+typedef CArraySquare<int, 3, Arrays::by_col_>              CSquare3i;
 
-
-
-typedef CArraySquare<Real>                        CArraySquareXX;
-typedef CArraySquare<Real, 2, Arrays::by_col_>    CArraySquare22;
-typedef CArraySquare<Real, 3, Arrays::by_col_>    CArraySquare33;
+typedef CArraySquare<Real, UnknownSize, Arrays::by_row_>   CSquareByRowX;
+typedef CArraySquare<Real, 2, Arrays::by_row_>             CSquareByRow2;
+typedef CArraySquare<Real, 3, Arrays::by_row_>             CSquareByRow3;
+typedef CArraySquare<double, UnknownSize, Arrays::by_row_> CSquareByRowXd;
+typedef CArraySquare<double, 2, Arrays::by_row_>           CSquareByRow2d;
+typedef CArraySquare<double, 3, Arrays::by_row_>           CSquareByRow3d;
+typedef CArraySquare<int, UnknownSize, Arrays::by_row_>    CSquareByRowXi;
+typedef CArraySquare<int, 2, Arrays::by_row_>              CSquareByRow2i;
+typedef CArraySquare<int, 3, Arrays::by_row_>              CSquareByRow3i;
 
 namespace hidden
 {
@@ -68,32 +78,14 @@ struct Traits< CArraySquare<Type_, Size_, Orient_> >
   private:
     class Void { };
 
-    typedef CArrayPoint<Type_, Size_, Arrays::by_col_> RowIndirect;
-    typedef CArrayPoint<Type_, Size_, Arrays::by_row_> RowDirect;
-
-    typedef CArrayPoint<Type_, UnknownSize, Arrays::by_col_> SubRowIndirect;
-    typedef CArrayPoint<Type_, UnknownSize, Arrays::by_row_> SubRowDirect;
-
-    typedef CArrayVector<Type_, Size_, Arrays::by_row_> ColIndirect;
-    typedef CArrayVector<Type_, Size_, Arrays::by_col_> ColDirect;
-
-    typedef CArrayVector<Type_, UnknownSize, Arrays::by_row_> SubColIndirect;
-    typedef CArrayVector<Type_, UnknownSize, Arrays::by_col_> SubColDirect;
-
-    typedef CArraySquare<Type_, Size_, Arrays::by_row_> FixedRowArrayIndirect;
-    typedef CArraySquare<Type_, Size_, Arrays::by_row_> FixedColArrayDirect;
-
-    typedef CArraySquare<Type_, Size_, Arrays::by_col_> FixedRowArrayDirect;
-    typedef CArraySquare<Type_, Size_, Arrays::by_col_> FixedColArrayIndirect;
-
   public:
-    typedef CArrayNumber<Type_, 1, 1, Orient_> Number;
+    typedef CArrayNumber<Type_, Orient_> Number;
 
-    typedef typename If<Orient_, RowIndirect, RowDirect >::Result  Row;
-    typedef typename If<Orient_, ColDirect, ColIndirect >::Result  Col;
+    typedef CArrayPoint<Type_, Size_, Orient_> Row;
+    typedef CArrayVector<Type_, Size_, Orient_> Col;
 
-    typedef typename If<Orient_, SubRowIndirect, SubRowDirect >::Result  SubRow;
-    typedef typename If<Orient_, SubColDirect, SubColIndirect >::Result  SubCol;
+    typedef CArrayPoint<Type_, UnknownSize, Orient_> SubRow;
+    typedef CArrayVector<Type_, UnknownSize, Orient_> SubCol;
 
     /** If one of the Size is 1, we have a Vector (a column) or a Point (a row)
      *  (What to do if both are = 1 : Type or array (1,1) ?).
@@ -108,8 +100,6 @@ struct Traits< CArraySquare<Type_, Size_, Orient_> >
 //                       , typename If<SizeRows_ != UnknownSize, FixedRowArrayDirect, FixedColArrayIndirect>::Result
 //                       , typename If<SizeCols_ != UnknownSize, FixedRowArrayIndirect, FixedColArrayDirect>::Result
 //                       >::Result SubArray;
-    // Transposed type
-    typedef CArraySquare< Type_, Size_, !Orient_> Transposed;
     // The CAllocator have to have the same structure than the CArray
     typedef CAllocator<Type_, Arrays::square_, Size_, Size_, Orient_> Allocator;
 
@@ -177,7 +167,7 @@ class CArraySquare
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    CArraySquare( ExprBase<OtherDerived> const& T): Base()
+    inline CArraySquare( ExprBase<OtherDerived> const& T): Base(T.size(), T.size())
     { LowBase::operator=(T);}
     /** destructor. */
     inline ~CArraySquare() {}
@@ -189,7 +179,7 @@ class CArraySquare
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArraySquare& operator=(Rhs const& T) { return LowBase::assign(T);}
+    inline CArraySquare& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy
      **/

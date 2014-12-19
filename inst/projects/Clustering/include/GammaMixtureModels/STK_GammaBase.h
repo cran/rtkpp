@@ -55,11 +55,11 @@ namespace hidden
 class invPsiMLog : public IFunction<invPsiMLog >
 {
   public:
-    inline invPsiMLog( Real y): y_(y)  {}
+    inline invPsiMLog( Real const& y): y_(y)  {}
     /** @return the value of the function at a
      * @param a a positive real value
      **/
-    inline Real fImpl(Real a) const
+    inline Real fImpl(Real const& a) const
     { return (y_ + std::log(a) - Funct::psi_raw(a));}
     /** @return the minimal value of the function at x */
     inline Real xminImpl() const { return 0;}
@@ -75,11 +75,11 @@ class invPsi : public IFunction<invPsi >
 {
   public:
     /** initialize y_ */
-    inline invPsi( Real y): y_(y) {}
+    inline invPsi( Real const& y): y_(y) {}
     /** @return the value of the function at a
      *  @param x a positive real value
      **/
-    inline Real fImpl(Real x) const { return (y_ - Funct::psi_raw(x));}
+    inline Real fImpl(Real const& x) const { return (y_ - Funct::psi_raw(x));}
     /** @return the minimal value of the function at x */
     inline Real xminImpl() const { return 0;}
   private:
@@ -97,12 +97,12 @@ class GammaBase : public IMixtureModel<Derived >
 {
   public:
     typedef IMixtureModel<Derived > Base;
-    typedef Array2D<Real>::Col ColVector;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
 
   protected:
     /** default constructor
@@ -121,7 +121,7 @@ class GammaBase : public IMixtureModel<Derived >
     Real impute(int i, int j) const
     {
       Real sum = 0.;
-      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+      for (int k= p_tik()->beginCols(); k < components().end(); ++k)
       { sum += p_tik()->elt(i,k) * p_param(k)->shape(j) * p_param(k)->scale(j);}
       return sum;
     }
@@ -137,6 +137,8 @@ class GammaBase : public IMixtureModel<Derived >
      *  @param params the array to fill with the parameters of the model
      **/
     void getParameters(Array2D<Real>& params) const;
+    /** @return the parameters of the model in an array of size (K * 2d). */
+    ArrayXX getParametersImpl() const;
     /** Write the parameters on the output stream os */
     void writeParameters(ostream& os) const;
 
@@ -161,16 +163,33 @@ void GammaBase<Derived>::getParameters(Array2D<Real>& params) const
 {
   int nbClust = this->nbCluster();
   params.resize(2*nbClust, p_data()->cols());
-
   for (int k= 0; k < nbClust; ++k)
   {
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
     {
-      params(2*k+  baseIdx, j) = p_param(k+baseIdx)->shape(j);
-      params(2*k+1+baseIdx, j) = p_param(k+baseIdx)->scale(j);
+      params(2*k+  baseIdx, j) = p_param(baseIdx+k)->shape(j);
+      params(baseIdx+2*k+1, j) = p_param(baseIdx+k)->scale(j);
     }
   }
 }
+/* get the parameters of the model in an array of size (K * 2d). */
+template<class Derived>
+ArrayXX GammaBase<Derived>::getParametersImpl() const
+{
+  ArrayXX params;
+  int nbClust = this->nbCluster();
+  params.resize(2*nbClust, p_data()->cols());
+  for (int k= 0; k < nbClust; ++k)
+  {
+    for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
+    {
+      params(2*k+  baseIdx, j) = p_param(baseIdx+k)->shape(j);
+      params(baseIdx+2*k+1, j) = p_param(baseIdx+k)->scale(j);
+    }
+  }
+  return params;
+}
+
 /* Write the parameters on the output stream os */
 template<class Derived>
 void GammaBase<Derived>::writeParameters(ostream& os) const
@@ -194,23 +213,23 @@ void GammaBase<Derived>::writeParameters(ostream& os) const
 template<class Derived>
 bool GammaBase<Derived>::moments()
 {
-  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+  for (int k= p_tik()->beginCols(); k < components().end(); ++k)
   {
-    ColVector tik(p_tik()->col(k), true); // create a reference
-    p_param(k)->tk_ = tik.sum();
+    CVectorX tikRowk(p_tik()->col(k), true); // create a reference
+    p_param(k)->tk_ = tikRowk.sum();
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
     {
       // mean
-      Real mean =  p_data()->col(j).wmean(tik);
-      if ( (mean<=0) || Arithmetic<Real>::isNA(mean) ) { return false;}
+      Real mean =  p_data()->col(j).wmean(tikRowk);
+      if ( (mean<=0) || isNA(mean) ) { return false;}
       p_param(k)->mean_[j] = mean;
       // mean log
-      Real meanLog =  p_data()->col(j).log().wmean(tik);
-      if (Arithmetic<Real>::isNA(meanLog)) { return false;}
+      Real meanLog =  p_data()->col(j).log().wmean(tikRowk);
+      if (isNA(meanLog)) { return false;}
       p_param(k)->meanLog_[j] = meanLog;
       // variance
-      Real variance =  p_data()->col(j).wvariance(mean, tik);
-      if ((variance<=0)||Arithmetic<Real>::isNA(variance)){ return false;}
+      Real variance =  p_data()->col(j).wvariance(mean, tikRowk);
+      if ((variance<=0)||isNA(variance)){ return false;}
       p_param(k)->variance_[j] = variance;
     }
   }
@@ -222,7 +241,7 @@ template<class Derived>
 Real GammaBase<Derived>::qValue() const
 {
   Real value = 0.;
-  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+  for (int k= p_tik()->beginCols(); k < components().end(); ++k)
   {
     Real sumjk=0.0;
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)

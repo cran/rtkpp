@@ -92,9 +92,9 @@ namespace STK
  *
  * In this interface, the pure virtual function to implement are
  * @code
- *   virtual void regression();
+ *   virtual void regressionStep();
  *   virtual void regression( WArray const& weights);
- *   virtual void prediction();
+ *   virtual void predictionStep();
  *   virtual int const& computeNbFreeParameter() const;
  *   virtual void extrapolate( XArray const& x, YArray& y) const;
  * @endcode
@@ -109,14 +109,14 @@ class IRegression
 {
   protected:
     /** Constructor. Initialize the data members.
-     * @param p_y container with the observed output
-     * @param p_x container with the predictors (inputs) of the model
+     * @param p_y array with the observed output
+     * @param p_x array with the predictors (inputs) of the model
      */
     IRegression( ArrayBase<YArray> const* p_y =0, ArrayBase<XArray> const* p_x =0)
                : p_y_((p_y == 0) ? 0 : p_y->asPtrDerived())
                , p_x_((p_x == 0) ? 0 : p_x->asPtrDerived())
-               , p_predicted_(0)
-               , p_residuals_(0)
+               , predicted_()
+               , residuals_()
                , nbFreeParameter_(Arithmetic<int>::NA())
      {}
 
@@ -129,13 +129,13 @@ class IRegression
       // perform any initialization step needed before the regression step
       initializeStep();
       // compute the regression
-      regression();
+      regressionStep();
       // Compute the number of parameter of the regression function.
       nbFreeParameter_ = computeNbFreeParameter();
-      // predictions
-      prediction();
+      // compute predictions
+      predictionStep();
       // compute residuals
-      residuals();
+      residualsStep();
       // return the result of the computations
       return true;
     }
@@ -151,10 +151,12 @@ class IRegression
       regression(weights);
       // Compute the number of parameter of the regression function.
       nbFreeParameter_ = computeNbFreeParameter();
-      // create container of the predicted value and compute prediction
-      prediction();
-      // create container of the residuals and compute them
-      residuals();
+      // create array of the predicted value and compute prediction
+      predictionStep();
+      // create array of the residuals and compute them
+      residualsStep();
+      // perform any post-operation needed before the regression step
+      finalizeStep();
       // return the result of the computations
       return true;
     }
@@ -163,21 +165,32 @@ class IRegression
      **/
     inline String const& error() const { return msg_error_;}
 
-    /** get the pointer of the container of the predicted values.
-     * The container @c p_predicted_ will not be deleted by @c this.
+    /** get the array of the predicted values.
+     * The array @c p_predicted_ will not be deleted by @c this.
      * @return the pointer on the predicted values
      **/
-    inline YArray* p_predicted() const { return p_predicted_;}
-    /** get the pointer of the container of the residuals. The container
+    inline YArray const& predicted() const { return predicted_;}
+    /** get the pointer of the array of the residuals. The array
      *  @c p_residuals_ will not be deleted by @c this.
      *  @return the pointer on the residuals
      **/
-    inline YArray* p_residuals() const {  return p_residuals_;}
+    inline YArray const& residuals() const {  return residuals_;}
+
+    /** get the pointer of the array of the predicted values.
+     * The array @c p_predicted_ will not be deleted by @c this.
+     * @return the pointer on the predicted values
+     **/
+    inline YArray* p_predicted() { return &predicted_;}
+    /** get the pointer of the array of the residuals. The array
+     *  @c p_residuals_ will not be deleted by @c this.
+     *  @return the pointer on the residuals
+     **/
+    inline YArray* p_residuals() { return &residuals_;}
 
     /** Give the number of parameter of the regression function.
      *  @return the number of parameter of the regression function
      **/
-    inline int nbFreeParameter() const {  return nbFreeParameter_;}
+    inline int nbFreeParameter() const { return nbFreeParameter_;}
 
     /** Set the data set the regression method should use.
      * @param p_y data set to adjust
@@ -208,40 +221,38 @@ class IRegression
      *  method. Default implementation is do nothing.
      */
     virtual void initializeStep() {}
-
+    /** @brief perform any computation needed after the call of the regression
+     *  method. Default implementation is do nothing.
+     */
+    virtual void finalizeStep() {}
     /** @brief Compute the residuals of the model.
      * The residuals of the model are computed by computing the difference
      * between the observed outputs and the predicted outputs of the model.
      */
-    inline void residuals()
-    {
-      if (p_residuals_) delete p_residuals_;
-       p_residuals_ =  p_y_->clone();
-      *p_residuals_ -= *p_predicted_;
-    }
+    inline void residualsStep() { residuals_ = *p_y_ - predicted_;}
 
     /** Container of the output to regress. */
     YArray const* p_y_;
     /** Container of the regressors. */
     XArray const* p_x_;
     /** Container of the predicted output. */
-    YArray* p_predicted_;
+    YArray predicted_;
     /** Container of the residuals. */
-    YArray* p_residuals_;
+    YArray residuals_;
 
   private:
     /** number of parameter of the regression method. */
     int nbFreeParameter_;
 
     /** compute the regression function. */
-    virtual void regression() =0;
+    virtual void regressionStep() =0;
     /** compute the weighted regression function.
      * @param weights the weights of the samples
      **/
     virtual void regression(WArray const& weights) =0;
     /** Compute the predicted outputs by the regression function and store the
-     * result in the p_predicted_ container. */
-    virtual void prediction() =0;
+     * result in the p_predicted_ array. */
+    virtual void predictionStep() =0;
     /** Compute the number of parameter of the regression function.
      * @return the number of parameter of the regression function
      **/
@@ -249,10 +260,8 @@ class IRegression
     /** delete allocated memory. */
     void clear()
     {
-      if (p_predicted_) delete p_predicted_;
-      if (p_residuals_) delete p_residuals_;
-      p_predicted_ = 0;
-      p_residuals_ = 0;
+      predicted_.clear();
+      residuals_.clear();
     }
 
   protected:

@@ -39,111 +39,12 @@ namespace STK
 {
 /* size of the block and panels used in the product algorithm */
 const int blockSize = 4;
-const int panelSize = 128;
+const int panelSize = 64;
 const int vectorSize = 256;
+}
 
-namespace hidden
-{
-
-/** @ingroup hidden
- *  this structure regroup all the methods using only pointers on the Type
- **/
-template<typename Type>
-struct MultImpl
-{
-  /** multiplication : 1 sized vector */
-  static inline Type vec1(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0]);}
-  /** multiplication : 2 sized vector */
-  static inline Type vec2(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1]);}
-  /** multiplication : 3 sized vector */
-  static inline Type vec3(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1] + p_lhs[2] * p_rhs[2]);}
-  /** multiplication of two vectors */
-  static inline Type vectorByVector(Type const* p_lhs, Type const* p_rhs)
-  {
-    Type sum = Type(0);
-    for (int k=0; k< vectorSize; ++k) sum += p_lhs[k] * p_rhs[k];
-    return(sum);
-  }
-  /** multiplication of two vectors */
-  static inline Type vectorByVector(Type const* p_lhs, Type const* p_rhs, int vSize)
-  {
-    Type sum = Type(0);
-    for (int k=0; k< vSize; ++k) sum += p_lhs[k] * p_rhs[k];
-    return(sum);
-  }
-  /** general multiplication : with full block and full panel */
-  static void blockByPanel(Type const* p_block, Type const* p_panel, Type* p_result)
-  {
-    for (int j= 0; j< panelSize; ++j )
-    {
-      p_result[j*blockSize]    = p_panel[j*blockSize]     * p_block[0]
-                               + p_panel[j*blockSize+ 1]  * p_block[1]
-                               + p_panel[j*blockSize+ 2]  * p_block[2]
-                               + p_panel[j*blockSize+ 3]  * p_block[3];
-      p_result[j*blockSize+ 1] = p_panel[j*blockSize]     * p_block[4]
-                               + p_panel[j*blockSize+ 1]  * p_block[5]
-                               + p_panel[j*blockSize+ 2]  * p_block[6]
-                               + p_panel[j*blockSize+ 3]  * p_block[7];
-      p_result[j*blockSize+ 2] = p_panel[j*blockSize]     * p_block[8]
-                               + p_panel[j*blockSize+ 1]  * p_block[9]
-                               + p_panel[j*blockSize+ 2]  * p_block[10]
-                               + p_panel[j*blockSize+ 3]  * p_block[11];
-      p_result[j*blockSize+ 3] = p_panel[j*blockSize]     * p_block[12]
-                               + p_panel[j*blockSize+ 1]  * p_block[13]
-                               + p_panel[j*blockSize+ 2]  * p_block[14]
-                               + p_panel[j*blockSize+ 3]  * p_block[15];
-    }
-  }
-  /** general multiplication : with full block and reduced panel */
-  static void blockByPanel( Type const* p_block, Type const* p_panel, Type* p_result
-                          , int pSize)
-  {
-    for (int j= 0; j< pSize; ++j)
-    {
-      p_result[j*blockSize]    = p_panel[j*blockSize]     * p_block[0]
-                               + p_panel[j*blockSize+ 1]  * p_block[1]
-                               + p_panel[j*blockSize+ 2]  * p_block[2]
-                               + p_panel[j*blockSize+ 3]  * p_block[3];
-
-      p_result[j*blockSize+ 1] = p_panel[j*blockSize]     * p_block[4]
-                               + p_panel[j*blockSize+ 1]  * p_block[5]
-                               + p_panel[j*blockSize+ 2]  * p_block[6]
-                               + p_panel[j*blockSize+ 3]  * p_block[7];
-
-      p_result[j*blockSize+ 2] = p_panel[j*blockSize]     * p_block[8]
-                               + p_panel[j*blockSize+ 1]  * p_block[9]
-                               + p_panel[j*blockSize+ 2]  * p_block[10]
-                               + p_panel[j*blockSize+ 3]  * p_block[11];
-
-      p_result[j*blockSize+ 3] = p_panel[j*blockSize]     * p_block[12]
-                               + p_panel[j*blockSize+ 1]  * p_block[13]
-                               + p_panel[j*blockSize+ 2]  * p_block[14]
-                               + p_panel[j*blockSize+ 3]  * p_block[15];
-    }
-  }
-  /** general multiplication : with reduced block and reduced panel */
-  static void blockByPanel( Type const* p_block, Type const* p_panel, Type* p_result
-                          , int pSize, int bSize)
-  {
-    for (int j= 0; j< pSize; ++j )
-      for (int i=0; i< bSize; i++)
-        p_result[j*bSize+i] = p_panel[j*blockSize]   * p_block[i*blockSize]
-                            + p_panel[j*blockSize+1] * p_block[i*blockSize+1]
-                            + p_panel[j*blockSize+2] * p_block[i*blockSize+2]
-                            + p_panel[j*blockSize+3] * p_block[i*blockSize+3];
-  }
-};
-
-
-} // namespace hidden
-
-} // namespace STK
-
-#include "STK_GeneralByGeneralProduct.h"
-#include "STK_GeneralByVectorProduct.h"
+#include "STK_ArrayByVectorProduct.h"
+#include "STK_ArrayByArrayProduct.h"
 
 namespace STK
 {
@@ -185,6 +86,11 @@ struct ProductImpl
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::array2D_>
 {
+  enum
+  {
+    orientLhs_ = Lhs::orient_,
+    orientRhs_ = Rhs::orient_
+  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -194,6 +100,11 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::array2D_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::square_>
 {
+  enum
+  {
+    orientLhs_ = Lhs::orient_,
+    orientRhs_ = Rhs::orient_
+  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -203,6 +114,11 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::square_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::square_>
 {
+  enum
+  {
+    orientLhs_ = Lhs::orient_,
+    orientRhs_ = Rhs::orient_
+  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -212,6 +128,11 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::square_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::array2D_>
 {
+  enum
+  {
+    orientLhs_ = Lhs::orient_,
+    orientRhs_ = Rhs::orient_
+  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )

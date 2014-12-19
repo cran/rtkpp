@@ -72,7 +72,7 @@ class Qr : public IQr<Qr>
      *  @param data the matrix to decompose
      *  @param ref true if we overwrite A
      **/
-    inline Qr( Matrix const&  data, bool ref = false): Base(data, ref) {}
+    inline Qr( ArrayXX const&  data, bool ref = false): Base(data, ref) {}
     /** @brief Constructor
      *  @param data reference on a matrix expression
      */

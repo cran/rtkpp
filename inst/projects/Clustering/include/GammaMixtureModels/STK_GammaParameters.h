@@ -39,12 +39,13 @@
 
 #include <cmath>
 
+#include "../STK_MixtureParamStat.h"
 #include "Arrays/include/STK_Const_Arrays.h"
 #include "Arrays/include/STK_Array2DPoint.h"
 #include "Arrays/include/STK_Display.h"
 
-#include "StatModels/include/STK_IMultiParameters.h"
 #include "STatistiK/include/STK_Law_Gamma.h"
+
 
 namespace STK
 {
@@ -53,21 +54,15 @@ namespace STK
  *  @brief Interface base class for the parameters of a multivariate model.
   */
 template<class Parameters>
-class GammaParametersBase : public IMultiParameters<Parameters>
+class GammaParametersBase : public IRecursiveTemplate<Parameters>
 {
   protected:
-    typedef IMultiParameters<Parameters> Base;
+    typedef IRecursiveTemplate<Parameters> Base;
     /** default constructor.*/
-    inline GammaParametersBase(): Base(), tk_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline GammaParametersBase( Range const& range)
-                              : Base(range), tk_(0), mean_(range, 1.), meanLog_(range, 0.), variance_(range, 1.)
-    {}
+    inline GammaParametersBase(): tk_(0) {}
     /** copy constructor.*/
     inline GammaParametersBase( GammaParametersBase const& param)
-                              : Base(param), tk_(param.tk_), mean_(param.mean_), meanLog_(param.meanLog_), variance_(param.variance_)
+                              : tk_(param.tk_), mean_(param.mean_), meanLog_(param.meanLog_), variance_(param.variance_)
     {}
     /** Destructor */
     inline ~GammaParametersBase() {}
@@ -106,18 +101,15 @@ class Gamma_ajk_bjk_Parameters: public GammaParametersBase<Gamma_ajk_bjk_Paramet
   public:
     typedef GammaParametersBase<Gamma_ajk_bjk_Parameters> Base;
     /** default constructor */
-    inline Gamma_ajk_bjk_Parameters() : Base(), shape_(), scale_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ajk_bjk_Parameters( Range const& range)
-                                   : Base(range), shape_(range, 1.), scale_(range, 1.)
-    {}
+    inline Gamma_ajk_bjk_Parameters()
+                      : Base(), shape_(), scale_(),stat_shape_(), stat_scale_() {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ajk_bjk_Parameters( Gamma_ajk_bjk_Parameters const& param)
-                                   : Base(param), shape_(param.shape_), scale_(param.scale_)
+                                   : Base(param)
+                                   , stat_shape_(param.stat_shape_)
+                                   , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_ajk_bjk_Parameters() {}
@@ -126,25 +118,44 @@ class Gamma_ajk_bjk_Parameters: public GammaParametersBase<Gamma_ajk_bjk_Paramet
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_[j];}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      shape_.resize(size); shape_ = 1.;
-      scale_.resize(size); scale_ = 1.;
-      mean_.resize(size); mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      shape_.resize(range); shape_ = 1.;
+      scale_.resize(range); scale_ = 1.;
+      mean_.resize(range); mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_shape_.initialize(range);
+      stat_scale_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_ << _T("\n") << scale_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_); stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release(); stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** vector of the shape */
     Array2DPoint<Real> shape_;
     /** vector of the scale */
     Array2DPoint<Real> scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_shape_;
+    /** Array of the statistics */
+    MixtureStatVector stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -155,18 +166,17 @@ class Gamma_ajk_bk_Parameters: public GammaParametersBase<Gamma_ajk_bk_Parameter
   public:
     typedef GammaParametersBase<Gamma_ajk_bk_Parameters> Base;
     /** default constructor */
-    inline Gamma_ajk_bk_Parameters() : Base(), shape_(), scale_(1.) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ajk_bk_Parameters( Range const& range)
-                                  : Base(range), shape_(range, 1.), scale_(1.)
-    {}
+    inline Gamma_ajk_bk_Parameters()
+                       : Base(), shape_(), scale_(1.), stat_shape_(), stat_scale_() {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ajk_bk_Parameters( Gamma_ajk_bk_Parameters const& param)
-                                  : Base(param), shape_(param.shape_), scale_(param.scale_)
+                                  : Base(param)
+                                  , shape_(param.shape_)
+                                  , scale_(param.scale_)
+                                  , stat_shape_(param.stat_shape_)
+                                  , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_ajk_bk_Parameters() {}
@@ -175,25 +185,43 @@ class Gamma_ajk_bk_Parameters: public GammaParametersBase<Gamma_ajk_bk_Parameter
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      shape_.resize(size);    shape_ = 1.;
-      mean_.resize(size);     mean_  = 1.;
-      meanLog_.resize(size);  meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      shape_.resize(range);    shape_ = 1.;
+      mean_.resize(range);     mean_  = 1.;
+      meanLog_.resize(range);  meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_shape_.initialize(range);
+      stat_scale_.initialize();
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_ << _T("\n")
-         << scale_ * Const::Point<Real>(shape_.range()) << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_); stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release(); stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** vector of the shape */
     Array2DPoint<Real> shape_;
     /** vector of the scale */
     Real scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_shape_;
+    /** Array of the statistics */
+    MixtureStatReal stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -205,17 +233,15 @@ class Gamma_ajk_bj_Parameters: public GammaParametersBase<Gamma_ajk_bj_Parameter
     typedef GammaParametersBase<Gamma_ajk_bj_Parameters> Base;
     /** default constructor */
     inline Gamma_ajk_bj_Parameters() : Base(), shape_(), p_scale_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ajk_bj_Parameters( Range const& range)
-                                  : Base(range), shape_(range, 1.), p_scale_(0)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ajk_bj_Parameters( Gamma_ajk_bj_Parameters const& param)
-                                  : Base(param), shape_(param.shape_), p_scale_(param.p_scale_)
+                                  : Base(param)
+                                  , shape_(param.shape_)
+                                  , p_scale_(param.p_scale_)
+                                  , stat_shape_(param.stat_shape_)
+
     {}
     /** destructor */
     inline ~Gamma_ajk_bj_Parameters() {}
@@ -224,24 +250,38 @@ class Gamma_ajk_bj_Parameters: public GammaParametersBase<Gamma_ajk_bj_Parameter
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return p_scale_->elt(j);}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      shape_.resize(size); shape_ = 1.;
-      mean_.resize(size); mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      shape_.resize(range); shape_ = 1.;
+      mean_.resize(range); mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_shape_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << *p_scale_ << shape_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+    }
     /** vector of the shape */
     Array2DPoint<Real> shape_;
     /** vector of the scale */
     Array2DPoint<Real>* p_scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_shape_;
 };
 
 /** @ingroup Clustering
@@ -253,17 +293,14 @@ class Gamma_ajk_b_Parameters: public GammaParametersBase<Gamma_ajk_b_Parameters>
     typedef GammaParametersBase<Gamma_ajk_b_Parameters> Base;
     /** default constructor */
     inline Gamma_ajk_b_Parameters() : Base(), shape_(), p_scale_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ajk_b_Parameters( Range const& range)
-                                 : Base(range), shape_(range, 1.), p_scale_(0)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ajk_b_Parameters( Gamma_ajk_b_Parameters const& param)
-                                 : Base(param), shape_(param.shape_), p_scale_(param.p_scale_)
+                                 : Base(param)
+                                 , shape_(param.shape_)
+                                 , p_scale_(param.p_scale_)
+                                 , stat_shape_(param.stat_shape_)
     {}
     /** destructor */
     inline~Gamma_ajk_b_Parameters() {}
@@ -272,26 +309,38 @@ class Gamma_ajk_b_Parameters: public GammaParametersBase<Gamma_ajk_b_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return *p_scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      shape_.resize(size); shape_ = 1.;
-      mean_.resize(size); mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      shape_.resize(range); shape_ = 1.;
+      mean_.resize(range); mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_shape_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_ << _T("\n")
-         << *p_scale_ * Const::Point<Real>(shape_.range()) << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
     }
     /** vector of the shape */
     Array2DPoint<Real> shape_;
     /** pointer on the scale */
     Real* p_scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_shape_;
 };
 
 /** @ingroup Clustering
@@ -303,17 +352,15 @@ class Gamma_ak_bjk_Parameters: public GammaParametersBase<Gamma_ak_bjk_Parameter
     typedef GammaParametersBase<Gamma_ak_bjk_Parameters> Base;
     /** default constructor */
     inline Gamma_ak_bjk_Parameters() : Base(), shape_(1), scale_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ak_bjk_Parameters( Range const& range)
-                                  : Base(range), shape_(1), scale_(range, 1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ak_bjk_Parameters( Gamma_ak_bjk_Parameters const& param)
-                                  : Base(param), shape_(param.shape_), scale_(param.scale_)
+                                  : Base(param)
+                                  , shape_(param.shape_)
+                                  , scale_(param.scale_)
+                                  , stat_shape_(param.stat_shape_)
+                                  , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_ak_bjk_Parameters() {}
@@ -322,26 +369,42 @@ class Gamma_ak_bjk_Parameters: public GammaParametersBase<Gamma_ak_bjk_Parameter
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_[j];}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      scale_.resize(size);   scale_ = 1.;
-      mean_.resize(size);    mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size);variance_ = 1.;
+      scale_.resize(range);   scale_ = 1.;
+      mean_.resize(range);    mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range);variance_ = 1.;
+      stat_scale_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_  * Const::Point<Real>(range())
-         << _T("\n") << scale_ << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_); stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release(); stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
     }
     /** vector of the shape */
     Real shape_;
     /** vector of the scale */
     Array2DPoint<Real> scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_shape_;
+    /** Array of the statistics */
+    MixtureStatVector stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -353,17 +416,15 @@ class Gamma_ak_bk_Parameters: public GammaParametersBase<Gamma_ak_bk_Parameters>
     typedef GammaParametersBase<Gamma_ak_bk_Parameters> Base;
     /** default constructor */
     inline Gamma_ak_bk_Parameters() : Base(), shape_(1), scale_(1) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ak_bk_Parameters( Range const& range)
-                                  : Base(range), shape_(1), scale_(1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ak_bk_Parameters( Gamma_ak_bk_Parameters const& param)
-                                  : Base(param), shape_(param.shape_), scale_(param.scale_)
+                                  : Base(param)
+                                  , shape_(param.shape_)
+                                  , scale_(param.scale_)
+                                  , stat_shape_(param.stat_shape_)
+                                  , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_ak_bk_Parameters() {}
@@ -372,25 +433,40 @@ class Gamma_ak_bk_Parameters: public GammaParametersBase<Gamma_ak_bk_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      mean_.resize(size);    mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size);variance_ = 1.;
+      mean_.resize(range);    mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range);variance_ = 1.;
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_  * Const::Point<Real>(range()) << _T("\n")
-         << scale_  * Const::Point<Real>(range()) << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_); stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release(); stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
     }
-    /** vector of the shape */
+   /** vector of the shape */
     Real shape_;
     /** vector of the scale */
     Real scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_shape_;
+    /** Array of the statistics */
+    MixtureStatReal stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -402,17 +478,14 @@ class Gamma_ak_bj_Parameters: public GammaParametersBase<Gamma_ak_bj_Parameters>
     typedef GammaParametersBase<Gamma_ak_bj_Parameters> Base;
     /** default constructor */
     inline Gamma_ak_bj_Parameters() : Base(), shape_(1), p_scale_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ak_bj_Parameters( Range const& range)
-                                  : Base(range), shape_(1), p_scale_(0)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ak_bj_Parameters( Gamma_ak_bj_Parameters const& param)
-                                  : Base(param), shape_(param.shape_), p_scale_(param.p_scale_)
+                                  : Base(param)
+                                  , shape_(param.shape_)
+                                  , p_scale_(param.p_scale_)
+                                  , stat_shape_(param.stat_shape_)
     {}
     /** destructor */
     inline ~Gamma_ak_bj_Parameters() {}
@@ -421,24 +494,36 @@ class Gamma_ak_bj_Parameters: public GammaParametersBase<Gamma_ak_bj_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return p_scale_->elt(j);}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      mean_.resize(size);    mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size);variance_ = 1.;
+      mean_.resize(range);    mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range);variance_ = 1.;
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_ * Const::Point<Real>(range()) << _T("\n")
-         << *p_scale_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+    }
     /** vector of the shape */
     Real shape_;
     /** vector of the scale */
     Array2DPoint<Real>* p_scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_shape_;
 };
 
 /** @ingroup Clustering
@@ -450,17 +535,14 @@ class Gamma_ak_b_Parameters: public GammaParametersBase<Gamma_ak_b_Parameters>
     typedef GammaParametersBase<Gamma_ak_b_Parameters> Base;
     /** default constructor */
     inline Gamma_ak_b_Parameters() : Base(), shape_(1), p_scale_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_ak_b_Parameters( Range const& range)
-                                  : Base(range), shape_(1), p_scale_(0)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_ak_b_Parameters( Gamma_ak_b_Parameters const& param)
-                                : Base(param), shape_(param.shape_), p_scale_(param.p_scale_)
+                                : Base(param)
+                                , shape_(param.shape_)
+                                , p_scale_(param.p_scale_)
+                                , stat_shape_(param.stat_shape_)
     {}
     /** destructor */
     inline ~Gamma_ak_b_Parameters() {}
@@ -469,25 +551,36 @@ class Gamma_ak_b_Parameters: public GammaParametersBase<Gamma_ak_b_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return *p_scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      mean_.resize(size);    mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size);variance_ = 1.;
+      mean_.resize(range);    mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range);variance_ = 1.;
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << shape_    * Const::Point<Real>(range()) << _T("\n")
-         << *p_scale_ * Const::Point<Real>(range()) << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_shape_.update(shape_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_shape_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
     }
     /** vector of the shape */
     Real shape_;
     /** vector of the scale */
     Real* p_scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_shape_;
 };
 
 /** @ingroup Clustering
@@ -499,17 +592,14 @@ class Gamma_aj_bjk_Parameters: public GammaParametersBase<Gamma_aj_bjk_Parameter
     typedef GammaParametersBase<Gamma_aj_bjk_Parameters> Base;
     /** default constructor */
     inline Gamma_aj_bjk_Parameters() : Base(), p_shape_(0), scale_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_aj_bjk_Parameters( Range const& range)
-                                  : Base(range), p_shape_(0), scale_(range, 1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_aj_bjk_Parameters( Gamma_aj_bjk_Parameters const& param)
-                                  : Base(param), p_shape_(param.p_shape_), scale_(param.scale_)
+                                  : Base(param)
+                                  , p_shape_(param.p_shape_)
+                                  , scale_(param.scale_)
+                                  , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline~Gamma_aj_bjk_Parameters() {}
@@ -518,24 +608,38 @@ class Gamma_aj_bjk_Parameters: public GammaParametersBase<Gamma_aj_bjk_Parameter
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_[j];}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      scale_.resize(size);    scale_ = 1.;
-      mean_.resize(size);     mean_ = 1.;
-      meanLog_.resize(size);  meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      scale_.resize(range);    scale_ = 1.;
+      mean_.resize(range);     mean_ = 1.;
+      meanLog_.resize(range);  meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_scale_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << *p_shape_  << _T("\n") << scale_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** vector of the shape */
     Array2DPoint<Real>* p_shape_;
     /** vector of the scale */
     Array2DPoint<Real> scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -547,17 +651,14 @@ class Gamma_aj_bk_Parameters: public GammaParametersBase<Gamma_aj_bk_Parameters>
     typedef GammaParametersBase<Gamma_aj_bk_Parameters> Base;
     /** default constructor */
     inline Gamma_aj_bk_Parameters() : Base(), p_shape_(0), scale_(1.) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_aj_bk_Parameters( Range const& range)
-                                 : Base(range), p_shape_(0), scale_(1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_aj_bk_Parameters( Gamma_aj_bk_Parameters const& param)
-                                 : Base(param), p_shape_(param.p_shape_), scale_(param.scale_)
+                                 : Base(param)
+                                 , p_shape_(param.p_shape_)
+                                 , scale_(param.scale_)
+                                , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_aj_bk_Parameters() {}
@@ -566,25 +667,36 @@ class Gamma_aj_bk_Parameters: public GammaParametersBase<Gamma_aj_bk_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      mean_.resize(size); mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      mean_.resize(range); mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << *p_shape_ << _T("\n")
-         << scale_ * Const::Point<Real>(range()) << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
     }
     /** vector of the shape */
     Array2DPoint<Real>* p_shape_;
     /** vector of the scale */
     Real scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -596,17 +708,14 @@ class Gamma_a_bjk_Parameters: public GammaParametersBase<Gamma_a_bjk_Parameters>
     typedef GammaParametersBase<Gamma_a_bjk_Parameters> Base;
     /** default constructor */
     inline Gamma_a_bjk_Parameters() : Base(), p_shape_(0), scale_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_a_bjk_Parameters( Range const& range)
-                                  : Base(range), p_shape_(0), scale_(range, 1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_a_bjk_Parameters( Gamma_a_bjk_Parameters const& param)
-                                  : Base(param), p_shape_(param.p_shape_), scale_(param.scale_)
+                                  : Base(param)
+                                  , p_shape_(param.p_shape_)
+                                  , scale_(param.scale_)
+                                  , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline~Gamma_a_bjk_Parameters() {}
@@ -615,26 +724,38 @@ class Gamma_a_bjk_Parameters: public GammaParametersBase<Gamma_a_bjk_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_[j];}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      scale_.resize(size);    scale_ = 1.;
-      mean_.resize(size);     mean_  = 1.;
-      meanLog_.resize(size);  meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      scale_.resize(range);    scale_ = 1.;
+      mean_.resize(range);     mean_  = 1.;
+      meanLog_.resize(range);  meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
+      stat_scale_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << *p_shape_ * Const::Point<Real>(range()) << _T("\n")
-         << scale_ << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
     }
     /** vector of the shape */
     Real* p_shape_;
     /** vector of the scale */
     Array2DPoint<Real> scale_;
+    /** Array of the statistics */
+    MixtureStatVector stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -646,17 +767,14 @@ class Gamma_a_bk_Parameters: public GammaParametersBase<Gamma_a_bk_Parameters>
     typedef GammaParametersBase<Gamma_a_bk_Parameters> Base;
     /** default constructor */
     inline Gamma_a_bk_Parameters() : Base(), p_shape_(0), scale_(1.) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gamma_a_bk_Parameters( Range const& range)
-                                 : Base(range), p_shape_(0), scale_(1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gamma_a_bk_Parameters( Gamma_a_bk_Parameters const& param)
-                                 : Base(param), p_shape_(param.p_shape_), scale_(param.scale_)
+                                 : Base(param)
+                                 , p_shape_(param.p_shape_)
+                                 , scale_(param.scale_)
+                                 , stat_scale_(param.stat_scale_)
     {}
     /** destructor */
     inline ~Gamma_a_bk_Parameters() {}
@@ -665,25 +783,36 @@ class Gamma_a_bk_Parameters: public GammaParametersBase<Gamma_a_bk_Parameters>
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size)
+    inline void resize(Range const& range)
     {
-      mean_.resize(size);    mean_ = 1.;
-      meanLog_.resize(size); meanLog_ = 0.;
-      variance_.resize(size); variance_ = 1.;
+      mean_.resize(range);    mean_ = 1.;
+      meanLog_.resize(range); meanLog_ = 0.;
+      variance_.resize(range); variance_ = 1.;
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << *p_shape_ * Const::Point<Real>(range()) << _T("\n")
-         << scale_ * Const::Point<Real>(range()) << _T("\n");
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
     }
     /** vector of the shape */
     Real* p_shape_;
     /** vector of the scale */
     Real scale_;
+    /** Array of the statistics */
+    MixtureStatReal stat_scale_;
 };
 
 } // namespace STK

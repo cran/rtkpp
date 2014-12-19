@@ -128,7 +128,7 @@ class AllocatorBase : public IContainerRef
     /** Get the const element number pos.
      *  @param pos the position of the element we get 
      **/
-    inline Type const& data( int const& pos) const
+    inline Type const& data( int pos) const
     {
 #ifdef STK_BOUNDS_CHECK
       if (pos < firstData())
@@ -141,7 +141,7 @@ class AllocatorBase : public IContainerRef
     /** Get the element number pos.
      *  @param pos the position of the element we get 
      **/
-    inline Type& data(int const& pos)
+    inline Type& data(int pos)
     {
 #ifdef STK_BOUNDS_CHECK
       if (pos < firstData())
@@ -161,11 +161,10 @@ class AllocatorBase : public IContainerRef
       IContainerRef::exchange(T);
       return *this;
     }
-    /** swap two elements of the Allcoator.
-     *  @param pos1 the position of the first element
-     *  @param pos2 the position of the second element
+    /** swap two elements of the Allocator.
+     *  @param pos1, pos2 the positions of the first and second element
      **/
-    inline void swap(int const& pos1, int const& pos2)
+    inline void swap(int pos1, int pos2)
     { std::swap(p_data_[pos1], p_data_[pos2]);}
     /** @brief copy the Allocator T by value.
      *  The memory is free and the Allocator T is physically copied in this.

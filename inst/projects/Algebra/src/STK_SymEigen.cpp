@@ -114,7 +114,7 @@ void SymEigen::tridiagonalize()
       )
   {
     // ref on the current column iter in the range iter1:last_
-    CArraySquareXX::Col v(eigenVectors_.col(range1, i));
+    CSquareXd::Col v(eigenVectors_.col(range1, i));
     // Compute Householder vector and get sub-diagonal element
     F_[i] = house(v);
     // Save diagonal element
@@ -124,7 +124,7 @@ void SymEigen::tridiagonalize()
     if (beta)
     {
       // ref on the current column iter1 in the range iter1:last_
-      CArraySquareXX::Col M1(eigenVectors_.col(range1, i1));
+      CSquareXd::Col M1(eigenVectors_.col(range1, i1));
       // aux1 will contain <v,p>
       Real aux1 = 0.0;
       // apply left and right Householder to eigenVectors_
@@ -177,7 +177,7 @@ void SymEigen::compHouse()
       ; iter0--, iter--, iter1--)
   {
     // reference on the Householder vector
-    CArraySquareXX::Col v(eigenVectors_.col(Range(iter, last_, 0), iter0));
+    CSquareXd::Col v(eigenVectors_.col(Range(iter, last_, 0), iter0));
     // Get Beta
     Real beta = v[iter];
     if (beta)

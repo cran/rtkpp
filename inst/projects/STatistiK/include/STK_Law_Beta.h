@@ -62,7 +62,7 @@ class Beta : public IUnivLaw<Real>
 {
   public:
     /** default constructor. */
-    Beta( const Real& alpha = .5, const Real& beta = .5);
+    Beta( Real const& alpha = .5, Real const& beta = .5);
     /** Dtor. */
     virtual ~Beta();
 
@@ -87,22 +87,22 @@ class Beta : public IUnivLaw<Real>
      *  TODO : Implement Cheng's algorithm BA for beta pdf 
      *  (Devroye p. 438)
      **/
-    static Real rand( const Real& alpha, const Real& beta);
+    static Real rand( Real const& alpha, Real const& beta);
     
     /** @return the value of the pdf at x.
      **/
-    virtual Real pdf( const Real& x) const;
+    virtual Real pdf( Real const& x) const;
     
     /** @return the value of the log-pdf at x.
      **/
-    virtual Real lpdf( const Real& x) const;
+    virtual Real lpdf( Real const& x) const;
 
     /** @return The cumulative distribution function
      **/
-    virtual Real cdf( const Real& t) const;
+    virtual Real cdf( Real const& t) const;
     
     /** @return The inverse cumulative distribution */
-    virtual Real icdf( const Real& p) const;
+    virtual Real icdf( Real const& p) const;
 
   protected:
     /** First parameter. */

@@ -41,11 +41,14 @@
 #include <Rcpp.h>
 
 #include "../projects/Rtkpp/include/STK_RcppTraits.h"
-#include "../projects/Rtkpp/include/STK_RcppVector.h"
-#include "../projects/Rtkpp/include/STK_RcppMatrix.h"
+#include "../projects/Rtkpp/include/STK_RVector.h"
+#include "../projects/Rtkpp/include/STK_RMatrix.h"
+
 #include "../projects/Rtkpp/include/STK_RDataHandler.h"
 #include "../projects/Rtkpp/include/STK_ClusterFacade.h"
 #include "../projects/Rtkpp/include/STK_ClusterLauncher.h"
+
+#include "../projects/Rtkpp/include/STK_wrap.h"
 
 #include "../projects/Rtkpp/include/Rcpp_wrap.h"
 #include "../projects/Rtkpp/include/Rcpp_as.h"

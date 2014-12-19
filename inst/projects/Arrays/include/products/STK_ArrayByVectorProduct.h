@@ -28,19 +28,49 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file STK_GeneralByVectorProduct.h
- *  @brief In this file we implement the General Matrix by Vector product.
+/** @file STK_ArrayByVectorProduct.h
+ *  @brief In this file we implement the General Array by Vector product.
  **/
 
 
-#ifndef STK_GENERALBYVECTORPRODUCT_H
-#define STK_GENERALBYVECTORPRODUCT_H
+#ifndef STK_ARRAYBYVECTORPRODUCT_H
+#define STK_ARRAYBYVECTORPRODUCT_H
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 namespace STK
 {
 
 namespace hidden
 {
+
+/** @ingroup hidden
+ *  this structure regroup all the methods using only pointers on the Type
+ **/
+template<typename Type>
+struct MultImpl
+{
+  /** multiplication : 1 sized vector */
+  static inline Type vec1(Type const* p_lhs, Type const* p_rhs)
+  { return(p_lhs[0] * p_rhs[0]);}
+  /** multiplication : 2 sized vector */
+  static inline Type vec2(Type const* p_lhs, Type const* p_rhs)
+  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1]);}
+  /** multiplication : 3 sized vector */
+  static inline Type vec3(Type const* p_lhs, Type const* p_rhs)
+  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1] + p_lhs[2] * p_rhs[2]);}
+  /** multiplication of two vectors */
+  static inline Type vectorByVector(Type const* p_lhs, Type const* p_rhs)
+  {
+    Type sum = Type(0);
+    for (int k=0; k< vectorSize; ++k) sum += p_lhs[k] * p_rhs[k];
+    return(sum);
+  }
+};
+
 /** @ingroup hidden
  *  Methods to use for C=AB with A a general matrix and B a vector.
  *  The structure bv contains only static methods and typedef and should normally
@@ -59,10 +89,14 @@ struct bv
   {
     int nbInnerLoop = lhs.sizeCols()/vectorSize; // = rhs.sizeRows()/blockSize;
     int vSize = lhs.sizeCols() - nbInnerLoop * vectorSize;
-    Type* p_lhs  = new Type[vectorSize];
-    Type* p_rhs  = new Type[vectorSize];
-    for (int k=0, iPos = lhs.beginCols(); k< nbInnerLoop; ++k, iPos+= vectorSize)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int k=0; k< nbInnerLoop; ++k)
     {
+      Type p_lhs[vectorSize];
+      Type p_rhs[vectorSize];
+      int iPos = lhs.beginCols() + k * vectorSize;
       for (int j=0; j<vectorSize; j++) p_rhs[j]  = rhs.elt(iPos+j);
       for (int iRow=lhs.beginRows(); iRow< lhs.endRows(); ++iRow)
       {
@@ -71,14 +105,16 @@ struct bv
       }
     }
     int iPos= lhs.beginCols()+vectorSize*nbInnerLoop;
-    for (int j=0; j<vSize; j++) p_rhs[j]  = rhs.elt(iPos+j);
+    Type lhsb[vectorSize];
+    Type rhsb[vectorSize];
+    for (int j=0; j<vSize; j++) rhsb[j]  = rhs.elt(iPos+j);
     for (int iRow=lhs.beginRows(); iRow< lhs.endRows(); ++iRow)
     {
-      for (int j=0; j<vSize; j++) p_lhs[j]  = lhs.elt(iRow, iPos+j);
-      res.elt(iRow) += Cmult::vectorByVector(p_lhs, p_rhs, vSize);
+      for (int j=0; j<vSize; j++) lhsb[j]  = lhs.elt(iRow, iPos+j);
+      Type sum = Type(0);
+      for (int k=0; k<vSize; ++k) sum += lhsb[k] * rhsb[k];
+      res.elt(iRow) += sum;
     }
-    delete[] p_lhs;
-    delete[] p_rhs;
   }
 }; // struct bv
 
@@ -100,10 +136,14 @@ struct vb
   {
     int nbInnerLoop = rhs.sizeRows()/vectorSize; // = rhs.sizeRows()/blockSize;
     int vSize = rhs.sizeRows() - nbInnerLoop * vectorSize;
-    Type* p_lhs  = new Type[vectorSize];
-    Type* p_rhs  = new Type[vectorSize];
-    for (int k = 0, iPos = lhs.begin(); k<nbInnerLoop; ++k, iPos+=vectorSize)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int k = 0; k<nbInnerLoop; ++k)
     {
+      int iPos = lhs.begin() + k * vectorSize;
+      Type p_lhs[vectorSize];
+      Type p_rhs[vectorSize];
       for (int j=0; j<vectorSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
       for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
       {
@@ -112,14 +152,16 @@ struct vb
       }
     } // k loop
     int iPos = lhs.begin()+vectorSize*nbInnerLoop;
+    Type p_lhs[vectorSize];
+    Type p_rhs[vectorSize];
     for (int j=0; j<vSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
     for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
     {
       for (int i=0; i<vSize; ++i) p_rhs[i]  = rhs.elt(iPos+i, j);
-      res.elt(j) += Cmult::vectorByVector(p_lhs, p_rhs, vSize);
+      Type sum = Type(0);
+      for (int k=0; k<vSize; ++k) sum += p_lhs[k] * p_rhs[k];
+      res.elt(j) += sum;
     } // j loop
-    delete[] p_lhs;
-    delete[] p_rhs;
   }
 }; // struct pb
 
@@ -129,4 +171,4 @@ struct vb
 
 } // namespace STK
 
-#endif /* STK_GENERALBYVECTOR_H */
+#endif /* STK_ARRAYBYVECTORPRODUCT_H */

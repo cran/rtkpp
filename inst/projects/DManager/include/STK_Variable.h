@@ -158,7 +158,49 @@ class Variable : public IVariable
     Variable( IArray2D<OtherArray> const& T, Range const& I, int col)
             : IVariable(IdTypeImpl<Type>::returnType(), stringNa)
             , Base(T, I, Range(col, 1))
-    {}
+    {
+        enum { value_ = hidden::isSame<Type, typename OtherArray::Type>::value };
+        STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+    }
+    /** constructor by reference, ref_=1.
+     *  @param T the container to wrap
+     *  @param col the index of the col to wrap
+     **/
+    template<class OtherArray>
+    Variable( IArray2D<OtherArray> const& T, int col)
+            : IVariable(IdTypeImpl<Type>::returnType(), stringNa)
+            , Base(T, T.range(), Range(col, 1))
+    {
+      enum
+      {
+        value_ = hidden::isSame<Type, typename OtherArray::Type>::value,
+        is1D_ = ( (OtherArray::struct_ == Arrays::vector_)
+               || (OtherArray::struct_ == Arrays::point_)
+               || (OtherArray::struct_ == Arrays::diagonal_)
+               )
+      };
+      STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+      STK_STATICASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
+    }
+    /** constructor by reference, ref_=1.
+     *  @param T the container to wrap
+     **/
+    template<class OtherArray>
+    Variable( IArray2D<OtherArray> const& T)
+            : IVariable(IdTypeImpl<Type>::returnType(), stringNa)
+            , Base(T, T.range(), T.cols())
+    {
+      enum
+      {
+        value_ = hidden::isSame<Type, typename OtherArray::Type>::value,
+        is1D_ = ( (OtherArray::structure_ == (int)Arrays::vector_)
+               || (OtherArray::structure_ == (int)Arrays::point_)
+               || (OtherArray::structure_ == (int)Arrays::diagonal_)
+               )
+      };
+      STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+      STK_STATICASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
+    }
     /** destructor. */
     ~Variable() {}
     /** clone return a ptr on a copy of the Object.

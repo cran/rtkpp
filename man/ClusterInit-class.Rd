@@ -13,7 +13,7 @@ rtkpp Cluster estimation method.
 \describe{
 \item{\code{method}}{Character string with the initialization method to use. Default value: "random"}
 
-\item{\code{nbInitRun}}{Integer defining the number of initialization to perform. Default value: 5.}
+\item{\code{nbInit}}{Integer defining the number of initialization to perform. Default value: 5.}
 
 \item{\code{algo}}{An instance of \code{\linkS4class{ClusterAlgo}} class.
 Default value: \code{clusterAlgo("SEM", 20, 0)}.}
@@ -21,7 +21,7 @@ Default value: \code{clusterAlgo("SEM", 20, 0)}.}
 \examples{
 getSlots("ClusterInit")
   new("ClusterInit")
-  new("ClusterInit", nbInitRun=1)
+  new("ClusterInit", nbInit=1)
 }
 \author{
 Serge Iovleff

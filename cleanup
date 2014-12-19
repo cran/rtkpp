@@ -1,2 +1,2 @@
 #!/bin/sh
-rm -rf lib/ bin/
+rm -rf inst/lib/*.a

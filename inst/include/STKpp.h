@@ -47,59 +47,81 @@
  * <p> <a href="http://www.stkpp.org/"> STK++ </a>
  *     is a multi-platform toolkit written in C++ for creating fast and
  *     easy to use Statistics and/or data mining console programs.
- * <br>
- * <a href="http://www.stkpp.org/"> STK++ </a> is a versatile, fast, reliable
-    and elegant collection of C++ classes for statistics, clustering, linear
-    algebra, arrays (with an Eigen-like API), regression, dimension reduction, etc.
-    Some functionalities provided by the library are available in the R
-    environment as R functions. The library offers a dense set of (mostly)
-    template classes in C++ and is suitable for projects ranging from small
-    one-off projects to complete data mining application suites.
-  </p>
-  <p> All <a href="http://www.stkpp.org/"> STK++ </a> programs are free software;
-      you can redistribute them and/or modify them under the terms of the
-      <a href="http://www.fsf.org/copyleft/lgpl.html">
-      GNU Lesser (Library) General Public License</a>
-      as published by the <a href="http://www.fsf.org">
-      Free Software Foundation</a>.
-  </p>
-  <p> The licensing terms for <a href="http://www.stkpp.org/"> STK++ </a>, the
-      GNU LGPL, allow it to be used by all developers, including those developing
-      proprietary software, without any license fees or royalties.
-  </p>
-
-  <p> The STK++ team use the <a href="http://www.eclipse.org/"> eclipse</a>
-      platform with the <a href="http://www.eclipse.org/cdt/"> cdt </a>
-      plugin.
-  </p>
-
-  <p align="center">
-      <img src="http://www.eclipse.org/images/EclipseBannerPic.jpg"
-           height="50"
-           border="0"
-           alt="eclipse Logo">
-  </p>
-  @section Projects
-  <p> The STK++ project is divided in different projects, each of them
-  being (eventually) divided into subproject:
-  - @subpage STKernel  "STKernel: Kernel tools"
-  - @subpage Sdk       "Sdk: Software Development Kits"
-  - @subpage Arrays    "Arrays: Containers oriented to numerical computation"
-  - @subpage DManager  "DManager: Tools for handling data and input/output"
-  - @subpage Analysis  "Analysis: Special functions and templated algorithms"
-  - @subpage Algebra   "Algebra: Linear Algebra tools"
-  - @subpage STatistiK "STatistiK: Statistical Tools"
-  - @subpage StatModels "StatModels: Usual Statistical Models"
-  - @subpage Clustering "Clustering: Usual Mixture Models"
-  - @subpage Reduct    "Reduct: Dimension reduction tools"
-  - @subpage Regress   "Regress: Regression tools"
-  - @subpage AAModels  "AAModels: Auto-Associative Models"
-  </p>
-
-  @section Tutorials
-  <p> Various @ref PageTutorials explain the use of the arrays classes and
-  how to develop a statistical application.
-  </p>
+ *   <br>
+ *   <a href="http://www.stkpp.org/"> STK++ </a> is a versatile, fast, reliable
+ *   and elegant collection of C++ classes for statistics, clustering, linear
+ *   algebra, arrays (with an Eigen-like API), regression, dimension reduction, etc.
+ *   Some functionalities provided by the library are available in the R
+ *   environment as R functions. The library offers a dense set of (mostly)
+ *   template classes in C++ and is suitable for projects ranging from small
+ *   one-off projects to complete data mining application suites.
+ * </p>
+ * <p> All <a href="http://www.stkpp.org/"> STK++ </a> programs are free software;
+ *   you can redistribute them and/or modify them under the terms of the
+ *   <a href="http://www.fsf.org/copyleft/lgpl.html">
+ *   GNU Lesser (Library) General Public License</a>
+ *   as published by the <a href="http://www.fsf.org">
+ *   Free Software Foundation</a>.
+ * </p>
+ * <p> The licensing terms for <a href="http://www.stkpp.org/"> STK++ </a>, the
+ *   GNU LGPL, allow it to be used by all developers, including those developing
+ *    proprietary software, without any license fees or royalties.
+ * </p>
+ * <p> The STK++ team use the <a href="http://www.eclipse.org/"> eclipse</a>
+ *     platform with the <a href="http://www.eclipse.org/cdt/"> cdt </a>
+ *     plugin.
+ * </p>
+ * <p align="center">
+ *   <img src="http://www.eclipse.org/images/EclipseBannerPic.jpg"
+ *        height="50"
+ *        border="0"
+ *        alt="eclipse Logo">
+ * </p>
+ *
+ * @section TutorialsContents Tutorials
+ *
+ *  @b Table @b of @b contents
+ *  <ul>
+ *  <li> @b Tips
+ *     <ul>
+ *     <li> @subpage TipsArraysCentering
+ *     <li> @subpage TipsComputeMeanByColumn
+ *     </ul>
+ *  <li> @b The @b %Arrays @b And @b Their @b Usages
+ *     <ul>
+ *     <li> @subpage ArraysFirstExemple
+ *     <li> @subpage ArraysConstructors
+ *     <li> @subpage UsingArray2D
+ *     <li> @subpage ArraysVisitorsApplyers
+ *     <li> @subpage ArraysSlicing
+ *     <li> @subpage ArraysRefArrays
+ *     </ul>
+ *  <li> @b Other @b tutorials
+ *     <ul>
+ *     <li> @subpage PageTutorialKernel
+ *     <li> @subpage TutorialClustering
+ *     <li> @subpage TutorialApplication
+ *     <li> @subpage TutorialStatModel
+ *     </ul>
+ *  </ul>
+ *
+ * @section Projects
+ * <p> The STK++ project is divided in different projects, each of them
+ *    being (eventually) divided into subproject:
+ *    - @subpage STKernel  "STKernel: Kernel tools"
+ *    - @subpage Sdk       "Sdk: Software Development Kits"
+ *    - @subpage Arrays    "Arrays: Containers oriented to numerical computation"
+ *    - @subpage DManager  "DManager: Tools for handling data and input/output"
+ *    - @subpage Analysis  "Analysis: Special functions and templated algorithms"
+ *    - @subpage Algebra   "Algebra: Linear Algebra tools"
+ *    - @subpage STatistiK "STatistiK: Statistical Tools"
+ *    - @subpage StatModels "StatModels: Statistical Models"
+ *    - @subpage Clustering "Clustering: Mixture Models"
+ *    - @subpage Reduct    "Reduct: Dimension reduction tools"
+ *    - @subpage Regress   "Regress: Regression tools"
+ *    - @subpage AAModels  "AAModels: Auto-Associative Models"
+ * </p>
+ *
  **/
 
 /** @namespace STK
@@ -117,7 +139,7 @@
  *  @namespace STK::hidden The hidden namespace enclose the classes and methods
  *  which are used internally by the STK++ classes. They are hidden to the
  *  end-user of theses classes.
-**/
+ **/
 
 // STKernel project
 #include "STKernel.h"

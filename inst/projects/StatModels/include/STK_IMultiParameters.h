@@ -55,7 +55,6 @@ class IMultiParameters : public IRecursiveTemplate<Parameters>
      *  @param range the range of the variables
      **/
     inline IMultiParameters( Range const& range): range_(range) {}
-
     /** copy constructor.*/
     inline IMultiParameters(IMultiParameters const& param): range_(param.range_) {}
     /** Destructor */
@@ -74,10 +73,6 @@ class IMultiParameters : public IRecursiveTemplate<Parameters>
         this->asDerived().resizeImpl(range);
       }
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
-     **/
-    inline void print(ostream &os) { this->asDerived().printImpl(os);}
 
   private:
     Range range_;

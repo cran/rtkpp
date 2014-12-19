@@ -24,13 +24,13 @@
 
 /*
  * Project:  stkpp::Arrays
- * Purpose:  Define the Upper Triangular Matrix class.
+ * Purpose:  Define the Upper Triangular Array class.
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  *
  **/
 
 /** @file STK_Array2DUpperTriangular.h
-  * @brief In this file we define the MatrixTriangular class
+  * @brief In this file we define the ArrayXXTriangular class
  **/
 
 #ifndef STK_MATRIXUPPERTRIANGULAR_H
@@ -47,11 +47,12 @@ template<typename> class Array2DVector;
 
 /** @ingroup Arrays
   * @brief Specialization of the Array2D class for Type values.
-  *
   * A Array2DLowerTriangular is a column oriented 2D container of Type
   * whcih is lower triangular.
  **/
-typedef Array2DUpperTriangular<Real> MatrixUpperTriangular;
+typedef Array2DUpperTriangular<Real>   ArrayUpperTriangularXX;
+typedef Array2DUpperTriangular<double> ArrayUpperTriangularXXd;
+typedef Array2DUpperTriangular<int>    ArrayUpperTriangularXXi;
 
 namespace hidden
 {
@@ -64,13 +65,13 @@ struct Traits< Array2DUpperTriangular<_Type> >
   private:
     class Void {};
   public:
-    typedef _Type          Type;
-    typedef Array2DPoint<_Type> Row;
-    typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type> SubRow;
-    typedef Array2DVector<_Type> SubCol;
+    typedef _Type                         Type;
+    typedef Array2DPoint<_Type>           Row;
+    typedef Array2DVector<_Type>          Col;
+    typedef Array2DPoint<_Type>           SubRow;
+    typedef Array2DVector<_Type>          SubCol;
     typedef Array2DUpperTriangular<_Type> SubArray;
-    typedef Void SubVector;
+    typedef Void                          SubVector;
     enum
     {
       structure_ = Arrays::upper_triangular_,
@@ -95,11 +96,12 @@ template<typename Type>
 class Array2DUpperTriangular : public IArray2D< Array2DUpperTriangular<Type> >
 {
   public:
-    typedef Array2DPoint<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DPoint<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2DUpperTriangular<Type> SubArray;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DUpperTriangular<Type> >::SubArray SubArray;
 
     enum
     {
@@ -161,7 +163,7 @@ class Array2DUpperTriangular : public IArray2D< Array2DUpperTriangular<Type> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DUpperTriangular& operator=(Rhs const& T)
+    inline Array2DUpperTriangular& operator=(ExprBase<Rhs> const& T)
     { return LowBase::operator=(T);}
     /** Operator = : overwrite the Array2DUpperTriangular with T.      */
     Array2DUpperTriangular& operator=(const Array2DUpperTriangular &T)

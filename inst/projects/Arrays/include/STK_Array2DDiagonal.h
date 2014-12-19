@@ -45,7 +45,9 @@ template< typename Type> class Array2DDiagonal;
 template< typename Type> class Array2DPoint;
 template< typename Type> class Array2DVector;
 
-typedef Array2DDiagonal<Real> MatrixDiagonal;
+typedef Array2DDiagonal<Real>   ArrayDiagonalX;
+typedef Array2DDiagonal<double> ArrayDiagonalXd;
+typedef Array2DDiagonal<int>    ArrayDiagonalXi;
 
 namespace hidden
 {
@@ -59,10 +61,10 @@ struct Traits<Array2DDiagonal<_Type> >
     class Void {};
   public:
     typedef _Type        Type;
-    typedef Array2DPoint<_Type> Row;
-    typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type> SubRow;
-    typedef Array2DVector<_Type> SubCol;
+    typedef Array2DPoint<_Type>    Row;
+    typedef Array2DVector<_Type>   Col;
+    typedef Array2DPoint<_Type>    SubRow;
+    typedef Array2DVector<_Type>   SubCol;
     typedef Array2DDiagonal<_Type> SubArray;
     typedef Array2DDiagonal<_Type> SubVector;
 
@@ -91,12 +93,12 @@ template<class Type>
 class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type> >
 {
   public:
-    typedef Array2DPoint<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DPoint<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2DDiagonal<Type> SubArray;
-    typedef Array2DDiagonal<Type> SubVector;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubArray SubArray;
 
     enum
     {
@@ -148,7 +150,7 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type> >
     /** @param i index of the diagonal element
      *  @return a constant reference on the ith diagonal element
      **/
-    inline Type const elt1Impl(int const& i) const
+    inline Type const& elt1Impl(int const& i) const
     { return this->elt(i,i);}
     /** New beginning index for the object.
      *  @param beg first index of the container
@@ -205,7 +207,7 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DDiagonal& operator=(Rhs const& T) { return LowBase::operator=(T);}
+    inline Array2DDiagonal& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** overwrite the Array2D with T.
      *  @note If the size match, @c this is not resized
      *  @param T the container to copy

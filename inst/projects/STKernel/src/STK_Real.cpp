@@ -71,7 +71,7 @@ Real stringToReal( String const& str, std::map<String, Real> const& mapping)
  **/
 String realToString( Real const& value, std::ios_base& (*f)(std::ios_base&))
 {
-  if (Arithmetic<Real>::isNA(value)) return stringNa;
+  if (isNA(value)) return stringNa;
   ostringstream os;
   os << f << value;
   return os.str();

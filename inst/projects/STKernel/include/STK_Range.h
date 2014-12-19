@@ -108,10 +108,11 @@ class TRange<UnknownSize>
      *  @return the size of the range
      **/
     inline int size()   const { return size_;};
+    // backward compatibility
     /** get the first index of the TRange.
      *  @return the first index of the range
      **/
-    inline int firstIdx() const { return begin_;};
+    inline int firstIdx()  const { return begin_;};
     /** get the last index of the TRange.
      *  @return the last index of the range
      **/
@@ -186,14 +187,14 @@ class TRange<UnknownSize>
      **/
     template<int OtherSize_>
     inline bool isIn(TRange<OtherSize_> const& I) const
-    { return ((begin_>= I.begin())&&(end_<I.end()));}
+    { return ((begin_>= I.begin())&&(end_<=I.end()));}
     /** check if the TRange I is include in the this TRange
      *  @param I the range to compare
      *  @return @c true if this contain I, @c false otherwise
      **/
     template<int OtherSize_>
     inline bool isContaining(TRange<OtherSize_> const& I) const
-    { return ((begin_<= I.begin())&&(end_>=I.end()));}
+    { return ((begin_<= I.begin())&&(I.end()<=end_));}
     /** Return true if i is in this TRange
      *  @param i the integer to compare
      *  @return @c true if i is in this, @c false otherwise
@@ -297,6 +298,7 @@ class TRange
      *  @return the size of the range
      **/
     inline int size()   const { return Size_;};
+    // backward compatibility
     /** get the first index of the TRange.
      *  @return the first index of the range
      **/

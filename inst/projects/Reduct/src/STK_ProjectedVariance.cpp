@@ -41,13 +41,13 @@ ProjectedVariance::ProjectedVariance() : ILinearReduct()
 /* Constructor.
  *  @param p_data a pointer on the constant data set to reduce.
  **/
-ProjectedVariance::ProjectedVariance(Matrix const* p_data) : ILinearReduct(p_data)
+ProjectedVariance::ProjectedVariance(ArrayXX const* p_data) : ILinearReduct(p_data)
 {;}
 
 /* Constructor.
  *  @param data a constatn reference on the data set to reduce.
  **/
-ProjectedVariance::ProjectedVariance(Matrix const& data) : ILinearReduct(data)
+ProjectedVariance::ProjectedVariance(ArrayXX const& data) : ILinearReduct(data)
 {}
 /* Copy constructor.
  * @param reductor the reductor to copy

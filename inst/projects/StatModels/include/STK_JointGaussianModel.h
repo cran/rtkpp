@@ -76,15 +76,10 @@ struct JointGaussianParameters: public IMultiParameters<JointGaussianParameters>
     /** set the standard deviation of the jth law */
     inline void setSigma(int const& j, Real const& sigma) { sigma_[j] = sigma;}
     /** resize the set of parameter */
-    inline void resizeImpl(Range const& size)
-    { mu_.resize(size); mu_ = 0.;
-      sigma_.resize(size); sigma_ = 1.;
+    inline void resizeImpl(Range const& range)
+    { mu_.resize(range); mu_ = 0.;
+      sigma_.resize(range); sigma_ = 1.;
     }
-    /** print the parameters mu_ and sigma_.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os)
-     { os << mu_ << sigma_ << _T("\n");}
 
   protected:
     Array2DPoint<Real> mu_;

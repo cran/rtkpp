@@ -53,7 +53,6 @@ struct MixtureTraits< Gaussian_sj<_Array> >
   typedef _Array Array;
   typedef typename Array::Type Type;
   typedef Gaussian_sj_Parameters Parameters;
-  typedef MixtureComponent<_Array, Parameters> Component;
   typedef Array2D<Real>        Param;
 };
 
@@ -72,13 +71,12 @@ class Gaussian_sj : public DiagGaussianBase<Gaussian_sj<Array> >
 {
   public:
     typedef DiagGaussianBase<Gaussian_sj<Array> > Base;
-    typedef typename Clust::MixtureTraits< Gaussian_sj<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gaussian_sj<Array> >::Parameters Parameters;
 
     using Base::p_tik;
+    using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -87,7 +85,10 @@ class Gaussian_sj : public DiagGaussianBase<Gaussian_sj<Array> >
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gaussian_sj( Gaussian_sj const& model): Base(model), sigma_(model.sigma_) {}
+    inline Gaussian_sj( Gaussian_sj const& model)
+                      : Base(model), sigma_(model.sigma_)
+                      , stat_sigma_(model.stat_sigma_)
+    {}
     /** destructor */
     inline ~Gaussian_sj() {}
     /** Initialize the component of the model.
@@ -96,13 +97,28 @@ class Gaussian_sj : public DiagGaussianBase<Gaussian_sj<Array> >
      **/
     void initializeModelImpl()
     {
-      sigma_.resize(this->nbVariable());
+      sigma_.resize(p_data()->cols());
       sigma_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
       { p_param(k)->p_sigma_ = &sigma_;}
+      stat_sigma_.initialize(p_data()->cols());
     }
-    /** Compute the inital weighted mean and the initial common standard deviation. */
-    inline bool initializeStep() { return mStep();}
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResultsImpl(int iteration)
+    { stat_sigma_.update(sigma_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResultsImpl()
+    { stat_sigma_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParametersImpl()
+    {
+      sigma_ = stat_sigma_.param_;
+      stat_sigma_.release();
+    }
     /** Initialize randomly the parameters of the Gaussian mixture. The centers
      *  will be selected randomly among the data set and the standard-deviation
      *  will be set to 1.
@@ -116,7 +132,9 @@ class Gaussian_sj : public DiagGaussianBase<Gaussian_sj<Array> >
 
   protected:
     /** Common standard deviation */
-    Array2DPoint<Real> sigma_;
+    PointX sigma_;
+    /** statistics */
+    MixtureStatVector stat_sigma_;
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers

@@ -1,0 +1,11 @@
+#-----------------------------------------------------------------------
+# makevars
+# author: Serge Iovleff
+#-----------------------------------------------------------------------
+# This file allow to activate the Verbose and Debug flag
+#-----------------------------------------------------------------------
+# flags in Debug mode
+#STK_CXXFLAGS  +=  -DSTK_AAMODELS_DEBUG -DSTK_AAMODELS_VERBOSE -DSTK_AAMODELS_VERY_VERBOSE
+#STK_CXXFLAGS  += -DSTK_AAMODELS_VERBOSE  -DSTK_AAMODELS_VERY_VERBOSE
+#STK_CXXFLAGS  += -DSTK_AAMODELS_VERBOSE
+

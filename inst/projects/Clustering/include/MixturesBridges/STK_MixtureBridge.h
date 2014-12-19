@@ -54,6 +54,9 @@
 #include "../GaussianMixtureModels/STK_Gaussian_s.h"
 #include "../CategoricalMixtureModels/STK_Categorical_pjk.h"
 #include "../CategoricalMixtureModels/STK_Categorical_pk.h"
+#include "../PoissonMixtureModels/STK_Poisson_ljk.h"
+#include "../PoissonMixtureModels/STK_Poisson_lk.h"
+#include "../PoissonMixtureModels/STK_Poisson_ljlk.h"
 
 #include "../STK_MixtureData.h"
 
@@ -65,6 +68,11 @@ template<int Id, class Data> class MixtureBridge;
 
 namespace hidden
 {
+/** @ingroup hidden
+ *  MixtureBridgeTraits class for bridged mixtures
+ **/
+template<class Derived> struct MixtureBridgeTraits;
+
 /** @ingroup hidden
  *  Implementation of the safeValue method. Default implementation.
  */
@@ -81,7 +89,7 @@ struct SafeValueImpl
   { return m_dataij.col(j).safe().mean();}
 };
 /** @ingroup hidden
- *  Implementation of the safeValue method. Specialization for Gamma_ajk_bjk_ models
+ *  Implementation of the safeValue method. Specialization for Gamma_ models
  */
 template<class Data>
 struct SafeValueImpl<Clust::Gamma_, Data >
@@ -96,7 +104,35 @@ struct SafeValueImpl<Clust::Gamma_, Data >
   { return m_dataij.col(j).safe(1).mean();}
 };
 /** @ingroup hidden
- *  Implementation of the safeValue method. Speciualization for Categorical_pjk_ models
+ *  Implementation of the safeValue method. Specialization for Poisson models
+ */
+template<class Data>
+struct SafeValueImpl<Clust::Poisson_, Data >
+{
+  // type of the data
+  typedef typename Data::Type Type;
+
+  /** @return a safe value for the jth variable
+   *  @param  m_dataij the matrix of the data set
+   *  @param j index of the column with the safe value needed */
+  static Type run(Data const& m_dataij, int j)
+  {
+
+    int lmin = m_dataij.col(j).safe().minElt(), lmax = m_dataij.col(j).safe().maxElt();
+    if (lmax -lmin > 10)
+    { return Real(m_dataij.col(j).safe().sum())/m_dataij.sizeRows();}
+    Array2DVector<int> count(Range(lmin, lmax, 0), 0);
+    for (int i= m_dataij.beginRows(); i < m_dataij.endRows(); ++i)
+    {
+      if (!Arithmetic<int>::isNA(m_dataij(i,j)))
+        count[m_dataij(i,j)]++;
+    }
+    int l; count.maxElt(l);
+    return l;
+  }
+};
+/** @ingroup hidden
+ *  Implementation of the safeValue method. Specialization for Categorical_ models
  */
 template<class Data>
 struct SafeValueImpl<Clust::Categorical_, Data >
@@ -113,7 +149,7 @@ struct SafeValueImpl<Clust::Categorical_, Data >
      Array2DVector<int> count(Range(lmin, lmax, 0), 0);
      for (int i= m_dataij.beginRows(); i < m_dataij.endRows(); ++i)
      {
-       if (Arithmetic<int>::isFinite(m_dataij(i,j)))
+       if (!Arithmetic<int>::isNA(m_dataij(i,j)))
          count[m_dataij(i,j)]++;
      }
      int l; count.maxElt(l);
@@ -121,14 +157,45 @@ struct SafeValueImpl<Clust::Categorical_, Data >
   }
 };
 
-} // namespace hidden
-
-namespace hidden
-{
 /** @ingroup hidden
- *  MixtureBridgeTraits class for bridged mixtures
+ *  Partial specialization of the MixtureBridgeTraits for the Poisson_ljk model
  **/
-template<class Derived> struct MixtureBridgeTraits;
+template<class Data>
+struct MixtureBridgeTraits< MixtureBridge<Clust::Poisson_ljk_, Data> >
+{
+  /** Type of the Mixture model */
+  typedef Poisson_ljk<Data> Mixture;
+  enum
+  {
+    idMixtureClass_ = Clust::Poisson_
+  };
+};
+/** @ingroup hidden
+ *  Partial specialization of the MixtureBridgeTraits for the Poisson_lk model
+ **/
+template<class Data>
+struct MixtureBridgeTraits< MixtureBridge<Clust::Poisson_lk_, Data> >
+{
+  /** Type of the Mixture model */
+  typedef Poisson_lk<Data> Mixture;
+  enum
+  {
+    idMixtureClass_ = Clust::Poisson_
+  };
+};
+/** @ingroup hidden
+ *  Partial specialization of the MixtureBridgeTraits for the Poisson_ljlk model
+ **/
+template<class Data>
+struct MixtureBridgeTraits< MixtureBridge< Clust::Poisson_ljlk_, Data> >
+{
+  /** Type of the mixture model */
+  typedef Poisson_ljlk<Data> Mixture;
+  enum
+  {
+    idMixtureClass_ = Clust::Poisson_
+  };
+};
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Categorical_pjk model
  **/
@@ -440,12 +507,6 @@ class MixtureBridge: public IMixtureBridge< MixtureBridge<Id,Data> >
       p_bridge->mixture_.setData(p_bridge->p_data_->m_dataij());
       return p_bridge;
     }
-    /** This function can be used in order to the values of the parameters
-     *  in an Array2D.
-     *  @param param the array with the parameters of the mixture.
-     */
-    void getParameters(Param& param) const { mixture_.getParameters(param);}
-
   private:
     /** This function will be used for the imputation of the missing data
      *  at the initialization.
@@ -465,7 +526,7 @@ class MixtureBridge: public IMixtureBridge< MixtureBridge<Id,Data> >
                  : Base(mixture, idData, nbCluster)
                  , p_data_(0)
     {}
-    /** Bridge for the data */
+    /** pointer on the data manager */
     MixtureData<Data>* p_data_;
 };
 

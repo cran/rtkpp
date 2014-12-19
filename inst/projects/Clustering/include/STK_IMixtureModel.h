@@ -30,7 +30,7 @@
  **/
 
 /** @file STK_IMixtureModel.h
- *  @brief In this file we define the main class for mixture models.
+ *  @brief In this file we define the main interface class for mixture models.
  **/
 
 
@@ -38,8 +38,11 @@
 #define STK_IMIXTUREMODEL_H
 
 #include "STK_IMixtureModelBase.h"
-#include "STK_MixtureComponent.h"
 #include "Arrays/include/STK_Array1D.h"
+#include "Arrays/include/STK_Array2D.h"
+#ifdef STK_MIXTURE_DEBUG
+#include "Arrays/include/STK_Display.h"
+#endif
 
 namespace STK
 {
@@ -56,31 +59,45 @@ template <class Mixture> struct MixtureTraits;
 
 /**@ingroup Clustering
  * @brief Main interface class for mixture models.
- * At this level we create the array of Components
+ * At this level we create the array of Components.
  *
- * @sa MixtureComponent, IMixtureModelBase, IMultiParameters
+ * The pseudo virtual methods to implement in derived class are
+ * @code
+ * Param getParametersImpl() const;
+ * // default implementation (do nothing) provided to all these methods
+ * void initializeModelImpl();
+ * bool initializeStepImpl(); // return true by default
+ * void finalizeModelImpl();
+ * void setParametersImpl();
+ * void storeIntermediateResultsImpl(int iter);
+ * void releaseIntermediateResultsImpl();
+ * @endcode
+ *
+ * @sa IMixtureModelBase, IRecursiveTemplate
  **/
 template<class Derived>
 class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBase
 {
   public:
     typedef typename Clust::MixtureTraits<Derived>::Array Array;
-    typedef typename Clust::MixtureTraits<Derived>::Component Component;
     typedef typename Clust::MixtureTraits<Derived>::Parameters Parameters;
+    typedef typename Clust::MixtureTraits<Derived>::Param Param;
 
   protected:
     /** Default constructor.
-     * Set the number of cluster and create components with zero pointer on data.
+     *  Set the number of cluster and create the parameters struct.
      **/
     IMixtureModel( int nbCluster)
-                 : IMixtureModelBase(nbCluster), p_dataij_(0), components_(nbCluster, 0)
+                 : IMixtureModelBase(nbCluster)
+                 , p_dataij_(0)
+                 , components_(nbCluster, 0)
     {
       for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k] = new Component();}
+      { components_[k] = new Parameters();}
     }
     /** copy constructor.
-     *  Call the clone method of the Components class.
-     *  The pointer on the data set is copied as-is. Just check if you should no
+     *  Call the clone method of the Parameters class.
+     *  The pointer on the data set is copied as-is. Just check if you should not
      *  change it on the copied object.
      *  @param model the model to copy
      **/
@@ -104,30 +121,74 @@ class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBa
     inline IMixtureModel* create() const { return new Derived(this->nbCluster());}
     /** @return a pointer on the current data set */
     inline Array const* p_data() const { return p_dataij_;}
-    /** @return the array with the components */
-    inline Array1D< Component* > const& components() const { return components_;}
-    /** @return a constant reference on the k-th component */
-    inline Component const* components(int k) const { return components_[k];}
     /** @return a constant reference on the k-th parameter */
-    inline Parameters const* p_param(int k) const { return components_[k]->p_param();}
-    /** Set a new data set and initialize the model.
+    inline Parameters const* p_param(int k) const { return components_[k];}
+    /** Set the data set and initialize the model.
      *  @param data the data set to set*/
     void setData(Array const& data)
     {
       p_dataij_ = &data;
       initializeModel();
     }
-    /** default implementation of initializeModelImpl */
-    void initializeModelImpl() {}
     /** @return the value of the probability of the i-th sample in the k-th component.
      *  @param i,k indexes of the sample and of the component
      **/
     inline Real lnComponentProbability(int i, int k)
     { return components_[k]->computeLnLikelihood(p_dataij_->row(i));}
+    /** @brief This function will be called once the model is created and data is set.
+     *  @note a stk++ mixture create and initialize all the containers when the data
+     *  is set. Thus the default behavior is @c return true.
+     */
+    bool initializeStep() { return this->asDerived().initializeStepImpl();}
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResults(int iteration)
+    {
+      for (int k= components_.begin(); k < components_.end(); ++k)
+      { components_[k]->storeIntermediateResults(iteration); }
+      this->asDerived().storeIntermediateResultsImpl(iteration);
+    }
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    {
+      for (int k= components_.begin(); k < components_.end(); ++k)
+      { components_[k]->releaseIntermediateResults(); }
+      // release shared parameters staticitcs if any
+      this->asDerived().releaseIntermediateResultsImpl();
+    }
+    /** call specific model finalization stuff */
+    void finalizeStep() { this->asDerived().finalizeModelImpl();}
+    /** set the parameters stored in the Stat* structures. */
+    void setParameters()
+    {
+      for (int k= components_.begin(); k < components_.end(); ++k)
+      { components_[k]->setParameters(); }
+      // set shared parameters if any
+      this->asDerived().setParametersImpl();
+    }
+    /**  @return the parameters of the mixture in the structure Param */
+    Param getParameters() const
+    { return this->asDerived().getParametersImpl();}
+
+    /** default implementation of initializeModelImpl (do nothing) */
+    void initializeModelImpl() {}
+    /** default implementation of initializeStepImpl (return true) */
+    bool initializeStepImpl() { return true;}
+    /** default implementation of finalizeModelImpl (do nothing) */
+    void finalizeModelImpl() {}
+    /** default implementation of storeIntermediateResultsImpl (do nothing) */
+    void storeIntermediateResultsImpl(int iteration) {}
+    /** default implementation of setParametersImpl (do nothing) */
+    void setParametersImpl() {}
+    /** default implementation of releaseIntermediateResultsImpl (do nothing) */
+    void releaseIntermediateResultsImpl() {}
 
   protected:
     /** @brief Initialize the model before its first use.
-     * This function will be called when the data is set.
+     * This function is used when the data is set.
      * In this interface, the @c initializeModel() method
      *  - set the number of samples and variables of the mixture model
      *  - resize the parameters of each component with the range of the variables
@@ -139,25 +200,27 @@ class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBa
      **/
     void initializeModel()
     {
-      if (!p_dataij_)
-        STKRUNTIME_ERROR_NO_ARG(IMixtureModel::initializeModel,p_dataij_ is not set);
       // set dimensions
       this->setNbSample(p_dataij_->sizeRows());
       this->setNbVariable(p_dataij_->sizeCols());
       // initialize the parameters
       for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k]->p_param()->resize(p_dataij_->cols());}
+      { components_[k]->resize(p_dataij_->cols());}
       // call specific model initialization stuff
       this->asDerived().initializeModelImpl();
     }
     /** @return the array with the components */
-    inline Array1D<Component*>& components() { return components_;}
+    inline Array1D<Parameters*> const& components() const { return components_;}
+    /** @return the array with the components */
+    inline Array1D<Parameters*>& components() { return components_;}
     /** @return a pointer on the k-th parameter */
-    inline Parameters* p_param(int k) { return components_[k]->p_param();}
+    inline Parameters* p_param(int k) { return components_[k];}
+
+  private:
     /** pointer on the data set */
     Array const* p_dataij_;
     /** Array of the components of the mixture model */
-    Array1D< Component* > components_;
+    Array1D< Parameters* > components_;
 };
 
 } // namespace STK

@@ -7,6 +7,8 @@
 \alias{ClusterDiagGaussianComponent-class}
 \alias{ClusterGammaComponent}
 \alias{ClusterGammaComponent-class}
+\alias{ClusterPoissonComponent}
+\alias{ClusterPoissonComponent-class}
 \alias{IClusterComponent}
 \alias{IClusterComponent-class}
 \title{Definition of the [\code{\linkS4class{ClusterCategoricalComponent}}] class}
@@ -16,6 +18,8 @@ This class defines a categorical component of a mixture Model.
 This class defines a diagonal Gaussian component of a mixture Model.
 
 This class defines a gamma component of a mixture Model.
+
+This class defines a poisson component of a mixture Model.
 
 This class defines a component of a mixture Model
 }
@@ -34,6 +38,8 @@ This class defines a component of a mixture Model
 
 \item{\code{scale}}{Matrix with the scale of the jth variable in the kth cluster.}
 
+\item{\code{lambda}}{Matrix with the mean of the jth variable in the kth cluster.}
+
 \item{\code{data}}{Matrix with the data set}
 
 \item{\code{missing}}{Matrix with the indexes of the missing values}
@@ -44,6 +50,7 @@ This class defines a component of a mixture Model
 getSlots("ClusterCategoricalComponent")
 getSlots("ClusterDiagGaussianComponent")
 getSlots("ClusterGammaComponent")
+getSlots("ClusterPoissonComponent")
 getSlots("IClusterComponent")
 }
 \author{
@@ -54,8 +61,12 @@ Serge Iovleff
 Serge Iovleff
 
 Serge Iovleff
+
+Serge Iovleff
 }
 \seealso{
+[\code{\linkS4class{IClusterComponent}}] class
+
 [\code{\linkS4class{IClusterComponent}}] class
 
 [\code{\linkS4class{IClusterComponent}}] class

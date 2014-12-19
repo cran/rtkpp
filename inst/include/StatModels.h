@@ -52,8 +52,8 @@
  *  of this set are likely to be the true one.
  **/
 
-/**  @ingroup StatModels
- *  @namespace Model namespace enclosing the enum and utilities functions of the
+/** @ingroup StatModels
+ *  @namespace STK::Model namespace enclosing the enum and utilities functions of the
  *  StatModel project.
  **/
 

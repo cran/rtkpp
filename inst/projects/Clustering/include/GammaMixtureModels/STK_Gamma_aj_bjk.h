@@ -53,7 +53,6 @@ struct MixtureTraits< Gamma_aj_bjk<_Array> >
 {
   typedef _Array Array;
   typedef typename Array::Type Type;
-  typedef MixtureComponent<_Array, Gamma_aj_bjk_Parameters> Component;
   typedef Gamma_aj_bjk_Parameters        Parameters;
   typedef Array2D<Real>        Param;
 };
@@ -73,25 +72,24 @@ template<class Array>
 class Gamma_aj_bjk : public GammaBase< Gamma_aj_bjk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_aj_bjk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Gamma_aj_bjk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_aj_bjk<Array> > Base;
 
-    using Base::p_tik;
+    using Base::p_tik;using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
     using Base::meanjk;
     using Base::variancejk;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline Gamma_aj_bjk( int nbCluster) : Base(nbCluster), shape_() {}
+    inline Gamma_aj_bjk( int nbCluster) : Base(nbCluster), shape_(), stat_shape_() {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gamma_aj_bjk( Gamma_aj_bjk const& model) : Base(model), shape_(model.shape_) {}
+    inline Gamma_aj_bjk( Gamma_aj_bjk const& model)
+                       : Base(model), shape_(model.shape_), stat_shape_(model.stat_shape_) {}
     /** destructor */
     inline ~Gamma_aj_bjk() {}
     /** Initialize the component of the model.
@@ -104,9 +102,24 @@ class Gamma_aj_bjk : public GammaBase< Gamma_aj_bjk<Array> >
       shape_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
       { p_param(k)->p_shape_ = &shape_;}
+      stat_shape_.initialize(p_data()->cols());
     }
-    /** initialize shape and scale parameters using weighted moment estimates.*/
-    inline bool initializeStep() { return mStep();}
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResultsImpl(int iteration)
+    { stat_shape_.update(shape_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResultsImpl()
+    { stat_shape_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParametersImpl()
+    {
+      shape_ = stat_shape_.param_;
+      stat_shape_.release();
+    }
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
      *  and the scale will be selected randomly using an exponential of parameter
@@ -122,6 +135,8 @@ class Gamma_aj_bjk : public GammaBase< Gamma_aj_bjk<Array> >
   protected:
     /** common shape */
     Array2DPoint<Real> shape_;
+    /** Statistics of the common shape */
+    MixtureStatVector stat_shape_;
 };
 
 /* Initialize randomly the parameters of the gamma mixture. The centers
@@ -160,7 +175,7 @@ bool Gamma_aj_bjk<Array>::mStep()
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
   {
     Real y =0.0, x0 = 0.0;
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+    for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k);
       y  += p_param(k)->tk_ * (p_param(k)->meanLog_[j]-std::log(mean));
@@ -170,7 +185,7 @@ bool Gamma_aj_bjk<Array>::mStep()
     y  /= this->nbSample();
     x0 /= this->nbSample();
     Real x1 = shape_[j];
-    if ((x0 <=0.) || (Arithmetic<Real>::isNA(x0))) return false;
+    if ((x0 <=0.) || (isNA(x0))) return false;
 
     // get shape
     hidden::invPsiMLog f(y);
@@ -189,7 +204,7 @@ bool Gamma_aj_bjk<Array>::mStep()
     // set values
     shape_[j] = a;
     // update bjk
-    for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+    for (int k= baseIdx; k < components().end(); ++k)
     { p_param(k)->scale_[j] = meanjk(j, k)/a;}
   }
   return true;

@@ -108,13 +108,16 @@ algoType stringToAlgo( std::string const& type)
  **/
 String exceptionToString( exceptions const& type)
 {
+  if (type == randomInitFail_)      return String(_T("RandomInit fail"));
+  if (type == randomClassInitFail_) return String(_T("RandomClassInit fail"));
+  if (type == randomFuzzyInitFail_) return String(_T("RandomFuzzyInit fail"));
+  if (type == randomParamInitFail_) return String(_T("RandomParamInit fail"));
   if (type == initializeStepFail_)  return String(_T("initializeStep fail"));
-  if (type == randomInitFail_) return String(_T("RandomInit fail"));
   if (type == estimFail_) return String(_T("Estimation fail"));
-  if (type == mStepFail_)  return String(_T("mStep fail"));
-  if (type == eStepFail_)  return String(_T("eStep fail"));
-  if (type == cStepFail_)  return String(_T("cStep fail"));
-  if (type == sStepFail_)  return String(_T("sStep fail"));
+  if (type == mStepFail_) return String(_T("mStep fail"));
+  if (type == eStepFail_) return String(_T("eStep fail"));
+  if (type == cStepFail_) return String(_T("cStep fail"));
+  if (type == sStepFail_) return String(_T("sStep fail"));
   return String(_T("unknown exception"));
 }
 
@@ -143,6 +146,9 @@ MixtureClass mixtureToMixtureClass( Mixture const& type)
   if (type == Gaussian_s_) return Gaussian_;
   if (type == Categorical_pjk_) return Categorical_;
   if (type == Categorical_pk_) return Categorical_;
+  if (type == Poisson_ljk_) return Poisson_;
+  if (type == Poisson_lk_) return Poisson_;
+  if (type == Poisson_ljlk_) return Poisson_;
   return unknown_mixture_class_;
 }
 
@@ -172,6 +178,9 @@ Mixture stringToMixture( std::string const& type)
   if (toUpperString(type) == toUpperString(_T("Gaussian_s"))) return Gaussian_s_;
   if (toUpperString(type) == toUpperString(_T("Categorical_pjk"))) return Categorical_pjk_;
   if (toUpperString(type) == toUpperString(_T("Categorical_pk"))) return Categorical_pk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_ljk"))) return Poisson_ljk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_lk"))) return Poisson_lk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_ljlk"))) return Poisson_ljlk_;
   return unknown_mixture_;
 }
 /* @ingroup Clustering
@@ -201,6 +210,9 @@ Mixture stringToMixture( std::string const& type, bool& freeProp)
   if (toUpperString(type) == toUpperString(_T("Gaussian_p_s"))) return Gaussian_s_;
   if (toUpperString(type) == toUpperString(_T("Categorical_p_pjk"))) return Categorical_pjk_;
   if (toUpperString(type) == toUpperString(_T("Categorical_p_pk"))) return Categorical_pk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_p_ljk"))) return Poisson_ljk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_p_lk"))) return Poisson_lk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_p_ljlk"))) return Poisson_ljlk_;
   freeProp = true;
   if (toUpperString(type) == toUpperString(_T("Gamma_pk_ajk_bjk"))) return Gamma_ajk_bjk_;
   if (toUpperString(type) == toUpperString(_T("Gamma_pk_ajk_bk"))) return Gamma_ajk_bk_;
@@ -220,6 +232,9 @@ Mixture stringToMixture( std::string const& type, bool& freeProp)
   if (toUpperString(type) == toUpperString(_T("Gaussian_pk_s"))) return Gaussian_s_;
   if (toUpperString(type) == toUpperString(_T("Categorical_pk_pjk"))) return Categorical_pjk_;
   if (toUpperString(type) == toUpperString(_T("Categorical_pk_pk"))) return Categorical_pk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_pk_ljk"))) return Poisson_ljk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_pk_lk"))) return Poisson_lk_;
+  if (toUpperString(type) == toUpperString(_T("Poisson_pk_ljlk"))) return Poisson_ljlk_;
   return unknown_mixture_;
 }
 
@@ -248,6 +263,9 @@ std::string mixtureToString( Mixture const& type)
   if (type == Gaussian_s_) return String(_T("Gaussian_s"));
   if (type == Categorical_pjk_) return String(_T("Categorical_pjk"));
   if (type == Categorical_pk_) return String(_T("Categorical_pk"));
+  if (type == Poisson_ljk_) return String(_T("Poisson_ljk"));
+  if (type == Poisson_lk_) return String(_T("Poisson_lk"));
+  if (type == Poisson_ljlk_) return String(_T("Poisson_ljlk"));
   return String(_T("unknown"));
 }
 
@@ -281,6 +299,9 @@ std::string mixtureToString(Mixture type, bool freeProp)
     if (type == Gaussian_s_) return String(_T("Gaussian_p_s"));
     if (type == Categorical_pjk_) return String(_T("Categorical_p_pjk"));
     if (type == Categorical_pk_) return String(_T("Categorical_p_pk"));
+    if (type == Poisson_ljk_) return String(_T("Poisson_p_ljk"));
+    if (type == Poisson_lk_) return String(_T("Poisson_p_lk"));
+    if (type == Poisson_ljlk_) return String(_T("Poisson_p_ljlk"));
   }
   else
   {
@@ -302,6 +323,9 @@ std::string mixtureToString(Mixture type, bool freeProp)
     if (type == Gaussian_s_) return String(_T("Gaussian_pk_s"));
     if (type == Categorical_pjk_) return String(_T("Categorical_pk_pjk"));
     if (type == Categorical_pk_) return String(_T("Categorical_pk_pk"));
+    if (type == Poisson_ljk_) return String(_T("Poisson_pk_ljk"));
+    if (type == Poisson_lk_) return String(_T("Poisson_pk_lk"));
+    if (type == Poisson_ljlk_) return String(_T("Poisson_pk_ljlk"));
   }
   return String(_T("unknown"));
 }

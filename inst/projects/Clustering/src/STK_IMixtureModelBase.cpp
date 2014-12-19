@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -41,10 +41,10 @@ namespace STK
 
 /* default constructor */
 IMixtureModelBase::IMixtureModelBase( int nbCluster)
-                                : p_pk_(0), p_tik_(0), p_zi_(0)
-                                , nbCluster_(nbCluster)
-                                , nbSample_(0)
-                                , nbVariable_(0)
+                                    : p_pk_(0), p_nk_(0), p_tik_(0), p_zi_(0)
+                                    , nbCluster_(nbCluster)
+                                    , nbSample_(0)
+                                    , nbVariable_(0)
 {}
 /* copy constructor. If the pointer on the mixture parameters are not zero
  *  then they are cloned.
@@ -53,12 +53,10 @@ IMixtureModelBase::IMixtureModelBase( int nbCluster)
  *  @param model the model to clone
  **/
 IMixtureModelBase::IMixtureModelBase( IMixtureModelBase const& model)
-                                : p_pk_(0)
-                                , p_tik_(0)
-                                , p_zi_(0)
-                                , nbCluster_(model.nbCluster_)
-                                , nbSample_(model.nbSample_)
-                                , nbVariable_(model.nbVariable_)
+                                    : p_pk_(0), p_nk_(0), p_tik_(0), p_zi_(0)
+                                    , nbCluster_(model.nbCluster_)
+                                    , nbSample_(model.nbSample_)
+                                    , nbVariable_(model.nbVariable_)
 {}
 
 /* destructor */
@@ -69,14 +67,16 @@ IMixtureModelBase::~IMixtureModelBase() {}
  *  @param p_tik pointer on the posterior probabilities
  *  @param p_zi pointer on the class labels
  * */
-void IMixtureModelBase::setMixtureParameters( CArrayPoint<Real> const* p_pk
-                                          , Array2D<Real> const* p_tik
-                                          , CArrayVector<int> const* p_zi
-                                          )
+void IMixtureModelBase::setMixtureParameters( CPointX const* p_pk
+                                            , CPointX const* p_nk
+                                            , CArrayXX const* p_tik
+                                            , CVectorXi const* p_zi
+                                            )
 {
-  p_pk_ = p_pk;
+  p_pk_  = p_pk;
+  p_nk_  = p_nk;
   p_tik_ = p_tik;
-  p_zi_ = p_zi;
+  p_zi_  = p_zi;
 }
 
 

@@ -43,7 +43,6 @@
 #include "Arrays/include/STK_Array2DPoint.h"
 #include "Arrays/include/STK_Display.h"
 
-#include "StatModels/include/STK_IMultiParameters.h"
 #include "STatistiK/include/STK_Law_Exponential.h"
 
 namespace STK
@@ -52,19 +51,19 @@ namespace STK
  *  @brief Interface base class for the parameters of a multivariate model.
   */
 template<class Parameters>
-class ExponentialParametersBase : public IMultiParameters<Parameters>
+class ExponentialParametersBase : public IRecursiveTemplate<Parameters>
 {
   protected:
-    typedef IMultiParameters<Parameters> Base;
+    typedef IRecursiveTemplate<Parameters> Base;
     /** default constructor.*/
-    inline ExponentialParametersBase(): Base(), tk_(0) {}
+    inline ExponentialParametersBase(): tk_(0) {}
     /** constructor with specified range
      *  @param range the range of the variables
      **/
-    inline ExponentialParametersBase( Range const& range): Base(range), tk_(0) {}
+    inline ExponentialParametersBase( Range const& range): tk_(0) {}
     /** copy constructor.*/
     inline ExponentialParametersBase( ExponentialParametersBase const& param)
-                                    : Base(param), tk_(param.tk_), mean_(param.mean_)
+                                    : tk_(param.tk_), mean_(param.mean_)
     {}
     /** Destructor */
     inline ~ExponentialParametersBase() {}
@@ -101,7 +100,7 @@ class Exponential_bjk_Parameters: public ExponentialParametersBase<Exponential_b
      **/
     inline Exponential_bjk_Parameters( Range const& range)
                                      : Base(range), scale_(range, 1.)
-    {}
+    { stat_scale_.initialize(range);}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
@@ -113,15 +112,33 @@ class Exponential_bjk_Parameters: public ExponentialParametersBase<Exponential_b
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_[j];}
     /** resize the parameters.
-     *  @param size range of the parameters
+     *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& size) { scale_.resize(size); scale_ = 1.;}
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    inline void resize(Range const& range)
+    {
+      scale_.resize(range); scale_ = 1.;
+      stat_scale_.initialize(range);
+    }
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const { os << scale_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** vector of the scale */
     Array2DPoint<Real> scale_;
+    /** vector of the scale */
+    MixtureStatVector stat_scale_;
 };
 
 /** @ingroup Clustering
@@ -147,15 +164,32 @@ class Exponential_bk_Parameters: public ExponentialParametersBase<Exponential_bk
     {}
     /** destructor */
     inline ~Exponential_bk_Parameters() {}
+    /** resize the parameters.
+     *  @param range range of the parameters
+     **/
+    inline void resize(Range const& range) {}
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) const
-    { os << scale_ * Const::Vector<Real>(this->range()) << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    { stat_scale_.update(scale_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_scale_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      scale_ = stat_scale_.param_;
+      stat_scale_.release();
+    }
     /** scale */
     Real scale_;
+    /** vector of the scale */
+    MixtureStatReal stat_scale_;
 };
 
 

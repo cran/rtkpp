@@ -44,16 +44,16 @@ namespace STK
 {
 
 /* constructor */
-GaussianModel::GaussianModel( Matrix const* p_data)
-                            : IGaussianModel<Matrix>(p_data)
+GaussianModel::GaussianModel( ArrayXX const* p_data)
+                            : IGaussianModel<ArrayXX>(p_data)
                             , cov_(p_data_->cols())
 {
   setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
 }
 
 /* constructor */
-GaussianModel::GaussianModel( Matrix const& data)
-                            : IGaussianModel<Matrix>(data)
+GaussianModel::GaussianModel( ArrayXX const& data)
+                            : IGaussianModel<ArrayXX>(data)
                             , cov_(data.cols())
 {
   setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
@@ -108,7 +108,7 @@ void GaussianModel::compCovariance()
 /** compute the empirical weighted covariance matrix.
  * @param weights the weights of the samples
  **/
-void GaussianModel::compWeightedCovariance(Matrix::Col const& weights)
+void GaussianModel::compWeightedCovariance(ArrayXX::Col const& weights)
 { Stat::covariance(*p_data_, weights, cov_);}
 
 } // namespace STK

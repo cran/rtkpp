@@ -43,8 +43,9 @@
 #include "Arrays/include/STK_Array2DPoint.h"
 #include "Arrays/include/STK_Display.h"
 
-#include "StatModels/include/STK_IMultiParameters.h"
 #include "STatistiK/include/STK_Law_Normal.h"
+
+#include "../STK_MixtureParamStat.h"
 
 namespace STK
 {
@@ -54,20 +55,15 @@ namespace STK
  *  multivariate model.
   */
 template<class Parameters>
-class DiagGaussianParametersBase : public IMultiParameters<Parameters>
+class DiagGaussianParametersBase : public IRecursiveTemplate<Parameters>
 {
   protected:
-    typedef IMultiParameters<Parameters> Base;
+    typedef IRecursiveTemplate<Parameters> Base;
     /** default constructor.*/
     inline DiagGaussianParametersBase() : Base(), mean_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline DiagGaussianParametersBase( Range const& range): Base(range), mean_(range, 0.)
-    {}
     /** copy constructor.*/
     inline DiagGaussianParametersBase( DiagGaussianParametersBase const& param)
-                                     : Base(param), mean_(param.mean_)
+                                     : mean_(param.mean_), stat_mean_(param.stat_mean_)
     {}
     /** destructor */
     inline ~DiagGaussianParametersBase() {}
@@ -77,8 +73,6 @@ class DiagGaussianParametersBase : public IMultiParameters<Parameters>
     inline Real mean(int j) const {return mean_[j];}
     /** @return the j-th sigma value */
     inline Real sigma(int j) const {return this->asDerived().sigmaImpl(j);}
-    /** vector of the mean */
-    Array2DPoint<Real> mean_;
     /** compute the log Likelihood of an observation.
      *  @param rowData the observation
      **/
@@ -90,6 +84,34 @@ class DiagGaussianParametersBase : public IMultiParameters<Parameters>
       { sum += Law::Normal::lpdf(rowData[j], mean(j), sigma(j));}
       return sum;
     }
+    /** resize the set of parameter, default implementation
+     *  @param range range of the parameters
+     **/
+    inline void resize(Range const& range)
+    {
+      mean_.resize(range); mean_= 0.;
+      stat_mean_.initialize(range);
+    }
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
+     **/
+    void storeIntermediateResults(int iteration)
+    { stat_mean_.update(mean_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    { stat_mean_.release();}
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      mean_ = stat_mean_.param_;
+      stat_mean_.release();
+    }
+    /** vector of the mean */
+    PointX mean_;
+    /** Array of the statistics */
+    MixtureStatVector stat_mean_;
 };
 
 
@@ -102,17 +124,13 @@ class Gaussian_sjk_Parameters: public DiagGaussianParametersBase<Gaussian_sjk_Pa
     typedef DiagGaussianParametersBase<Gaussian_sjk_Parameters> Base;
     /** default constructor */
     inline Gaussian_sjk_Parameters() : Base(), sigma_() {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gaussian_sjk_Parameters( Range const& range)
-                                  : Base(range), sigma_(range, 1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gaussian_sjk_Parameters( Gaussian_sjk_Parameters const& param)
-                                  : Base(param), sigma_(param.sigma_)
+                                  : Base(param)
+                                  , sigma_(param.sigma_)
+                                  , stat_sigma_(param.stat_sigma_)
     {}
     /** destructor */
     inline ~Gaussian_sjk_Parameters() {}
@@ -121,17 +139,39 @@ class Gaussian_sjk_Parameters: public DiagGaussianParametersBase<Gaussian_sjk_Pa
     /** resize the set of parameter
      *  @param range range of the parameters
      **/
-    inline void resizeImpl(Range const& range)
+    inline void resize(Range const& range)
     {
-      mean_.resize(range); mean_ = 0.;
+      Base::resize(range);
       sigma_.resize(range); sigma_ = 1.;
+      stat_sigma_.initialize(range);
     }
-    /** print the parameters.
-     *  @param os the output stream for the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void printImpl(ostream &os) { os << mean_ << sigma_ << _T("\n");}
+    void storeIntermediateResults(int iteration)
+    {
+      Base::storeIntermediateResults(iteration);
+      stat_mean_.update(mean_); stat_sigma_.update(sigma_);
+    }
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
+     **/
+    void releaseIntermediateResults()
+    {
+      Base::releaseIntermediateResults();
+      stat_mean_.release(); stat_sigma_.release();
+    }
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      Base::setParameters();
+      sigma_ = stat_sigma_.param_;
+      stat_sigma_.release();
+    }
     /** vector of the standard deviation */
     Array2DPoint<Real> sigma_;
+    /** Array of the statistics */
+    MixtureStatVector stat_sigma_;
 };
 
 /** @ingroup Clustering
@@ -143,10 +183,6 @@ class Gaussian_sj_Parameters: public DiagGaussianParametersBase<Gaussian_sj_Para
     typedef DiagGaussianParametersBase<Gaussian_sj_Parameters> Base;
     /** default constructor */
     inline Gaussian_sj_Parameters() : Base(), p_sigma_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gaussian_sj_Parameters( Range const& range) : Base(range), p_sigma_(0) {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
@@ -157,15 +193,6 @@ class Gaussian_sj_Parameters: public DiagGaussianParametersBase<Gaussian_sj_Para
     inline ~Gaussian_sj_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const { return p_sigma_->elt(j);}
-    /** resize the set of parameter
-     *  @param range range of the parameters
-     **/
-    inline void resizeImpl(Range const& range)
-    { mean_.resize(range); mean_= 0.;}
-    /** print the parameters mean_.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os) { os << *p_sigma_ << mean_ << _T("\n");}
     /** vector of the standard deviation */
     Array2DPoint<Real>* p_sigma_;
 };
@@ -180,33 +207,45 @@ class Gaussian_sk_Parameters: public DiagGaussianParametersBase<Gaussian_sk_Para
 
     /** default constructor */
     inline Gaussian_sk_Parameters() : Base(), sigma_(1.) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gaussian_sk_Parameters( Range const& range) : Base(range), sigma_(1.)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
     inline Gaussian_sk_Parameters( Gaussian_sk_Parameters const& param)
                                  : Base(param), sigma_(param.sigma_)
+                                 , stat_sigma_(param.stat_sigma_)
     {}
     /** destructor */
     inline ~Gaussian_sk_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const {return sigma_;}
-    /** resize the set of parameter
-     *  @param range range of the parameters
+    /** Store the intermediate results of the Mixture.
+     *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    inline void resizeImpl(Range const& range)
-    { mean_.resize(range); mean_ = 0.; sigma_ = 1.;}
-    /** print the parameters mean_.
-     *  @param os the output stream for the parameters
+    void storeIntermediateResults(int iteration)
+    {
+      Base::storeIntermediateResults(iteration);
+      stat_mean_.update(mean_); stat_sigma_.update(sigma_);}
+    /** Release the stored results. This is usually used if the estimation
+     *  process failed.
      **/
-    inline void printImpl(ostream &os)
-    { os << mean_ << _T("\n") << sigma_ * Const::Point<Real>(mean_.range()) << _T("\n");}
+    void releaseIntermediateResults()
+    {
+      Base::releaseIntermediateResults();
+      stat_mean_.release(); stat_sigma_.release();
+    }
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    void setParameters()
+    {
+      Base::setParameters();
+      sigma_ = stat_sigma_.param_;
+      stat_sigma_.release();
+    }
     /** vector of the standard deviation */
     Real sigma_;
+
+  protected:
+    /** Array of the statistics */
+    MixtureStatReal stat_sigma_;
 };
 
 /** @ingroup Clustering
@@ -218,12 +257,6 @@ class Gaussian_s_Parameters: public DiagGaussianParametersBase<Gaussian_s_Parame
     typedef DiagGaussianParametersBase<Gaussian_s_Parameters> Base;
     /** default constructor */
     inline Gaussian_s_Parameters() : Base(), p_sigma_(0) {}
-    /** constructor with specified range
-     *  @param range the range of the variables
-     **/
-    inline Gaussian_s_Parameters( Range const& range)
-                                : Base(range), p_sigma_(0)
-    {}
     /** copy constructor.
      * @param param the parameters to copy.
      **/
@@ -234,16 +267,6 @@ class Gaussian_s_Parameters: public DiagGaussianParametersBase<Gaussian_s_Parame
     inline~Gaussian_s_Parameters() {}
     /** @return the j-th sigma value */
     inline Real sigmaImpl(int j) const {return *p_sigma_;}
-    /** resize the set of parameter
-     *  @param range range of the parameters
-     **/
-    inline void resizeImpl(Range const& range)
-    { mean_.resize(range); mean_ = 0.;}
-    /** print the parameters mean_.
-     *  @param os the output stream for the parameters
-     **/
-    inline void printImpl(ostream &os)
-    { os << mean_ << _T("\n") << *p_sigma_ * Const::Point<Real>(mean_.range()) << _T("\n");}
     /** pointer on the standard deviation */
     Real* p_sigma_;
 };

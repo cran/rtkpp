@@ -33,7 +33,7 @@
 // for int and Real
 #include "STKernel/include/STK_Misc.h"
 
-#include "../include/STK_Funct_util.h"
+#include "../include/STK_Funct_Util.h"
 // for _LN2_
 #include "../include/STK_Const_Math.h"
 

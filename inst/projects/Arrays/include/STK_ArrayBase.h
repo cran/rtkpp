@@ -36,6 +36,8 @@
 #define STK_ARRAYBASE_H
 
 #include "STK_ExprBase.h"
+#include "STatistiK/include/STK_Law_IUnivLaw.h"
+
 
 namespace STK
 {
@@ -80,21 +82,40 @@ class ArrayBase :  public ExprBase<Derived>
     inline ~ArrayBase() {}
 
   public:
-    /** Visit the container using a visitor. @sa ArrayBaseApplier
-     *  @param visitor the visitor to apply
-     **/
+    /** Apply the Visitor @c visitor to the whole coefficients of the array.
+      * The template parameter @c Visitor is the type of the visitor and provides
+      * the following interface:
+      * @code
+      * struct MyVisitor {
+      *   // called for all  coefficients
+      *   void operator() (Type& value);
+      * };
+      * @endcode
+      *
+      * @note visitors offer automatic unrolling for small fixed size matrix.
+      *
+      * @sa setValue, setOnes(), setZeros()
+      */
     template<typename Visitor>
     void apply(Visitor& visitor);
-    /** set random values to this using a uniform law. @sa apply(), ones(), zeros() */
-    void randUnif();
-    /** set random values to this using a standard gaussian law. @sa apply(), ones(), zeros() */
-    void randGauss();
+    /** set random values to this using a uniform law. @sa apply(), randGauss() */
+    Derived& randUnif();
+    /** set random values to this using a standard gaussian law.
+     *  @sa randUnif(), rand(Law::IUnivLaw<Type> const& law), apply()
+     **/
+    Derived& randGauss();
+    /** set random values to this using a law given by the user. @sa randGauss(), randUnif(), apply() */
+    Derived& rand( Law::IUnivLaw<Type> const& law);
+    /** set one to this using a Visitor. @sa apply(), setValue(), setZeros() */
+    Derived& setOnes();
+    /** set zero to this using a Visitor. @sa apply(), setOnes(), setValue()*/
+    Derived& setZeros();
     /** set one to this using a Visitor. @sa apply(), setValue(), zeros() */
-    void ones();
+    Derived& ones();
     /** set zero to this using a Visitor. @sa apply(), ones(), setValue()*/
-    void zeros();
+    Derived& zeros();
 
-    /** set a value to this container. @sa apply(), ones(), zeros()
+    /** set a value to this container. @sa apply(), setOnes(), setZeros()
      *  @param value the value to set
      **/
     Derived& setValue(Type const& value);
@@ -117,17 +138,23 @@ class ArrayBase :  public ExprBase<Derived>
     /** Adding a Rhs to this. */
     template<typename Rhs>
     Derived& operator+=( ExprBase<Rhs> const& other);
-    /** substract a Rhs to this. */
+    /** subtract a Rhs to this. */
     template<typename Rhs>
     Derived& operator-=( ExprBase<Rhs> const& other);
+    /** divide this by Rhs. */
+    template<typename Rhs>
+    Derived& operator/=( ExprBase<Rhs> const& other);
+    /** multiply this by Rhs. */
+    template<typename Rhs>
+    Derived& operator*=( ExprBase<Rhs> const& other);
     /** Adding a constant to this. */
-    Derived& operator+=( Type const other);
+    Derived& operator+=( Type const& other);
     /** Substract a constant to this. */
-    Derived& operator-=( Type const other);
+    Derived& operator-=( Type const& other);
     /** product of this by a constant. */
-    Derived& operator*=( Type const other);
+    Derived& operator*=( Type const& other);
     /** dividing this by a constant. */
-    Derived& operator/=( Type const other);
+    Derived& operator/=( Type const& other);
 
     /** @return the element (i,j) of the 2D container.
      *  @param i index of the row
@@ -150,7 +177,7 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return a constant reference on element (i,j) of the 2D container
      *  @param i, j indexes of the row and of the column
      **/
-    inline Type const elt(int i, int j) const
+    inline Type const& elt(int i, int j) const
     {
 #ifdef STK_BOUNDS_CHECK
       if (this->beginRows() > i)
@@ -175,7 +202,7 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return the constant ith element
      *  @param i index of the ith element
      **/
-    inline Type const elt(int i) const
+    inline Type const& elt(int i) const
     {
       STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived)
       return this->asDerived().elt1Impl(i);
@@ -187,7 +214,7 @@ class ArrayBase :  public ExprBase<Derived>
       return this->asDerived().elt0Impl();
     }
     /** @return a constant reference on the number */
-    inline Type const elt() const
+    inline Type const& elt() const
     {
       STK_STATICASSERT_ZERO_DIMENSION_ONLY(Derived)
       return this->asDerived().elt0Impl();
@@ -195,15 +222,27 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return a reference on the ith element
      *  @param i index of the ith element
      **/
-    inline Type& operator[](int i) { return this->asDerived().elt1Impl(i);}
+    inline Type& operator[](int i)
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived)
+      return this->asDerived().elt1Impl(i);
+    }
     /** @return the ith element
      *  @param i index of the ith element
      **/
-    inline Type const operator[](int i) const { return this->asDerived().elt1Impl(i);}
+    inline Type const& operator[](int i) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived)
+      return this->asDerived().elt1Impl(i);
+    }
     /** @return the ith element
      *  @param I range to get
      **/
-    inline SubVector operator[](Range const& I) const { return this->asDerived().sub(I);}
+    inline SubVector operator[](Range const& I) const
+    {
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived)
+      return this->asDerived().subImpl(I);
+    }
     /** @return a reference on the element (i,j) of the 2D container.
      *  @param i, j indexes of the row and of the column
      **/
@@ -225,7 +264,7 @@ class ArrayBase :  public ExprBase<Derived>
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const operator()(int i, int j) const
+    inline Type const& operator()(int i, int j) const
     {
 #ifdef STK_BOUNDS_CHECK
       if (this->beginRows() > i)
@@ -259,7 +298,7 @@ class ArrayBase :  public ExprBase<Derived>
      *  @param i index of the row
      *  @param j index of the col
      **/
-    Type const at(int i, int j) const
+    Type const& at(int i, int j) const
     {
       if (this->beginRows() > i)
       { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, beginRows() > i);}
@@ -285,7 +324,7 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return safely the constant ith element
      *  @param i index of the element
      **/
-    Type const at(int i) const
+    Type const& at(int i) const
     {
       if (this->asDerived().begin() > i)
       { STKOUT_OF_RANGE_1ARG(ArrayBase::at, i, begin() > i);}
@@ -294,37 +333,45 @@ class ArrayBase :  public ExprBase<Derived>
       return this->asDerived().elt1Impl(i);
     }
     /** @return a constant reference on the number */
-    inline Type const operator()() const { return this->asDerived().elt0Impl();}
+    inline Type const& operator()() const
+    {
+      STK_STATICASSERT_ZERO_DIMENSION_ONLY(Derived)
+      return this->asDerived().elt0Impl();
+    }
     /** @return the number */
-    inline Type& operator()() { return this->asDerived().elt0Impl();}
+    inline Type& operator()()
+    {
+      STK_STATICASSERT_ZERO_DIMENSION_ONLY(Derived)
+      return this->asDerived().elt0Impl();
+    }
 
-    /** @return the ith row of this */
-    inline Row row(int i) const { return this->asDerived().rowImpl(i);}
     /** @return the jth column of this */
     inline Col col(int j) const { return this->asDerived().colImpl(j);}
-    /** @return the ith row of this in the range J */
-    inline SubRow row(int i, Range const& J) const
-    {
-      STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
-      return this->asDerived().rowImpl(i,J);
-    }
     /** @return the jth column of this in the range I*/
     inline SubCol col(Range const& I, int j) const
     {
       STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
       return this->asDerived().colImpl(I, j);
     }
-    /** @return the sub array with the rows in the range J */
-    inline SubArray row(Range const& I) const
-    {
-      STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
-      return this->asDerived().rowImpl(I);
-    }
     /** @return the sub array with the column in the range J */
     inline SubArray col(Range const& J) const
     {
       STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
       return this->asDerived().colImpl(J);
+    }
+    /** @return the ith row of this */
+    inline Row row(int i) const { return this->asDerived().rowImpl(i);}
+    /** @return the ith row of this in the range J */
+    inline SubRow row(int i, Range const& J) const
+    {
+      STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
+      return this->asDerived().rowImpl(i,J);
+    }
+    /** @return the sub array with the rows in the range J */
+    inline SubArray row(Range const& I) const
+    {
+      STK_STATICASSERT_TWO_DIMENSIONS_ONLY(Derived)
+      return this->asDerived().rowImpl(I);
     }
     /** @return the sub-array (I,J)*/
     inline SubArray sub(Range const& I, Range const& J) const
@@ -336,7 +383,7 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return the sub-vector in the range I*/
     inline SubVector sub(Range const& I) const
     {
-      STK_STATICASSERT_VECTOR_ONLY(Derived)
+      STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived)
       return this->asDerived().subImpl(I);
     }
 
@@ -345,14 +392,14 @@ class ArrayBase :  public ExprBase<Derived>
     /** @return the last element */
     inline Type& back() { return elt(this->lastIdx());}
     /** @return the first element */
-    inline Type const front() const { return elt(this->begin());}
+    inline Type const& front() const { return elt(this->begin());}
     /** @return the last element */
-    inline Type const back() const { return elt(this->lastIdx());}
-   /** Convenient operator to set the coefficients of a matrix.
-      *
-      * The coefficients must be provided in the row/column order and exactly
-      * match the size of the matrix. Otherwise an exception is throwed.
-      */
+    inline Type const& back() const { return elt(this->lastIdx());}
+    /** Convenient operator to set the coefficients of a matrix.
+     *
+     * The coefficients must be provided in the row/column order and exactly
+     * match the size of the matrix. Otherwise an exception is throwed.
+     **/
     ArrayInitializer<Derived> operator<<(Type const& s);
 
     /** \sa operator<<(Type const&) */

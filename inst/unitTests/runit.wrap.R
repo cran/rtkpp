@@ -47,7 +47,7 @@ body <- '
   NumericMatrix RData3(tab3);
 
   // wrap Rcpp matrix
-  RcppMatrix<double> data1(RData1);
+  RMatrix<double> data1(RData1);
   // start tests
   for (int i=data1.beginRows(); i< data1.endRows(); ++i)
   {
@@ -61,7 +61,7 @@ body <- '
   RDataHandler handler(RData2, "model1", "gaussian_sjk");
   handler.addData(RData3,  "model2", "gaussian_sj");
 
-  RcppMatrix<double> data2;
+  RMatrix<double> data2;
   int nbVar;
   handler.getData("model1", data2, nbVar);
 
@@ -74,7 +74,7 @@ body <- '
   data1(2,2) = 22;
   l.push_back(tab2, "3");
 
-  RcppMatrix<double> m = as< RcppMatrix<double> >(tab1);
+  RMatrix<double> m = as< RMatrix<double> >(tab1);
   m(1,1) = Arithmetic<double>::NA();
   // return final output
   return l;

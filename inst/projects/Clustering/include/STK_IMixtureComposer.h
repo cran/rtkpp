@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2014  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -41,8 +41,7 @@
 
 #include "Arrays/include/STK_CArrayPoint.h"
 #include "Arrays/include/STK_CArrayVector.h"
-#include "Arrays/include/STK_Array2D.h"
-#include "Arrays/include/STK_Array2DPoint.h"
+#include "Arrays/include/STK_CArray.h"
 
 namespace STK
 {
@@ -107,9 +106,9 @@ class IMixtureComposer : public IStatModelBase
 {
   protected:
     /** Constructor.
-     * @param nbCluster,nbSample,nbVariable number of clusters, samples and Variables
+     * @param nbCluster,nbSample number of clusters and samples
      **/
-    IMixtureComposer( int nbSample, int nbVariable, int nbCluster);
+    IMixtureComposer( int nbSample, int nbCluster);
     /** copy constructor. If the pointer on the mixture parameters are not zero
      *  then they are cloned.
      *  @note if the model have not created the parameters, then the pointer are
@@ -128,20 +127,22 @@ class IMixtureComposer : public IStatModelBase
     inline Clust::modelState state() const { return state_;}
 
     /** @return the proportions of each mixtures */
-    inline CArrayPoint<Real> const& pk() const { return prop_;};
+    inline CPointX const& pk() const { return prop_;};
     /** @return the tik probabilities */
-    inline Array2D<Real> const& tik() const { return tik_;};
-    /** @return the estimated proportions of individuals  */
-    inline CArrayPoint<Real> const& tk() const { return tk_;};
+    inline CArrayXX const& tik() const { return tik_;};
+    /** @return the estimated proportions of individuals in each mixtures */
+    inline CPointX const& nk() const { return nk_;};
     /** @return the zi class label */
-    inline CArrayVector<int> const& zi() const { return zi_;};
+    inline CVectorXi const& zi() const { return zi_;};
 
     /** @return a pointer on the proportions of each mixtures */
-    inline CArrayPoint<Real> const* p_pk() const { return &prop_;};
+    inline CPointX const* p_pk() const { return &prop_;};
+    /** @return a pointer on the the estimated proportions of individuals in each mixtures */
+    inline CPointX const* p_nk() const { return &nk_;};
     /** @return a pointer on the the tik probabilities */
-    inline Array2D<Real> const* p_tik() const { return &tik_;};
+    inline CArrayXX const* p_tik() const { return &tik_;};
     /** @return a pointer on the zi class labels */
-    inline CArrayVector<int> const* p_zi() const { return &zi_;};
+    inline CVectorXi const* p_zi() const { return &zi_;};
 
     /** @return the computed log-likelihood of the i-th sample.
      *  @param i index of the sample
@@ -205,7 +206,20 @@ class IMixtureComposer : public IStatModelBase
     /** @brief Simulation of all the latent variables and/or missing data
      *  excluding class labels. Default behavior is "do nothing".
      */
-    virtual void samplingStep() {};
+    virtual void samplingStep() {}
+    /** @brief Utility method allowing to signal to a mixture to set its parameters.
+     *  It will be called once enough intermediate results have been stored. */
+    virtual void setParameters() {}
+    /**@brief This step can be used to signal to the mixtures that they must
+     * store results. This is usually called after a burn-in phase. The composer
+     * store the current value of the log-Likelihood.
+     **/
+    virtual void storeIntermediateResults(int iteration) {}
+    /**@brief This step can be used to signal to the mixtures that they must
+     * release the stored results. This is usually called if the estimation
+     * process failed.
+     **/
+    virtual void releaseIntermediateResults() {}
     /** @brief Finalize the estimation of the model.
      *  The default behavior is compute current lnLikelihood.
      **/
@@ -238,6 +252,11 @@ class IMixtureComposer : public IStatModelBase
      *  @return the minimal value of tk
      **/
     Real eStep();
+    /** compute one zi and the next value of the tik for i fixed
+     *  @param i the individual
+     *  @return the contribution of the individual i to the log-likelihood
+     **/
+    Real eStep(int i);
     /** Compute zi using the Map estimate. */
     void mapStep();
 
@@ -245,21 +264,25 @@ class IMixtureComposer : public IStatModelBase
     /** number of cluster. */
     int nbCluster_;
     /** The proportions of each mixtures */
-    CArrayPoint<Real> prop_;
+    CPointX prop_;
     /** The tik probabilities */
-    Array2D<Real> tik_;
+    CArrayXX tik_;
     /** The sum of the columns of tik_ */
-    CArrayPoint<Real> tk_;
+    CPointX nk_;
     /** The zi class label */
-    CArrayVector<int> zi_;
+    CVectorXi zi_;
     /** Create the mixture model parameters. */
     void initializeMixtureParameters();
     /** generate random tik_ */
-    void randomFuzzyTik();
+    int randomFuzzyTik();
 
   private:
     /** state of the model*/
     Clust::modelState state_;
+    /** Auxiliary array used in the eStep */
+#ifndef _OPENMP
+    CPointX lnComp_;
+#endif
 };
 
 } // namespace STK

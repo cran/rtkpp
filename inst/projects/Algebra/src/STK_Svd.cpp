@@ -48,7 +48,7 @@ namespace STK
 
 /* Constructors   */
 /* Default constructor  */
- Svd::Svd( Matrix const& A, bool   ref, bool   withU, bool   withV)
+ Svd::Svd( ArrayXX const& A, bool   ref, bool   withU, bool   withV)
         : U_(A, ref)
         , withU_(withU)
         , withV_(withV)
@@ -162,7 +162,7 @@ void Svd::compSvd()
 
 
 /* New computation of the Svd.                                        */
-void Svd::newSvd( Matrix const&   A
+void Svd::newSvd( ArrayXX const&   A
                 , bool     withU
                 , bool     withV
                 )
@@ -206,7 +206,7 @@ void Svd::clear()
 
 
 /* Bidiagonalization of the matrix M.                                 */
-Real Svd::bidiag(const Matrix& M, Point& D, Vector& F)
+Real Svd::bidiag(const ArrayXX& M, Point& D, Vector& F)
 {
   // norm of the matrix M
   Real norm  = 0.0;
@@ -367,7 +367,7 @@ void Svd::compU()
 
 /* eliminate the element of the surdiagonal with right rotations      */
 void Svd::rightEliminate( Point& D, Vector& F, int const& nrow
-                        , MatrixSquare& V, bool withV, Real const& tol
+                        , ArraySquareX& V, bool withV, Real const& tol
                         )
 {
   // the element to eliminate
@@ -401,7 +401,7 @@ void Svd::rightEliminate( Point& D, Vector& F, int const& nrow
 /* eliminate the element of the surdiagonal with left rotations       */
 void Svd::leftEliminate( Point& D, Vector& F
                        , int const& nrow
-                       , Matrix& U
+                       , ArrayXX& U
                        , bool withU
                        , Real const& tol
                        )
@@ -433,8 +433,8 @@ void Svd::leftEliminate( Point& D, Vector& F
 /*  diagonalization of the bidiag matrix                              */
 bool Svd::diag( Point& D
               , Vector& F
-              , Matrix& U
-              , MatrixSquare& V
+              , ArrayXX& U
+              , ArraySquareX& V
               , bool withU
               , bool withV
               , Real const& tol

@@ -42,12 +42,12 @@ namespace STK
 {
 /** @ingroup Algebra
  *  @brief The class SymEigen compute the eigenvalue Decomposition
- *  of a symmetric Matrix.
+ *  of a symmetric ArrayXX.
  * 
  *  The decomposition of a symmetric matrix require
  *  - Input:  A symmetric matrix A of size (n,n)
  *  - Output:
- *     -# P Matrix of size (n,n).
+ *     -# P Array of size (n,n).
  *     -# D Vector of dimension n
  *     -# \f$ A = PDP' \f$
  *  The matrix A can be copied or overwritten by the class.
@@ -66,7 +66,7 @@ class SymEigen : public ISymEigen<SymEigen>
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    inline SymEigen( CArraySquareXX const& data, bool ref =false)
+    inline SymEigen( CSquareXd const& data, bool ref =false)
                    : Base(data, ref)
                    , begin_(data.begin())
                    , last_(data.lastIdx())
@@ -110,7 +110,7 @@ class SymEigen : public ISymEigen<SymEigen>
     /** get rotation matrix
      *  @return the rotation matrix
      **/
-    inline CArraySquareXX const& rotation() const{ return eigenVectors_;}
+    inline CSquareXd const& rotation() const{ return eigenVectors_;}
 
   protected:
     /// first row/col of eigenVectors_

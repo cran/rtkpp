@@ -121,7 +121,7 @@ Real Gamma::rand() const
 Real Gamma::pdf( Real const& x) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return x;
+  if (isNA(x)) return x;
   // trivial cases
   if (x < 0.) return 0.;
   if (Arithmetic<Real>::isInfinite(x)) return 0.;
@@ -142,7 +142,7 @@ Real Gamma::pdf( Real const& x) const
 Real Gamma::lpdf( Real const& x) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return x;
+  if (isNA(x)) return x;
   // trivial cases
   if (x < 0.) return -Arithmetic<Real>::infinity();
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
@@ -164,7 +164,7 @@ Real Gamma::lpdf( Real const& x) const
 Real Gamma::cdf( Real const& t) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(t)) return t;
+  if (isNA(t)) return t;
   // trivial cases
   if (t <= 0.) return 0.;
   if (Arithmetic<Real>::isInfinite(t)) return 1.;
@@ -246,7 +246,7 @@ Real Gamma::rand( Real const& a, Real const& b)
 Real Gamma::pdf( Real const& x, Real const& a, Real const& b)
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return x;
+  if (isNA(x)) return x;
   // trivial cases
   if (x < 0.) return 0.;
   if (Arithmetic<Real>::isInfinite(x)) return 0.;
@@ -267,7 +267,7 @@ Real Gamma::pdf( Real const& x, Real const& a, Real const& b)
 Real Gamma::lpdf( Real const& x, Real const& a, Real const& b)
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(x)) return x;
+  if (isNA(x)) return x;
   // trivial cases
   if (x < 0.) return -Arithmetic<Real>::infinity();
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
@@ -277,6 +277,24 @@ Real Gamma::lpdf( Real const& x, Real const& a, Real const& b)
   return (a < 1) ? Funct::poisson_lpdf_raw(a, x/b) +std::log(a/x)
                   : Funct::poisson_lpdf_raw(a-1, x/b) - std::log(b);
 }
+
+/* @return the cumulative distribution function
+ *  @param t a positive real value
+ *  @param shape shape parameter
+ *  @param scale scale (dispersion) parameter
+ **/
+Real Gamma::cdf(Real const& t, Real const& a, Real const& b)
+{
+  // check NA value
+  if (isNA(t)) return t;
+  // trivial cases
+  if (t <= 0.) return 0.;
+  if (Arithmetic<Real>::isInfinite(t)) return 1.;
+  // general case
+  return Funct::gammaRatioP(a, t/b);
+}
+
+
 
 void Gamma::computeCtes() const
 {

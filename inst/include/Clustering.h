@@ -89,6 +89,9 @@
 #include "../projects/Clustering/include/CategoricalMixtureModels/STK_Categorical_pjk.h"
 #include "../projects/Clustering/include/CategoricalMixtureModels/STK_Categorical_pk.h"
 
+#include "../projects/Clustering/include/PoissonMixtureModels/STK_Poisson_ljk.h"
+#include "../projects/Clustering/include/PoissonMixtureModels/STK_Poisson_ljlk.h"
+
 #include "../projects/Clustering/include/STK_MixtureInit.h"
 #include "../projects/Clustering/include/STK_MixtureAlgo.h"
 #include "../projects/Clustering/include/STK_MixtureStrategy.h"

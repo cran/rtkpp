@@ -40,15 +40,15 @@
 
 namespace STK
 {
-
 // forward declaration
 template< typename Type> class Array2DSquare;
 template< typename Type> class Array2D;
 template< typename Type> class Array2DPoint;
 template< typename Type> class Array2DVector;
 
-
-typedef Array2DSquare<Real> MatrixSquare;
+typedef Array2DSquare<Real>   ArraySquareX;
+typedef Array2DSquare<double> ArraySquareXd;
+typedef Array2DSquare<int>    ArraySquareXi;
 
 namespace hidden
 {
@@ -61,13 +61,13 @@ struct Traits<Array2DSquare<_Type> >
   private:
     class Void {};
   public:
-    typedef _Type        Type;
-    typedef Array2DPoint<_Type> Row;
+    typedef _Type                Type;
+    typedef Array2DPoint<_Type>  Row;
     typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type> SubRow;
+    typedef Array2DPoint<_Type>  SubRow;
     typedef Array2DVector<_Type> SubCol;
-    typedef Array2D<_Type> SubArray;
-    typedef Void SubVector;
+    typedef Array2D<_Type>       SubArray;
+    typedef Void                 SubVector;
 
     enum
     {
@@ -94,11 +94,12 @@ template<class Type>
 class Array2DSquare : public IArray2D< Array2DSquare<Type> >
 {
   public:
-    typedef Array2DPoint<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DPoint<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2D<Type> SubArray;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DSquare<Type> >::SubArray SubArray;
 
     enum
     {
@@ -192,12 +193,11 @@ class Array2DSquare : public IArray2D< Array2DSquare<Type> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DSquare& operator=(Rhs const& T) { return LowBase::operator=(T);}
+    inline Array2DSquare& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** overwrite the Array2D with T.
      *  @param T the container to copy
      **/
-    inline Array2DSquare& operator=( Array2DSquare const& T)
-    { return LowBase::assign(T);}
+    inline Array2DSquare& operator=( Array2DSquare const& T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/

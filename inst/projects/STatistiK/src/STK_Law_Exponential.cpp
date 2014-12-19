@@ -83,7 +83,7 @@ Real Exponential::rand( Real const& scale)
 Real Exponential::pdf( Real const& x) const
 {
   // NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial cases
   if (x<0) return 0.0;
   if (Arithmetic<Real>::isInfinite(x)) return 0.0;
@@ -102,7 +102,7 @@ Real Exponential::pdf( Real const& x, Real const& scale)
     STKDOMAIN_ERROR_1ARG(Exponential::pdf,scale,invalid argument);
 #endif
   // NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial cases
   if (x<0) return 0.0;
   if (Arithmetic<Real>::isInfinite(x)) return 0.0;
@@ -116,7 +116,7 @@ Real Exponential::pdf( Real const& x, Real const& scale)
 Real Exponential::lpdf( Real const& x) const
 {
   // NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial cases
   if (x<0) return -Arithmetic<Real>::infinity();
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
@@ -135,7 +135,7 @@ Real Exponential::lpdf( Real const& x, Real const& scale)
     STKDOMAIN_ERROR_1ARG(Exponential::lpdf,scale,invalid argument);
 #endif
   // NA value
-  if (Arithmetic<Real>::isNA(x)) return Arithmetic<Real>::NA();
+  if (isNA(x)) return Arithmetic<Real>::NA();
   // trivial cases
   if (x<0) return -Arithmetic<Real>::infinity();
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
@@ -149,7 +149,7 @@ Real Exponential::lpdf( Real const& x, Real const& scale)
 Real Exponential::cdf( Real const& t) const
 {
   // NA value
-  if (Arithmetic<Real>::isNA(t)) return Arithmetic<Real>::NA();
+  if (isNA(t)) return Arithmetic<Real>::NA();
   // trivial cases
   if (t <= 0.) return 0.0;
   if (Arithmetic<Real>::isInfinite(t)) return 1.0; /* t= +inf */
@@ -163,7 +163,7 @@ Real Exponential::cdf( Real const& t) const
 Real Exponential::icdf( Real const& p) const
 {
   // check NA value
-  if (Arithmetic<Real>::isNA(p)) return Arithmetic<Real>::NA();
+  if (isNA(p)) return Arithmetic<Real>::NA();
 
   // check parameter
   if ((p > 1.) || (p < 0.))

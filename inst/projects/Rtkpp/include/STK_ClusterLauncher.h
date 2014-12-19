@@ -82,6 +82,8 @@ class ClusterLauncher : public IRunnerBase
     void getParameters(Rcpp::S4& s4_component, std::string const& idData);
     /** get the diagonal Gaussian parameters */
     void getDiagGaussianParameters(Rcpp::S4& s4_component, std::string const& idData);
+    /** get the Poisson parameters */
+    void getPoissonParameters(Rcpp::S4& s4_component, std::string const& idData);
     /** get the gamma parameters */
     void getGammaParameters(Rcpp::S4& s4_component, std::string const& idData);
     /** get the gamma parameters */

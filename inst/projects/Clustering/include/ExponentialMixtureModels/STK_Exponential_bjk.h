@@ -53,7 +53,6 @@ struct MixtureTraits< Exponential_bjk<_Array> >
 {
   typedef _Array Array;
   typedef typename Array::Type Type;
-  typedef MixtureComponent<_Array, Exponential_bjk_Parameters> Component;
   typedef Exponential_bjk_Parameters        Parameters;
   typedef Array2D<Real>        Param;
 };
@@ -64,7 +63,7 @@ struct MixtureTraits< Exponential_bjk<_Array> >
  *  Exponential_bjk is a mixture model of the following form
  * \f[
  *     f(\mathbf{x}_i|\theta) = \sum_{k=1}^K p_k
- *     \prod_{j=1}^p \frac{e^{-x_i^j/b_{jk}}}{b_{jk}
+ *     \prod_{j=1}^p \frac{e^{-x_i^j/b_{jk}}}{b_{jk}}
  *      \quad x_i^j\geq 0, \quad i=1,\ldots,n.
  * \f]
  **/
@@ -72,14 +71,13 @@ template<class Array>
 class Exponential_bjk : public ExponentialBase< Exponential_bjk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Exponential_bjk<Array> >::Component Component;
     typedef typename Clust::MixtureTraits< Exponential_bjk<Array> >::Parameters Parameters;
     typedef ExponentialBase< Exponential_bjk<Array> > Base;
 
-    using Base::p_tik;
+     using Base::p_tik;using Base::components;
     using Base::p_data;
     using Base::p_param;
-    using Base::components;
+
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -91,8 +89,6 @@ class Exponential_bjk : public ExponentialBase< Exponential_bjk<Array> >
     inline Exponential_bjk( Exponential_bjk const& model) : Base(model) {}
     /** destructor */
     inline ~Exponential_bjk() {}
-    /** initialize shape and scale parameters using weighted moment estimates.*/
-    inline bool initializeStep() { return mStep();}
     /** Initialize randomly the parameters of the Exponential mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
      *  and the scale will be selected randomly using an exponential of parameter
@@ -104,6 +100,10 @@ class Exponential_bjk : public ExponentialBase< Exponential_bjk<Array> >
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
     { return this->nbCluster()*this->nbVariable();}
+
+  protected:
+    /** Array of the statistics */
+    MixtureStatVector stat_;
 };
 
 /* Initialize randomly the parameters of the gamma mixture. The centers
@@ -114,7 +114,7 @@ template<class Array>
 void Exponential_bjk<Array>::randomInit()
 {
   // estimate b
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
@@ -133,7 +133,7 @@ template<class Array>
 bool Exponential_bjk<Array>::mStep()
 {
   // estimate b
-  for (int k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= baseIdx; k < components().end(); ++k)
   {
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
     { p_param(k)->scale_[j] = p_data()->col(j).wmean(p_tik()->col(k));}

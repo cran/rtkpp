@@ -52,7 +52,9 @@ template<typename> class Array2DVector;
   * An Array2DLowerTriangular is a column oriented 2D container of Real
   * whcih is lower triangular.
  **/
-typedef Array2DLowerTriangular<Real> MatrixLowerTriangular;
+typedef Array2DLowerTriangular<Real>   ArrayLowerTriangularXX;
+typedef Array2DLowerTriangular<double> ArrayLowerTriangularXXd;
+typedef Array2DLowerTriangular<int>    ArrayLowerTriangularXXi;
 
 namespace hidden
 {
@@ -64,13 +66,13 @@ struct Traits< Array2DLowerTriangular<_Type> >
 {  private:
     class Void {};
   public:
-    typedef _Type          Type;
-    typedef Array2DPoint<_Type> Row;
-    typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type> SubRow;
-    typedef Array2DVector<_Type> SubCol;
+    typedef _Type                         Type;
+    typedef Array2DPoint<_Type>           Row;
+    typedef Array2DVector<_Type>          Col;
+    typedef Array2DPoint<_Type>           SubRow;
+    typedef Array2DVector<_Type>          SubCol;
     typedef Array2DLowerTriangular<_Type> SubArray;
-    typedef Void SubVector;
+    typedef Void                          SubVector;
 
    enum
    {
@@ -101,11 +103,12 @@ template<class Type >
 class Array2DLowerTriangular : public IArray2D< Array2DLowerTriangular<Type> >
 {
   public:
-    typedef Array2DPoint<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DPoint<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2DLowerTriangular<Type> SubArray;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DLowerTriangular<Type> >::SubArray SubArray;
 
    enum
    {
@@ -167,7 +170,7 @@ class Array2DLowerTriangular : public IArray2D< Array2DLowerTriangular<Type> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DLowerTriangular& operator=(Rhs const& T)
+    inline Array2DLowerTriangular& operator=(ExprBase<Rhs> const& T)
     { return LowBase::operator=(T);}
     /** operator = : overwrite the Array2DLowerTriangular with T.
      *  @param T the container to copy

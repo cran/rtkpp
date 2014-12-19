@@ -65,6 +65,28 @@
 #' @useDynLib rtkpp
 NULL
 
+#' Counting Data: DebTrivedi
+#'
+#' Deb and Trivedi (1997) analyze data on 4406 individuals, aged 66 and over, who are covered
+#' by Medicare, a public insurance program. Originally obtained from the US National Medical
+#' Expenditure Survey (NMES) for 1987/88, the data are available from the data archive of
+#' the \emph{Journal of Applied Econometrics}.
+#' It was prepared for an R package accompanying Kleiber and Zeileis (2008)
+#' and is also available asDebTrivedi.rda in the Journal of Statistical Software
+#' together with Zeileis (2006). The objective is to model the demand for medical
+#' care -as captured by the number of physician/non-physician office and hospital
+#' outpatient visits- by the covariates available for the patients.
+#' @source \url{http://www.jstatsoft.org/v27/i08/paper}
+#' @references
+#' Zeileis, A. and Kleiber, C. and Jackma, S. (2008). "Regression Models for Count Data in R". JSS 27, 8, 1--25.
+#' @name DebTrivedi
+#' @docType data
+#' @keywords datasets
+#'
+#' @examples
+#'   data(DebTrivedi)
+NULL
+
 #' Quantitative data: Old Faithful Geyser
 #'
 #' The file geyser.rda contains 272 observations from the Old Faithful Geyser
@@ -308,6 +330,21 @@ setMethod(
   "missingValues",
   c("ClusterGamma"),
   function(x){ return(missingValues(x@component));}
+)
+
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterPoissonComponent-method
+setMethod(
+    "missingValues",
+    c("ClusterPoissonComponent"),
+    function(x){ return(cbind(x@missing, x@data[x@missing]));}
+)
+#' @rdname missingValues-methods
+#' @aliases missingValues,ClusterPoisson-method
+setMethod(
+    "missingValues",
+    c("ClusterPoisson"),
+    function(x){ return(missingValues(x@component));}
 )
 
 #' @rdname missingValues-methods

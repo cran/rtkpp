@@ -79,7 +79,7 @@ struct CsvToArrayImpl<Type, Array2D<Type> >
   static void run(TReadWriteCsv<Type> const& rw, Array2D<Type>* p_data, Real const propMiss)
   {
     p_data->reserveCols(rw.size());
-    for(int jVar = rw.begin(); jVar<=rw.lastIdx(); jVar++)
+    for(int jVar = rw.begin(); jVar<rw.end(); jVar++)
     {
       if ( (rw.var(jVar).nbMiss()/Real(rw.var(jVar).size())) <= propMiss)
        p_data->merge(rw.var(jVar));

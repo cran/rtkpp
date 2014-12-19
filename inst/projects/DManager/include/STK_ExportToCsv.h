@@ -56,7 +56,7 @@ namespace Csv
  *  @brief Export data to a Csv.
  *
  * An ExportToCsv object creates a @c ReadWriteCsv from a container of data
- * like a DataFrame, a Vector, a point or a Matrix. The data are stored in a
+ * like a DataFrame, a Vector, a point or a ArrayXX. The data are stored in a
  * String format in the @c ReadWriteCsv struct.
  **/
 class ExportToCsv

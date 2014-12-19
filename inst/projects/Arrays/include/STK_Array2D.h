@@ -45,10 +45,11 @@ template< typename Type> class Array2DVector;
 
 /** @ingroup Arrays
   * @brief Specialization of the Array2D class for Real values.
-  *
-  * A Matrix is a column oriented 2D container of Real.
+  * An Array is a column oriented 2D container of Real.
  **/
-typedef Array2D<Real> Matrix;
+typedef Array2D<Real>   ArrayXX;
+typedef Array2D<double> ArrayXXd;
+typedef Array2D<int>    ArrayXXi;
 
 
 namespace hidden
@@ -62,13 +63,13 @@ struct Traits< Array2D<_Type> >
   private:
     class Void {};
   public:
-    typedef _Type          Type;
-    typedef Array2DPoint<_Type> Row;
+    typedef _Type                Type;
+    typedef Array2DPoint<_Type>  Row;
     typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type> SubRow;
+    typedef Array2DPoint<_Type>  SubRow;
     typedef Array2DVector<_Type> SubCol;
-    typedef Array2D<_Type> SubArray;
-    typedef Void SubVector;
+    typedef Array2D<_Type>       SubArray;
+    typedef Void                 SubVector;
 
     enum
     {
@@ -112,11 +113,12 @@ class Array2D : public IArray2D< Array2D<Type> >
   typedef ArrayBase < Array2D<Type> > LowBase;
 
   public:
-    typedef Array2DPoint<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DPoint<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2D<Type> SubArray;
+    typedef typename hidden::Traits<Array2D<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2D<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2D<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2D<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2D<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2D<Type> >::SubArray SubArray;
 
     enum
     {
@@ -129,14 +131,12 @@ class Array2D : public IArray2D< Array2D<Type> >
     /** Default constructor */
     Array2D() : Base() {}
     /** constructor
-     *  @param I range of the Rows
-     *  @param J range of the Cols
+     *  @param I,J range of the rows and columns
      **/
     Array2D( Range const& I, Range const& J) : Base(I, J) {}
     /** constructor with rbeg, rend, cbeg and cend specified,
      *  initialization with a constant.
-     *  @param I range of the Rows
-     *  @param J range of the Cols
+     *  @param I,J range of the rows and columns
      *  @param v initial value of the container
      **/
     Array2D( Range const& I, Range const& J, Type const& v) : Base(I, J)
@@ -148,8 +148,7 @@ class Array2D : public IArray2D< Array2D<Type> >
     Array2D( Array2D const& T, bool ref=false) : Base(T, ref) {}
     /** Copy constructor by reference, ref_=1.
      *  @param T the container to wrap
-     *  @param I range of the Rows to wrap
-     *  @param J range of the Cols to wrap
+     *  @param I,J range of the rows and columns to wrap
      **/
     template<class OtherArray>
     Array2D( IArray2D<OtherArray> const& T, Range const& I, Range const& J)
@@ -162,17 +161,16 @@ class Array2D : public IArray2D< Array2D<Type> >
     { LowBase::operator=(T);}
     /** Wrapper constructor Contruct a reference container.
      *  @param q pointer on the data
-     *  @param I range of the  Rows to wrap
-     *  @param J range of the Cols to wrap
+     *  @param I,J range of the rows and columns to wrap
      **/
     Array2D( Type** q, Range const& I, Range const& J) : Base(q, I, J) {}
     /** destructor. */
-    ~Array2D() {}
-    /** operator = : overwrite the CArray with the Right hand side T.
+    inline ~Array2D() {}
+    /** operator = : overwrite the Array2D with the right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2D& operator=(Rhs const& T) { return LowBase::operator=(T);}
+    inline Array2D& operator=( ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** overwrite the Array2D with T.
      *  @param T the container to copy
      **/
@@ -180,10 +178,9 @@ class Array2D : public IArray2D< Array2D<Type> >
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2D& operator=(Type const& v) { return LowBase::setValue(v);}
+    inline Array2D& operator=( Type const& v) { return LowBase::setValue(v);}
     /** Swapping the pos1 row and the pos2 row.
-     *  @param pos1 position of the first row
-     *  @param pos2 position of the second row
+     *  @param pos1,pos2 position of the rows to swap
      **/
     void swapRows( int const& pos1, int const& pos2)
     {
@@ -191,15 +188,14 @@ class Array2D : public IArray2D< Array2D<Type> >
       // check conditions
       if (this->beginRows() > pos1)
       STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,beginRows()>pos1);
-      if (this->lastIdxRows() < pos1)
-      STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,lastIdxRows()<pos1);
+      if (this->endRows() <= pos1)
+      STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,endRows()<=pos1);
       if (this->beginRows() > pos2)
       STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,beginRows()>pos2);
-      if (this->lastIdxRows() < pos2)
-      STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,lastIdxRows() < pos2);
+      if (this->endRows() <= pos2)
+      STKOUT_OF_RANGE_2ARG(Array2D::swapRows,pos1, pos2,endRows()<=pos2);
 #endif
-      // swap
-      for (int j=this->beginCols(); j<=this->lastIdxCols(); j++)
+      for (int j=this->beginCols(); j<this->endCols(); j++)
       { std::swap(this->elt(pos1, j), this->elt(pos2, j));}
     }
 };

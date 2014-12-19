@@ -43,6 +43,11 @@
 #' @rdname rtkppFlags
 #' @keywords internal
 CxxFlags <- function(cpp11=FALSE) { cat(.rtkppCxxFlags(cpp11=cpp11)) }
+#-----------------------------------------------------------------------
+#' CppFlags defaults for the rtkpp
+#' @rdname rtkppFlags
+#' @keywords internal
+CppFlags <- function() { cat(.rtkppCppFlags()) }
 #' LdFlags defaults for the rtkpp package
 #' @rdname rtkppFlags
 #' @keywords internal
@@ -68,6 +73,13 @@ LdFlags <- function() { cat(.rtkppLdFlags()) }
   paste("-DIS_RTKPP_LIB -DSTKUSELAPACK -I", path1, " -I", path2, if (cpp11) " -std=c++11 " else "", sep="")
 }
 
+# Provide internal STK++ macros
+# @keywords internal
+.rtkppCppFlags <- function(cpp11=FALSE)
+{
+  paste("-DIS_RTKPP_LIB -DSTKUSELAPACK", sep="")
+}
+
 # Provide linker flags -- i.e. /path/to/rtkpp.so
 ###########################
 # Adapted from Rcpp package
@@ -81,7 +93,7 @@ LdFlags <- function() { cat(.rtkppLdFlags()) }
     path <- .rtkpp.system.file("lib",.Platform$r_arch)
   }
   else { path <- .rtkpp.system.file("lib") }
-  paste( path, "/libSTKpp.a", sep="") 
+  paste( path, "/libSTKpp.a", sep="")
 }
 
 # Transform a path for passing to the build system on the command line.

@@ -53,7 +53,10 @@ template<typename> class Array2DVector;
   *
   * A Vector is a column oriented 1D container of Real.
   **/
-typedef Array2DVector<Real> Vector;
+typedef Array2DVector<Real>   Vector;
+typedef Array2DVector<Real>   VectorX;
+typedef Array2DVector<double> VectorXd;
+typedef Array2DVector<int>    VectorXi;
 
 namespace hidden
 {
@@ -63,10 +66,10 @@ namespace hidden
 template<class _Type>
 struct Traits< Array2DVector<_Type> >
 {
-  typedef _Type          Type;
-  typedef Array2DPoint<_Type> Row;
+  typedef _Type                Type;
+  typedef Array2DPoint<_Type>  Row;
   typedef Array2DVector<_Type> Col;
-  typedef Array2DPoint<_Type> SubRow;
+  typedef Array2DPoint<_Type>  SubRow;
   typedef Array2DVector<_Type> SubCol;
   typedef Array2DVector<_Type> SubArray;
   typedef Array2DVector<_Type> SubVector;
@@ -96,12 +99,12 @@ template<class Type>
 class Array2DVector : public IArray2D< Array2DVector<Type> >
 {
   public:
-    typedef Array2DVector<Type> Row;
-    typedef Array2DVector<Type> Col;
-    typedef Array2DVector<Type> SubRow;
-    typedef Array2DVector<Type> SubCol;
-    typedef Array2DVector<Type> SubArray;
-    typedef Array2DVector<Type> SubVector;
+    typedef typename hidden::Traits<Array2DVector<Type> >::Row Row;
+    typedef typename hidden::Traits<Array2DVector<Type> >::Col Col;
+    typedef typename hidden::Traits<Array2DVector<Type> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DVector<Type> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DVector<Type> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DVector<Type> >::SubArray SubArray;
 
     enum
     {
@@ -203,11 +206,11 @@ class Array2DVector : public IArray2D< Array2DVector<Type> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DVector& operator=(Rhs const& T) { return LowBase::operator=(T);}
+    inline Array2DVector& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
      **/
-    inline Array2DVector& operator=(const Array2DVector &T) { return LowBase::assign(T);}
+    inline Array2DVector& operator=(Array2DVector const& T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/

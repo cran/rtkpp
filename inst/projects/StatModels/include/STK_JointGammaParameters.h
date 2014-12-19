@@ -70,21 +70,16 @@ struct JointGammaParameters: public IMultiParameters<JointGammaParameters>
   /** @return the j-th scale value */
   inline Real scale(int j) const {return scale_[j];}
   /** resize the set of parameter
-   *  @param size range of the parameters
+   *  @param range range of the parameters
    **/
-  inline void resizeImpl(Range const& size)
+  inline void resizeImpl(Range const& range)
   {
-    shape_.resize(size); shape_ = 1.;
-    scale_.resize(size); scale_ = 1.;
-    mean_.resize(size); mean_ = 1.;
-    meanLog_.resize(size); meanLog_ = 0.;
-    variance_.resize(size); variance_ = 1.;
+    shape_.resize(range); shape_ = 1.;
+    scale_.resize(range); scale_ = 1.;
+    mean_.resize(range); mean_ = 1.;
+    meanLog_.resize(range); meanLog_ = 0.;
+    variance_.resize(range); variance_ = 1.;
   }
-  /** print the parameters shape_ and scale_.
-   *  @param os the output stream for the parameters
-   **/
-  inline void printImpl(ostream &os)
-   { os << shape_ << scale_ << _T("\n");}
   /** vector of the shape */
   Array2DPoint<Real> shape_;
   /** vector of the scale */

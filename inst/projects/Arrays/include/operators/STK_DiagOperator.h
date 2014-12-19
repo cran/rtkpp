@@ -37,7 +37,7 @@
 
 
 #include "Sdk/include/STK_StaticAssert.h"
-#include "STK_SliceOperators.h"
+#include "STK_SlicingOperators.h"
 
 namespace STK
 {
@@ -60,8 +60,8 @@ struct Traits< DiagOperator <Lhs> >
   {
     structure_ = Arrays::diagonal_,
     orient_    = Lhs::orient_,
-    sizeRows_  = Lhs::sizeCols_,
-    sizeCols_  = Lhs::sizeRows_,
+    sizeRows_  = ((Lhs::sizeRows_ != UnknownSize)&&(Lhs::sizeRows_!= 1)) ?  Lhs::sizeRows_  : UnknownSize,
+    sizeCols_  = ((Lhs::sizeCols_ != UnknownSize)&&(Lhs::sizeCols_!= 1)) ?  Lhs::sizeCols_  : UnknownSize,
     storage_   = Lhs::storage_
   };
 };
@@ -100,10 +100,19 @@ class DiagOperator  : public DiagOperatorBase< Lhs >, public TRef<1>
         orient_    = hidden::Traits< DiagOperator<Lhs> >::orient_,
         sizeRows_  = hidden::Traits< DiagOperator<Lhs> >::sizeRows_,
         sizeCols_  = hidden::Traits< DiagOperator<Lhs> >::sizeCols_,
-        storage_   = hidden::Traits< DiagOperator<Lhs> >::storage_
+        storage_   = hidden::Traits< DiagOperator<Lhs> >::storage_,
+        // this is safe as we can use diag operator only on vectors/points
+        size_      = (sizeRows_ != UnknownSize) ? sizeRows_ : sizeCols_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<size_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<size_> ColRange;
     /** Constructor */
-    inline DiagOperator( Lhs const& lhs) : Base(), lhs_(lhs)
+    inline DiagOperator( Lhs const& lhs)
+                       : Base(), lhs_(lhs)
+                       , rows_(lhs_.beginRows(), (size_ != UnknownSize) ? size_ : lhs_.size())
+                       , cols_(lhs_.beginCols(), (size_ != UnknownSize) ? size_ : lhs_.size())
     {
       STK_STATICASSERT_VECTOR_ONLY(Lhs);
     }
@@ -117,28 +126,30 @@ class DiagOperator  : public DiagOperatorBase< Lhs >, public TRef<1>
     inline int const sizeImpl() const { return lhs_.size();}
 
     /**  @return the range of the rows */
-    inline Range const rows() const { return lhs_.range();}
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return lhs_.begin();}
+    inline int const beginRowsImpl() const { return rows_.begin();}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return lhs_.end();}
+    inline int const endRowsImpl() const { return rows_.end();}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return lhs_.size();}
+    inline int const sizeRowsImpl() const { return rows_.size();}
 
     /** @return the range of the Columns */
-    inline Range const cols() const { return lhs_.range();}
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return lhs_.begin();}
+    inline int const beginColsImpl() const { return cols_.begin();}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return lhs_.end();}
+    inline int const endColsImpl() const { return cols_.end();}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return lhs_.size();}
+    inline int const sizeColsImpl() const { return cols_.size();}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
 
   protected:
     Lhs const& lhs_;
+    RowRange rows_;
+    ColRange cols_;
 };
 
 /** @ingroup Arrays

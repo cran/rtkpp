@@ -28,13 +28,13 @@
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
-/** @file RcppVector.h
+/** @file STK_RVector.h
  *  @brief In this file we define the wrapper of the the Rcpp vectors.
  **/
 
 
-#ifndef RCPPVECTOR_H
-#define RCPPVECTOR_H
+#ifndef STK_RVECTOR_H
+#define STK_RVECTOR_H
 
 #include "../projects/Arrays/include/STK_ExprBaseVisitor.h"
 #include "../projects/Arrays/include/STK_ExprBaseDot.h"
@@ -48,7 +48,7 @@ namespace STK
 {
 
 // forward declaration
-template <typename Type > class RcppVector;
+template <typename Type > class RVector;
 
 namespace hidden
 {
@@ -57,17 +57,17 @@ namespace hidden
  *  @brief Specialization of the Traits class for the  STK::IntegerVector class.
  **/
 template<typename Type_>
-struct Traits< RcppVector<Type_> >
+struct Traits< RVector<Type_> >
 {
   private:
     class Void {};
   public:
     typedef Type_ Type;
-    typedef RowOperator< RcppVector<Type_> > Row;
-    typedef ColOperator< RcppVector<Type_> > Col;
-    typedef RowOperator< RcppMatrix<Type_> > SubRow;
-    typedef ColOperator< RcppMatrix<Type_> > SubCol;
-    typedef SubOperator< RcppMatrix<Type_> > SubVector;
+    typedef RowOperator< RVector<Type_> > Row;
+    typedef ColOperator< RVector<Type_> > Col;
+    typedef RowOperator< RMatrix<Type_> > SubRow;
+    typedef ColOperator< RMatrix<Type_> > SubCol;
+    typedef SubOperator< RMatrix<Type_> > SubVector;
     typedef Void SubArray;
 
     enum
@@ -83,32 +83,48 @@ struct Traits< RcppVector<Type_> >
 } // namespace hidden
 
 template <typename Type_>
-class RcppVector : public ArrayBase< RcppVector<Type_> >
+class RVector : public ArrayBase< RVector<Type_> >
 {
   public:
-    typedef typename hidden::Traits<RcppVector >::Type Type;
-    typedef typename hidden::Traits<RcppVector >::Row Row;
-    typedef typename hidden::Traits<RcppVector >::Col Col;
-    typedef typename hidden::Traits<RcppVector >::SubRow SubRow;
-    typedef typename hidden::Traits<RcppVector >::SubCol SubCol;
-    typedef typename hidden::Traits<RcppVector >::SubVector SubVector;
+    typedef typename hidden::Traits<RVector >::Type Type;
+    typedef typename hidden::Traits<RVector >::Row Row;
+    typedef typename hidden::Traits<RVector >::Col Col;
+    typedef typename hidden::Traits<RVector >::SubRow SubRow;
+    typedef typename hidden::Traits<RVector >::SubCol SubCol;
+    typedef typename hidden::Traits<RVector >::SubVector SubVector;
 
     enum
     {
+      structure_ = hidden::Traits<RVector<Type_> >::structure_,
+      orient_    = hidden::Traits<RVector<Type_> >::orient_,
+      sizeRows_  = hidden::Traits<RVector<Type_> >::sizeRows_,
+      sizeCols_  = hidden::Traits<RVector<Type_> >::sizeCols_,
+      storage_   = hidden::Traits<RVector<Type_> >::storage_,
+
       Rtype_ = hidden::RcppTraits<Type_>::Rtype_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
+
+    /** Default Constructor. */
+    inline RVector() : vector_(),rows_(), cols_(0,1) {}
     /** Constructor */
-    inline RcppVector(Rcpp::Vector<Rtype_> vector) : vector_(vector) {}
+    inline RVector (Rcpp::Vector<Rtype_> vector)
+                      : vector_(vector), rows_(), cols_(0,1) {}
     /** Constructor with SEXP. */
-    inline RcppVector(SEXP robj) : vector_(robj) {}
+    inline RVector( SEXP robj)
+                     : vector_(robj), rows_(0, vector_.size()), cols_(0,1) {}
     /** set Vector .
      *  @param vector the Rcpp matrix to wrap
      *  @note cannot be passed as const& due to a bug from the (old versions of) Rcpp side
      * */
-    inline void setVector( Rcpp::Vector<Rtype_> vector) { vector_ = vector;}
+    inline void setVector( Rcpp::Vector<Rtype_> vector)
+    { vector_ = vector; rows_ = RowRange(0, vector_.size());}
 
     /** @return the Vertical range */
-    inline Range rows() const { return Range(0, vector_.size());}
+    inline RowRange const& rowsImpl() const { return rows_;}
     /** @return the index of the first row */
     inline int beginRowsImpl() const { return 0;}
     /** @return the ending index of the rows */
@@ -117,7 +133,7 @@ class RcppVector : public ArrayBase< RcppVector<Type_> >
     inline int sizeRowsImpl() const { return vector_.size();}
 
     /**@return the Horizontal range */
-    inline Range cols() const { return Range(0,1);}
+    inline ColRange const& colsImpl() const { return cols_;}
     /** @return the index of the first column */
     inline int beginColsImpl() const { return 0;}
     /**  @return the ending index of the columns */
@@ -134,29 +150,31 @@ class RcppVector : public ArrayBase< RcppVector<Type_> >
     /** @return the ith element of the operator
      *  @param i index of the ith element
      **/
-    inline Type const elt1Impl(int i) const { return (vector_[i]);}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    inline Type const& elt1Impl(int i) const { return static_cast<Type const&>(vector_[i]);}
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param T the container to copy
      **/
-    inline RcppVector& operator=( RcppVector const& T)
+    inline RVector& operator=( RVector const& T)
     { vector_ = T.vector_; return *this;}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param T the container to transfer
      **/
     template<class OtherType>
-    inline RcppVector& operator=( RcppVector<OtherType> const& T)
+    inline RVector& operator=( RVector<OtherType> const& T)
     { vector_ = T.vector_; return *this;}
-    /** overwrite the RcppMatrix with T, using Rcpp operator=.
+    /** overwrite the RMatrix with T, using Rcpp operator=.
      *  @param vector the container to copy
      **/
     template<int OtherRtype>
-    inline RcppVector& operator=( Rcpp::Vector<OtherRtype> const& vector)
+    inline RVector& operator=( Rcpp::Vector<OtherRtype> const& vector)
     { vector_ = vector; return *this;}
   private:
     Rcpp::Vector<Rtype_> vector_;
+    RowRange rows_;
+    ColRange cols_;
 };
 
 } // namespace STK
 
 
-#endif /* RCPPVECTOR_H */
+#endif /* STK_RVECTOR_H */

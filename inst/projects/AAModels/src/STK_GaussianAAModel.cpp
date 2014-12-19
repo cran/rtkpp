@@ -54,9 +54,9 @@ namespace STK
 /* Constructor.
  *  @param p_workData a pointer on the data set to process
  **/
-GaussianAAModel::GaussianAAModel( Matrix* p_workData)
+GaussianAAModel::GaussianAAModel( ArrayXX* p_workData)
                                 : IAAModel(p_workData)
-                                , IStatModel<Matrix>(p_workData)
+                                , IStatModel<ArrayXX>(p_workData)
                                 , projectedCovariance_()
                                 , residualCovariance_()
                                 , residualVariance_(0.)
@@ -65,9 +65,9 @@ GaussianAAModel::GaussianAAModel( Matrix* p_workData)
 { }
 
 // constructor
-GaussianAAModel::GaussianAAModel( Matrix& workData)
+GaussianAAModel::GaussianAAModel( ArrayXX& workData)
                                 : IAAModel(workData)
-                                , IStatModel<Matrix>(workData)
+                                , IStatModel<ArrayXX>(workData)
                                 , projectedCovariance_()
                                 , residualCovariance_()
                                 , residualVariance_(0.)
@@ -80,12 +80,12 @@ GaussianAAModel::~GaussianAAModel()
 {}
 
 /* update the container when the data set is modified. **/
-void GaussianAAModel::setWorkData(Matrix& workData)
+void GaussianAAModel::setWorkData(ArrayXX& workData)
 {
   // update data set and flags for the IAAModel part
   IAAModel::setWorkData(workData);
   // set dimensions to new size for the IStatModel part
-  IStatModel<Matrix>::setData(workData);
+  IStatModel<ArrayXX>::setData(workData);
 }
 
 /* compute the ln-likelihood of the model */
@@ -129,9 +129,9 @@ void GaussianAAModel::computeProjectedLnLikelihood()
   Range cols = Range(p_reduced_->beginCols(), dim());
 
   // create a reference with the first columns of the reduced data
-  Matrix reducedData(*p_reduced_, p_reduced_->rows(), cols);
+  ArrayXX reducedData(*p_reduced_, p_reduced_->rows(), cols);
   // create a reference with the first columns of the reduced data
-  MatrixSquare reducedCovariance(projectedCovariance(), cols);
+  ArraySquareX reducedCovariance(projectedCovariance(), cols);
 
   // compute first part of the ln-likelihood
   Point mean(cols, 0.);
