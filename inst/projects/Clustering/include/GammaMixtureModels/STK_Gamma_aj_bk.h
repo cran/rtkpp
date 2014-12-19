@@ -80,7 +80,7 @@ class Gamma_aj_bk : public GammaBase< Gamma_aj_bk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -105,7 +105,7 @@ class Gamma_aj_bk : public GammaBase< Gamma_aj_bk<Array> >
       shape_.resize(p_data()->cols());
       shape_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_shape_ = &shape_;}
+      { param(k).p_shape_ = &shape_;}
       stat_shape_.initialize(p_data()->cols());
     }
     /** Store the intermediate results of the Mixture.
@@ -159,13 +159,13 @@ void Gamma_aj_bk<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      value += p_param(k)->tk_ * mean*mean/variance;
+      value += param(k).tk_ * mean*mean/variance;
     }
     shape_[j] = Law::Exponential::rand(value/(this->nbSample()));
   }
   // simulates bk
   for (int k= baseIdx; k < components().end(); ++k)
-  { p_param(k)->scale_ = Law::Exponential::rand((this->variancek(k)/this->meank(k)));}
+  { param(k).scale_ = Law::Exponential::rand((this->variancek(k)/this->meank(k)));}
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_aj_bk<Array>::randomInit done\n");
   this->writeParameters(stk_cout);
@@ -191,8 +191,8 @@ bool Gamma_aj_bk<Array>::mStep()
       for (int k= baseIdx; k < components().end(); ++k)
       {
         Real mean = meanjk(j,k), variance = variancejk(j,k);
-        y  += p_param(k)->tk_ * (p_param(k)->meanLog_[j] - std::log(p_param(k)->scale_));
-        x0 += p_param(k)->tk_ * mean*mean/variance;
+        y  += param(k).tk_ * (param(k).meanLog_[j] - std::log(param(k).scale_));
+        x0 += param(k).tk_ * mean*mean/variance;
       }
       y /= this->nbSample();
       x0/= this->nbSample();
@@ -218,7 +218,7 @@ bool Gamma_aj_bk<Array>::mStep()
       Real sum = shape_.sum();
       for (int k= baseIdx; k < components().end(); ++k)
       { // update bk
-        p_param(k)->scale_ = p_param(k)->mean_.sum()/sum;
+        param(k).scale_ = param(k).mean_.sum()/sum;
       }
     }
   // check convergence

@@ -135,7 +135,7 @@ void DataFrame::shift(int const& cbeg)
 {
   // list1D shift
   Base::shift(cbeg);
-  // ICAllocatorBase shift for Col
+  // IArrayBase shift for Col
   shiftBeginCols(cbeg);
 }
 
@@ -168,7 +168,7 @@ void DataFrame::popBackCols(int const& n)
     if (elt(j)) delete elt(j);
   // popBack() of List1D
   Base::popBack(n);
-  // update ICAllocatorBase
+  // update IArrayBase
   decLastIdxCols(n);
   // if it was the last elt, free mem
   if (this->sizeCols() == 0) freeMem();
@@ -379,7 +379,7 @@ void DataFrame::pushBackCols(int const& n)
   if (n <= 0) return;
   // add n columns to list1D
   insert(Range(lastIdx()+1, n), 0);
-  // update ICAllocatorBase
+  // update IArrayBase
   incLastIdxCols(n);
 }
 
@@ -394,7 +394,7 @@ void DataFrame::insertCols( int pos, int const& n)
   { STKOUT_OF_RANGE_2ARG(Dataframe::insertCols,pos, n,pos>lastIdx());}
   // insert n elements in list1D
   insert(Range(pos, n), 0);
-  // update ICAllocatorBase
+  // update IArrayBase
   incLastIdxCols(n);
 }
 

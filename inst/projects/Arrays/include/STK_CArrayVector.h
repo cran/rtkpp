@@ -77,8 +77,10 @@ template<typename Type_, int SizeRows_, bool Orient_>
 struct Traits< CArrayVector<Type_, SizeRows_, Orient_> >
 {
     typedef CArrayNumber<Type_, Orient_> Number;
-    typedef CArrayNumber<Type_, Orient_> Row;
-    typedef CArrayNumber<Type_, Orient_> SubRow;
+//    typedef CArrayNumber<Type_, Orient_> Row;
+//    typedef CArrayNumber<Type_, Orient_> SubRow;
+    typedef CArrayPoint<Type_, 1, Orient_> Row;
+    typedef CArrayPoint<Type_, 1, Orient_> SubRow;
 
     typedef CArrayVector<Type_, SizeRows_, Orient_> Col;
     typedef CArrayVector<Type_, UnknownSize, Orient_> SubCol;
@@ -86,10 +88,10 @@ struct Traits< CArrayVector<Type_, SizeRows_, Orient_> >
     typedef typename  If<(SizeRows_ == 1), Number, SubCol>::Result SubVector;
     typedef typename  If<(SizeRows_ == 1), Number, SubCol>::Result SubArray;
     // The CAllocator have to have the same structure than the CArray
-    typedef CAllocator<Type_, Arrays::vector_, SizeRows_, 1, Orient_> Allocator;
+    typedef CAllocator<Type_, SizeRows_, 1, Orient_> Allocator;
 
-    typedef Type_ Type;
-
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::vector_,
@@ -105,12 +107,16 @@ struct Traits< CArrayVector<Type_, SizeRows_, Orient_> >
 /** @ingroup Arrays
  * @brief specialization for the vector case.
  */
-template <typename Type, int SizeRows_, bool Orient_>
-class CArrayVector : public ICArray < CArrayVector<Type, SizeRows_, Orient_> >
+template <typename Type_, int SizeRows_, bool Orient_>
+class CArrayVector : public ICArray < CArrayVector<Type_, SizeRows_, Orient_> >
 {
   public:
-    typedef ICArray < CArrayVector<Type, SizeRows_, Orient_> > Base;
-    typedef ArrayBase < CArrayVector<Type, SizeRows_, Orient_> > LowBase;
+    typedef ICArray < CArrayVector<Type_, SizeRows_, Orient_> > Base;
+    typedef ArrayBase < CArrayVector<Type_, SizeRows_, Orient_> > LowBase;
+
+    typedef typename hidden::Traits< CArrayVector<Type_, SizeRows_, Orient_> >::Type Type;
+    typedef typename hidden::Traits< CArrayVector<Type_, SizeRows_, Orient_> >::ReturnType ReturnType;
+
     enum
     {
       structure_ = Arrays::vector_,

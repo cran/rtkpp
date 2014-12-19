@@ -42,17 +42,13 @@ namespace STK
 
 StrategyFacade::~StrategyFacade() { if (p_strategy_) delete p_strategy_;}
 
-void StrategyFacade::createSimpleStrategy( Clust::initType init, int nbTrialInInit, Clust::algoType initAlgo, int nbInitIter, Real initEpsilon
+void StrategyFacade::createSimpleStrategy( Clust::initType init, int nbTryInInit, Clust::algoType initAlgo, int nbInitIter, Real initEpsilon
                                         , int nbTry, Clust::algoType algo, int nbIter, Real epsilon)
 {
-  SimpleStrategyParam* p_param = new SimpleStrategyParam();
-  p_param->p_algo_ = Clust::createAlgo(algo, nbIter, epsilon);
+  IMixtureInit* p_init = Clust::createInit(init, nbTryInInit, initAlgo, nbInitIter, initEpsilon);
+  IMixtureAlgo* p_algo = Clust::createAlgo(algo, nbIter, epsilon);
 
-  SimpleStrategy* p_strategy = new SimpleStrategy(p_model_);
-  p_strategy->setNbTry(nbTry);
-  p_strategy->setParam(p_param);
-  p_strategy_ = p_strategy;
-  p_strategy_->setMixtureInit(Clust::createInit(init, nbTrialInInit, initAlgo, nbInitIter, initEpsilon));
+  p_strategy_ = Clust::createSimpleStrategy(p_model_, nbTry, p_init, p_algo);
 }
 
 /* create a FullStrategy */
@@ -61,9 +57,9 @@ void StrategyFacade::createFullStrategy( Clust::initType init, int nbTryInInit, 
                        , Clust::algoType shortAlgo, int nbShortIter, Real shortEpsilon
                        , Clust::algoType longAlgo, int nblongIter, Real longEpsilon)
 {
+  IMixtureInit* p_init = Clust::createInit(init, nbTryInInit, initAlgo, nbInitIter, initEpsilon);
   IMixtureAlgo* p_shortAlgo = Clust::createAlgo(shortAlgo, nbShortIter, shortEpsilon);
   IMixtureAlgo* p_longAlgo = Clust::createAlgo(longAlgo, nblongIter, longEpsilon);
-  IMixtureInit* p_init = Clust::createInit(init, nbTryInInit, initAlgo, nbInitIter, initEpsilon);
 
   p_strategy_ = Clust::createFullStrategy(p_model_, nbTry, nbInitRun, p_init, nbShortRun, p_shortAlgo, p_longAlgo);
 }

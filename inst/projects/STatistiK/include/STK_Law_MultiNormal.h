@@ -143,7 +143,7 @@ class MultiNormal: public IMultiLaw<RowVector>
       { invEigenvalues_[j] = 1./decomp_.eigenValues()[j];}
       for (int j=end; j< mu_.end(); j++) { invEigenvalues_[j] = 0.;}
 
-      squareroot_ = decomp_.rotation() * decomp_.eigenValues().sqrt().diag() * decomp_.rotation().transpose();
+      squareroot_ = decomp_.rotation() * decomp_.eigenValues().sqrt().diagonalize() * decomp_.rotation().transpose();
     }
     /** @brief compute the probability distribution function (density) of the
      * multivariate normal law

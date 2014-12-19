@@ -67,6 +67,17 @@ class GammaParametersBase : public IRecursiveTemplate<Parameters>
     /** Destructor */
     inline ~GammaParametersBase() {}
   public:
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline GammaParametersBase& operator=( GammaParametersBase const& other)
+    {
+      tk_ = other.tk_;
+      mean_ = other.mean_;
+      meanLog_ = other.meanLog_;
+      variance_ = other.variance_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shape(int j) const {return this->asDerived().shapeImpl(j);}
     /** @return the j-th scale value */
@@ -113,6 +124,18 @@ class Gamma_ajk_bjk_Parameters: public GammaParametersBase<Gamma_ajk_bjk_Paramet
     {}
     /** destructor */
     inline ~Gamma_ajk_bjk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ajk_bjk_Parameters& operator=( Gamma_ajk_bjk_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      scale_ = other.scale_;
+      stat_shape_ = other.stat_shape_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_[j];}
     /** @return the j-th scale value */
@@ -180,6 +203,18 @@ class Gamma_ajk_bk_Parameters: public GammaParametersBase<Gamma_ajk_bk_Parameter
     {}
     /** destructor */
     inline ~Gamma_ajk_bk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ajk_bk_Parameters& operator=( Gamma_ajk_bk_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      scale_ = other.scale_;
+      stat_shape_ = other.stat_shape_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_[j];}
     /** @return the j-th scale value */
@@ -245,6 +280,17 @@ class Gamma_ajk_bj_Parameters: public GammaParametersBase<Gamma_ajk_bj_Parameter
     {}
     /** destructor */
     inline ~Gamma_ajk_bj_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ajk_bj_Parameters& operator=( Gamma_ajk_bj_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      p_scale_ = other.p_scale_;
+      stat_shape_ = other.stat_shape_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_[j];}
     /** @return the j-th scale value */
@@ -304,6 +350,17 @@ class Gamma_ajk_b_Parameters: public GammaParametersBase<Gamma_ajk_b_Parameters>
     {}
     /** destructor */
     inline~Gamma_ajk_b_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ajk_b_Parameters& operator=( Gamma_ajk_b_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      p_scale_ = other.p_scale_;
+      stat_shape_ = other.stat_shape_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_[j];}
     /** @return the j-th scale value */
@@ -364,6 +421,18 @@ class Gamma_ak_bjk_Parameters: public GammaParametersBase<Gamma_ak_bjk_Parameter
     {}
     /** destructor */
     inline ~Gamma_ak_bjk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ak_bjk_Parameters& operator=( Gamma_ak_bjk_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      scale_ = other.scale_;
+      stat_shape_ = other.stat_shape_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_;}
     /** @return the j-th scale value */
@@ -430,6 +499,18 @@ class Gamma_ak_bk_Parameters: public GammaParametersBase<Gamma_ak_bk_Parameters>
     inline ~Gamma_ak_bk_Parameters() {}
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_;}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ak_bk_Parameters& operator=( Gamma_ak_bk_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      scale_ = other.scale_;
+      stat_shape_ = other.stat_shape_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th scale value */
     inline Real scaleImpl(int j) const {return scale_;}
     /** resize the parameters.
@@ -489,6 +570,17 @@ class Gamma_ak_bj_Parameters: public GammaParametersBase<Gamma_ak_bj_Parameters>
     {}
     /** destructor */
     inline ~Gamma_ak_bj_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ak_bj_Parameters& operator=( Gamma_ak_bj_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      p_scale_ = other.p_scale_;
+      stat_shape_ = other.stat_shape_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_;}
     /** @return the j-th scale value */
@@ -546,6 +638,17 @@ class Gamma_ak_b_Parameters: public GammaParametersBase<Gamma_ak_b_Parameters>
     {}
     /** destructor */
     inline ~Gamma_ak_b_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_ak_b_Parameters& operator=( Gamma_ak_b_Parameters const& other)
+    {
+      Base::operator =(other);
+      shape_ = other.shape_;
+      p_scale_ = other.p_scale_;
+      stat_shape_ = other.stat_shape_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return shape_;}
     /** @return the j-th scale value */
@@ -603,6 +706,17 @@ class Gamma_aj_bjk_Parameters: public GammaParametersBase<Gamma_aj_bjk_Parameter
     {}
     /** destructor */
     inline~Gamma_aj_bjk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_aj_bjk_Parameters& operator=( Gamma_aj_bjk_Parameters const& other)
+    {
+      Base::operator =(other);
+      p_shape_ = other.p_shape_;
+      scale_ = other.scale_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return p_shape_->elt(j);}
     /** @return the j-th scale value */
@@ -662,6 +776,17 @@ class Gamma_aj_bk_Parameters: public GammaParametersBase<Gamma_aj_bk_Parameters>
     {}
     /** destructor */
     inline ~Gamma_aj_bk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_aj_bk_Parameters& operator=( Gamma_aj_bk_Parameters const& other)
+    {
+      Base::operator =(other);
+      p_shape_ = other.p_shape_;
+      scale_ = other.scale_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return p_shape_->elt(j);}
     /** @return the j-th scale value */
@@ -719,6 +844,17 @@ class Gamma_a_bjk_Parameters: public GammaParametersBase<Gamma_a_bjk_Parameters>
     {}
     /** destructor */
     inline~Gamma_a_bjk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_a_bjk_Parameters& operator=( Gamma_a_bjk_Parameters const& other)
+    {
+      Base::operator =(other);
+      p_shape_ = other.p_shape_;
+      scale_ = other.scale_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return *p_shape_;}
     /** @return the j-th scale value */
@@ -778,6 +914,17 @@ class Gamma_a_bk_Parameters: public GammaParametersBase<Gamma_a_bk_Parameters>
     {}
     /** destructor */
     inline ~Gamma_a_bk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Gamma_a_bk_Parameters& operator=( Gamma_a_bk_Parameters const& other)
+    {
+      Base::operator =(other);
+      p_shape_ = other.p_shape_;
+      scale_ = other.scale_;
+      stat_scale_ = other.stat_scale_;
+      return *this;
+    }
     /** @return the j-th shape value */
     inline Real shapeImpl(int j) const {return *p_shape_;}
     /** @return the j-th scale value */

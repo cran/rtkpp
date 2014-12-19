@@ -88,7 +88,7 @@ class IDataHandler
      *  @return @c true if there exists an idData in the InfoMap, @c false
      *  otherwise.
      **/
-    bool getIdModel(std::string const& idData, std::string& idModel) const;
+    bool getIdModelName(std::string const& idData, std::string& idModel) const;
     /** @return the number of sample (the number of rows of the data) */
     virtual int nbSample() const =0;
     /** @return the number of variables (the number of columns of the data) */

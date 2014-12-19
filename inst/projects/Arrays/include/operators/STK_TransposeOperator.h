@@ -86,9 +86,8 @@ namespace hidden
 template<typename Lhs>
 struct Traits< TransposeOperator <Lhs> >
 {
-    typedef RowOperator<TransposeOperator < Lhs> > Row;
-    typedef ColOperator<TransposeOperator < Lhs> > Col;
-  typedef typename Lhs::Type Type;
+  typedef RowOperator<TransposeOperator < Lhs> > Row;
+  typedef ColOperator<TransposeOperator < Lhs> > Col;
   enum
   {
     structure_ = TransposeTraits<Lhs::structure_>::structure_,
@@ -97,6 +96,8 @@ struct Traits< TransposeOperator <Lhs> >
     sizeCols_  = Lhs::sizeRows_,
     storage_   = Lhs::storage_
   };
+  typedef typename Lhs::Type Type;
+  typedef typename Lhs::ReturnType ReturnType;
 };
 
 } // end namespace hidden
@@ -145,20 +146,20 @@ class TransposeOperator  : public TransposeOperatorBase< Lhs >, public TRef<1>
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return lhs_.cols();}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return lhs_.beginCols();}
+    inline int beginRowsImpl() const { return lhs_.beginCols();}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return lhs_.endCols();}
+    inline int endRowsImpl() const { return lhs_.endCols();}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return lhs_.sizeCols();}
+    inline int sizeRowsImpl() const { return lhs_.sizeCols();}
 
     /** @return the range of the Columns */
     inline ColRange const& colsImpl() const { return lhs_.rows();}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return lhs_.beginRows();}
+    inline int beginColsImpl() const { return lhs_.beginRows();}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return lhs_.endRows();}
+    inline int endColsImpl() const { return lhs_.endRows();}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return lhs_.sizeRows();}
+    inline int sizeColsImpl() const { return lhs_.sizeRows();}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
@@ -171,25 +172,27 @@ class TransposeOperator  : public TransposeOperatorBase< Lhs >, public TRef<1>
   * @brief implement the access to the elements in the (2D) general case.
   **/
 template< typename Lhs>
-class TransposeOperatorBase : public ExprBase< TransposeOperator< Lhs> >
+class TransposeOperatorBase : public ExprBase< TransposeOperator<Lhs> >
 {
   public:
-    typedef typename hidden::Traits< TransposeOperator<Lhs> >::Type Type;
-    typedef ExprBase< TransposeOperator< Lhs> > Base;
+    typedef TransposeOperator<Lhs> Derived;
+    typedef ExprBase< Derived > Base;
+    typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
     /** constructor. */
     inline TransposeOperatorBase() : Base() {}
     /** @return the element (i,j) of the transposed expression.
      *  @param i, j index of the row and of the column
      **/
-    inline Type const elt2Impl(int i, int j) const
+    inline ReturnType elt2Impl(int i, int j) const
     { return (this->asDerived().lhs().elt(j, i));}
     /** @return the element ith element of the transposed expression
      *  @param i index of the ith element
      **/
-    inline Type const elt1Impl(int i) const
+    inline ReturnType elt1Impl(int i) const
     { return (this->asDerived().lhs().elt(i));}
     /** accesses to the element of the transposed expression */
-    inline Type const elt0Impl() const
+    inline ReturnType elt0Impl() const
     { return (this->asDerived().lhs().elt());}
 };
 

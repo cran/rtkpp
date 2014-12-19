@@ -52,38 +52,37 @@ template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSi
 template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSize> class UpperTriangular;
 template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSize> class LowerTriangular;
 
+typedef Vector<Real, UnknownSize> ConstVectorX;
+typedef Vector<Real, 3> ConstVector3;
+typedef Vector<Real, 2> ConstVector2;
+typedef Vector<double, UnknownSize> ConstVectorXd;
+typedef Vector<double, 3> ConstVector3d;
+typedef Vector<double, 2> ConstVector2d;
+typedef Vector<int, UnknownSize> ConstVectorXi;
+typedef Vector<int, 3> ConstVector3i;
+typedef Vector<int, 2> ConstVector2i;
 
+typedef Point<Real, UnknownSize> ConstPointX;
+typedef Point<Real, 3> ConstPoint3;
+typedef Point<Real, 2> ConstPoint2;
+typedef Point<double, UnknownSize> ConstPointXd;
+typedef Point<double, 3> ConstPoint3d;
+typedef Point<double, 2> ConstPoint2d;
+typedef Point<int, UnknownSize> ConstPointXi;
+typedef Point<int, 3> ConstPoint3i;
+typedef Point<int, 2> ConstPoint2i;
+
+typedef Point<Real, UnknownSize> ConstPointX;
+typedef Point<Real, 3> ConstPoint3;
+typedef Point<Real, 2> ConstPoint2;
+typedef Point<double, UnknownSize> ConstPointXd;
+typedef Point<double, 3> ConstPoint3d;
+typedef Point<double, 2> ConstPoint2d;
+typedef Point<int, UnknownSize> ConstPointXi;
+typedef Point<int, 3> ConstPoint3i;
+typedef Point<int, 2> ConstPoint2i;
 }
 
-typedef Const::Vector<Real, UnknownSize> ConstVectorX;
-typedef Const::Vector<Real, 3> ConstVector3;
-typedef Const::Vector<Real, 2> ConstVector2;
-typedef Const::Vector<double, UnknownSize> ConstVectorXd;
-typedef Const::Vector<double, 3> ConstVector3d;
-typedef Const::Vector<double, 2> ConstVector2d;
-typedef Const::Vector<int, UnknownSize> ConstVectorXi;
-typedef Const::Vector<int, 3> ConstVector3i;
-typedef Const::Vector<int, 2> ConstVector2i;
-
-typedef Const::Point<Real, UnknownSize> ConstPointX;
-typedef Const::Point<Real, 3> ConstPoint3;
-typedef Const::Point<Real, 2> ConstPoint2;
-typedef Const::Point<double, UnknownSize> ConstPointXd;
-typedef Const::Point<double, 3> ConstPoint3d;
-typedef Const::Point<double, 2> ConstPoint2d;
-typedef Const::Point<int, UnknownSize> ConstPointXi;
-typedef Const::Point<int, 3> ConstPoint3i;
-typedef Const::Point<int, 2> ConstPoint2i;
-
-typedef Const::Point<Real, UnknownSize> ConstPointX;
-typedef Const::Point<Real, 3> ConstPoint3;
-typedef Const::Point<Real, 2> ConstPoint2;
-typedef Const::Point<double, UnknownSize> ConstPointXd;
-typedef Const::Point<double, 3> ConstPoint3d;
-typedef Const::Point<double, 2> ConstPoint2d;
-typedef Const::Point<int, UnknownSize> ConstPointXi;
-typedef Const::Point<int, 3> ConstPoint3i;
-typedef Const::Point<int, 2> ConstPoint2i;
 
 namespace hidden
 {
@@ -93,7 +92,6 @@ namespace hidden
 template< typename Type_, int Size_>
 struct Traits< Const::Identity <Type_, Size_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::diagonal_,
@@ -102,6 +100,9 @@ struct Traits< Const::Identity <Type_, Size_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the identity constant matrix
@@ -109,7 +110,6 @@ struct Traits< Const::Identity <Type_, Size_> >
 template< typename Type_, int Size_>
 struct Traits< Const::Vector <Type_, Size_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::vector_,
@@ -118,6 +118,8 @@ struct Traits< Const::Vector <Type_, Size_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the constant vector_
@@ -125,7 +127,6 @@ struct Traits< Const::Vector <Type_, Size_> >
 template< typename Type_, int Size_>
 struct Traits< Const::Point <Type_, Size_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::point_,
@@ -134,6 +135,8 @@ struct Traits< Const::Point <Type_, Size_> >
     orient_    = Arrays::by_row_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the square constant matrix
@@ -141,7 +144,6 @@ struct Traits< Const::Point <Type_, Size_> >
 template< typename Type_, int Size_>
 struct Traits< Const::Square <Type_, Size_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::square_,
@@ -150,6 +152,8 @@ struct Traits< Const::Square <Type_, Size_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the general constant matrix
@@ -157,7 +161,6 @@ struct Traits< Const::Square <Type_, Size_> >
 template< typename Type_, int SizeRows_, int SizeCols_>
 struct Traits< Const::Array<Type_, SizeRows_, SizeCols_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::array2D_,
@@ -166,6 +169,8 @@ struct Traits< Const::Array<Type_, SizeRows_, SizeCols_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the upper triangular constant matrix
@@ -173,7 +178,6 @@ struct Traits< Const::Array<Type_, SizeRows_, SizeCols_> >
 template< typename Type_, int SizeRows_, int SizeCols_>
 struct Traits< Const::UpperTriangular<Type_, SizeRows_, SizeCols_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::upper_triangular_,
@@ -182,6 +186,8 @@ struct Traits< Const::UpperTriangular<Type_, SizeRows_, SizeCols_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 /** @ingroup hidden
  *  @brief Traits class for the lower triangular constant matrix
@@ -189,7 +195,6 @@ struct Traits< Const::UpperTriangular<Type_, SizeRows_, SizeCols_> >
 template< typename Type_, int SizeRows_, int SizeCols_>
 struct Traits< Const::LowerTriangular<Type_, SizeRows_, SizeCols_> >
 {
-  typedef Type_ Type;
   enum
   {
     structure_ = Arrays::lower_triangular_,
@@ -198,6 +203,8 @@ struct Traits< Const::LowerTriangular<Type_, SizeRows_, SizeCols_> >
     orient_    = Arrays::by_col_,
     storage_   = Arrays::sparse_
   };
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type ReturnType;
 };
 
 } // namespace hidden
@@ -205,15 +212,15 @@ struct Traits< Const::LowerTriangular<Type_, SizeRows_, SizeCols_> >
 namespace Const
 {
 template< class Derived, int SizeRows_, int SizeCols_>
-class IConstArray: protected ICAllocatorBase<SizeRows_, SizeCols_>, public ExprBase<Derived>
+class IConstArray: protected IArrayBase<SizeRows_, SizeCols_>, public ExprBase<Derived>
 {
   public:
     /** Type of the Range for the rows */
     typedef TRange<SizeRows_> RowRange;
     /** Type of the Range for the columns */
     typedef TRange<SizeCols_> ColRange;
-    /** Type for the ICAllocatorBase base Class. */
-    typedef ICAllocatorBase<SizeRows_, SizeCols_ > Base2D;
+    /** Type for the IArrayBase base Class. */
+    typedef IArrayBase<SizeRows_, SizeCols_ > Base2D;
     typedef ExprBase<Derived> Base;
 
   protected:
@@ -269,8 +276,8 @@ class IConstArray: protected ICAllocatorBase<SizeRows_, SizeCols_>, public ExprB
  * The size can be either a fixed template argument or a dynamic size.
  * Exemple:
  * @code
- *  STK::Const::Square<Real,3> S3; // S3 is a 3x3 square matrix of 1.
- *  STK::Const::Square<Real> S(10); // S is a 10x10 identity matrix of 1.
+ *  STK::Square<Real,3> S3; // S3 is a 3x3 square matrix of 1.
+ *  STK::Square<Real> S(10); // S is a 10x10 identity matrix of 1.
  * @endcode
  * @tparam Size_ the size of the identity ArrayXX. Default is UnknownSize.
  **/
@@ -279,14 +286,15 @@ class Identity : public IConstArray<Identity<Type_, Size_>, Size_, Size_ >
 {
   public:
     typedef IConstArray<Identity<Type_, Size_>, Size_, Size_ > Base;
-    typedef Type_ Type;
+    typedef typename hidden::Traits< Identity<Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Identity<Type_, Size_> >::ReturnType ReturnType;
     enum
     {
-      structure_ = hidden::Traits< Const::Identity <Type_, Size_> >::structure_,
-      orient_    = hidden::Traits< Const::Identity <Type_, Size_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::Identity <Type_, Size_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::Identity <Type_, Size_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::Identity <Type_, Size_> >::storage_
+      structure_ = hidden::Traits< Identity <Type_, Size_> >::structure_,
+      orient_    = hidden::Traits< Identity <Type_, Size_> >::orient_,
+      sizeRows_  = hidden::Traits< Identity <Type_, Size_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< Identity <Type_, Size_> >::sizeCols_,
+      storage_   = hidden::Traits< Identity <Type_, Size_> >::storage_
     };
     /** default constructor */
     Identity() : Base() {}
@@ -296,12 +304,12 @@ class Identity : public IConstArray<Identity<Type_, Size_>, Size_, Size_ >
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const
+    inline ReturnType elt2Impl(int i, int j) const
     { return (i==j ? Type(1) : Type(0));}
     /** @return the element ith element of the identity matrix
      *  @param i index of the ith element
      **/
-    inline Type const elt1Impl(int i) const { return Type(1);}
+    inline ReturnType elt1Impl(int i) const { return Type(1);}
 };
 
 /**@ingroup Arrays
@@ -321,8 +329,8 @@ class Identity : public IConstArray<Identity<Type_, Size_>, Size_, Size_ >
  * The size can be either a fixed template argument or a dynamic size.
  * Exemple:
  * @code
- *  STK::Const::Square<Real,3> S3; // S3 is a 3x3 square matrix of Real
- *  STK::Const::Square<Real> S(10); // S is a 10x10 square matrix of Real
+ *  STK::Square<Real,3> S3; // S3 is a 3x3 square matrix of Real
+ *  STK::Square<Real> S(10); // S is a 10x10 square matrix of Real
  * @endcode
  * @tparam Size_ the size of the square ArrayXX. Default is UnknownSize.
  **/
@@ -331,14 +339,15 @@ class Square : public IConstArray<Square<Type_, Size_>, Size_, Size_ >
 {
   public:
     typedef IConstArray<Square<Type_, Size_>, Size_, Size_ > Base;
-    typedef typename hidden::Traits< Const::Square <Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Square<Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Square<Type_, Size_> >::ReturnType ReturnType;
     enum
     {
-      structure_ = hidden::Traits< Const::Square <Type_, Size_> >::structure_,
-      orient_    = hidden::Traits< Const::Square <Type_, Size_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::Square <Type_, Size_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::Square <Type_, Size_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::Square <Type_, Size_> >::storage_
+      structure_ = hidden::Traits< Square <Type_, Size_> >::structure_,
+      orient_    = hidden::Traits< Square <Type_, Size_> >::orient_,
+      sizeRows_  = hidden::Traits< Square <Type_, Size_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< Square <Type_, Size_> >::sizeCols_,
+      storage_   = hidden::Traits< Square <Type_, Size_> >::storage_
     };
     /** default constructor */
     Square() : Base() {}
@@ -348,7 +357,7 @@ class Square : public IConstArray<Square<Type_, Size_>, Size_, Size_ >
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -368,8 +377,8 @@ class Square : public IConstArray<Square<Type_, Size_>, Size_, Size_ >
  * The sizes can be either two fixed template arguments or dynamic sizes.
  * Exemple:
  * @code
- *  STK::Const::Array<Real,3, 4> G3; // G3 is a 3x4 matrix of Real
- *  STK::Const::Array<Real> S(10, 20); // S is a 10x20 matrix of Real
+ *  STK::Array<Real,3, 4> G3; // G3 is a 3x4 matrix of Real
+ *  STK::Array<Real> S(10, 20); // S is a 10x20 matrix of Real
  * @endcode
  * @tparam SizeRows_ the number of row of the matrix. Default is UnknownSize.
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
@@ -379,14 +388,16 @@ class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, 
 {
   public:
     typedef IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
-    typedef Type_ Type;
+    typedef typename hidden::Traits< Array<Type_, SizeRows_, SizeCols_> >::Type Type;
+    typedef typename hidden::Traits< Array<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
+
     enum
     {
-      structure_ = hidden::Traits< Const::Array <Type_, SizeRows_, SizeCols_> >::structure_,
-      orient_    = hidden::Traits< Const::Array <Type_, SizeRows_, SizeCols_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::Array <Type_, SizeRows_, SizeCols_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::Array <Type_, SizeRows_, SizeCols_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::Array <Type_, SizeRows_, SizeCols_> >::storage_
+      structure_ = hidden::Traits< Array <Type_, SizeRows_, SizeCols_> >::structure_,
+      orient_    = hidden::Traits< Array <Type_, SizeRows_, SizeCols_> >::orient_,
+      sizeRows_  = hidden::Traits< Array <Type_, SizeRows_, SizeCols_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< Array <Type_, SizeRows_, SizeCols_> >::sizeCols_,
+      storage_   = hidden::Traits< Array <Type_, SizeRows_, SizeCols_> >::storage_
     };
     /** default constructor */
     Array() : Base() {}
@@ -396,7 +407,7 @@ class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, 
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -416,8 +427,8 @@ class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, 
  * The sizes can be either two fixed template arguments or dynamic sizes.
  * Exemple:
  * @code
- *  STK::Const::UpperTriangular<Real,3, 4> U3; // U3 is a 3x4 upper triangular matrix of Real
- *  STK::Const::UpperTriangular<Real> S(10, 20); // S is a 10x20 upper triangula matrix of Real
+ *  STK::UpperTriangular<Real,3, 4> U3; // U3 is a 3x4 upper triangular matrix of Real
+ *  STK::UpperTriangular<Real> S(10, 20); // S is a 10x20 upper triangula matrix of Real
  * @endcode
  * @tparam SizeRows_ the number of row of the matrix. Default is UnknownSize.
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
@@ -427,14 +438,16 @@ class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, Siz
 {
   public:
     typedef IConstArray<UpperTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
-    typedef Type_ Type;
+    typedef typename hidden::Traits< UpperTriangular<Type_, SizeRows_, SizeCols_> >::Type Type;
+    typedef typename hidden::Traits< UpperTriangular<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
+
     enum
     {
-      structure_ = hidden::Traits< Const::UpperTriangular <Type_, SizeRows_, SizeCols_> >::structure_,
-      orient_    = hidden::Traits< Const::UpperTriangular <Type_, SizeRows_, SizeCols_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::UpperTriangular <Type_, SizeRows_, SizeCols_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::UpperTriangular <Type_, SizeRows_, SizeCols_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::UpperTriangular <Type_, SizeRows_, SizeCols_> >::storage_
+      structure_ = hidden::Traits< UpperTriangular <Type_, SizeRows_, SizeCols_> >::structure_,
+      orient_    = hidden::Traits< UpperTriangular <Type_, SizeRows_, SizeCols_> >::orient_,
+      sizeRows_  = hidden::Traits< UpperTriangular <Type_, SizeRows_, SizeCols_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< UpperTriangular <Type_, SizeRows_, SizeCols_> >::sizeCols_,
+      storage_   = hidden::Traits< UpperTriangular <Type_, SizeRows_, SizeCols_> >::storage_
     };
     /** default constructor */
     UpperTriangular() : Base() {}
@@ -444,7 +457,7 @@ class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, Siz
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -464,8 +477,8 @@ class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, Siz
  * The sizes can be either two fixed template arguments or dynamic sizes.
  * Exemple:
  * @code
- *  STK::Const::LowerTriangular<Real,3, 4> G3; // G3 is a 3x4 lower triangular matrix of Real
- *  STK::Const::LowerTriangular<Real> S(10, 20); // S is a 10x20 lower triangular matrix of Real
+ *  STK::LowerTriangular<Real,3, 4> G3; // G3 is a 3x4 lower triangular matrix of Real
+ *  STK::LowerTriangular<Real> S(10, 20); // S is a 10x20 lower triangular matrix of Real
  * @endcode
  * @tparam SizeRows_ the number of row of the matrix. Default is UnknownSize.
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
@@ -475,14 +488,16 @@ class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, Siz
 {
   public:
     typedef IConstArray<LowerTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
-    typedef Type_ Type;
+    typedef typename hidden::Traits< LowerTriangular<Type_, SizeRows_, SizeCols_> >::Type Type;
+    typedef typename hidden::Traits< LowerTriangular<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
+
     enum
     {
-      structure_ = hidden::Traits< Const::LowerTriangular <Type_, SizeRows_, SizeCols_> >::structure_,
-      orient_    = hidden::Traits< Const::LowerTriangular <Type_, SizeRows_, SizeCols_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::LowerTriangular <Type_, SizeRows_, SizeCols_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::LowerTriangular <Type_, SizeRows_, SizeCols_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::LowerTriangular <Type_, SizeRows_, SizeCols_> >::storage_
+      structure_ = hidden::Traits< LowerTriangular <Type_, SizeRows_, SizeCols_> >::structure_,
+      orient_    = hidden::Traits< LowerTriangular <Type_, SizeRows_, SizeCols_> >::orient_,
+      sizeRows_  = hidden::Traits< LowerTriangular <Type_, SizeRows_, SizeCols_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< LowerTriangular <Type_, SizeRows_, SizeCols_> >::sizeCols_,
+      storage_   = hidden::Traits< LowerTriangular <Type_, SizeRows_, SizeCols_> >::storage_
     };
     /** default constructor */
     LowerTriangular() : Base() {}
@@ -492,7 +507,7 @@ class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, Siz
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -508,8 +523,8 @@ class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, Siz
  * The size can be either a fixed template argument or a dynamic size.
  * Exemple:
  * @code
- *  STK::Const::Point<Real,3> p3; // p3 is a row-vector of size 3
- *  STK::Const::Point<Real> p(10); // p is a row-vector of Real of size 10
+ *  STK::Point<Real,3> p3; // p3 is a row-vector of size 3
+ *  STK::Point<Real> p(10); // p is a row-vector of Real of size 10
  * @endcode
  * @tparam Size_ the size of the row-vector. Default is UnknownSize.
  **/
@@ -518,14 +533,16 @@ class Point : public IConstArray<Point<Type_, Size_>, Size_, Size_ >
 {
   public:
     typedef IConstArray<Point<Type_, Size_>, Size_, Size_ > Base;
-    typedef typename hidden::Traits< Const::Point <Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Point<Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Point<Type_, Size_> >::ReturnType ReturnType;
+
     enum
     {
-      structure_ = hidden::Traits< Const::Point <Type_, Size_> >::structure_,
-      orient_    = hidden::Traits< Const::Point <Type_, Size_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::Point <Type_, Size_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::Point <Type_, Size_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::Point <Type_, Size_> >::storage_
+      structure_ = hidden::Traits< Point <Type_, Size_> >::structure_,
+      orient_    = hidden::Traits< Point <Type_, Size_> >::orient_,
+      sizeRows_  = hidden::Traits< Point <Type_, Size_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< Point <Type_, Size_> >::sizeCols_,
+      storage_   = hidden::Traits< Point <Type_, Size_> >::storage_
     };
     /** default constructor */
     Point() : Base() {}
@@ -534,12 +551,12 @@ class Point : public IConstArray<Point<Type_, Size_>, Size_, Size_ >
     /** @return the j-th element  of the constant row-vector.
      *  @param j index of the element
      **/
-    inline Type const elt1Impl(int j) const { return (Type(1));}
+    inline ReturnType elt1Impl(int j) const { return (Type(1));}
     /** @return the element (i,j) of the constant row-vector.
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 /**@ingroup Arrays
@@ -555,8 +572,8 @@ class Point : public IConstArray<Point<Type_, Size_>, Size_, Size_ >
  * The size can be either a fixed template argument or a dynamic size.
  * Exemple:
  * @code
- *  STK::Const::Point<Real,3> p3; // p3 is a row-vector of size 3
- *  STK::Const::Point<Real> p(10); // p is a row-vector of Real of size 10
+ *  STK::Point<Real,3> p3; // p3 is a row-vector of size 3
+ *  STK::Point<Real> p(10); // p is a row-vector of Real of size 10
  * @endcode
  * @tparam Size_ the size of the row-vector. Default is UnknownSize.
  **/
@@ -565,14 +582,16 @@ class Vector : public IConstArray<Vector<Type_, Size_>, Size_, Size_ >
 {
   public:
     typedef IConstArray<Vector<Type_, Size_>, Size_, Size_ > Base;
-    typedef typename hidden::Traits< Const::Vector <Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Vector<Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< Vector<Type_, Size_> >::ReturnType ReturnType;
+
     enum
     {
-      structure_ = hidden::Traits< Const::Vector <Type_, Size_> >::structure_,
-      orient_    = hidden::Traits< Const::Vector <Type_, Size_> >::orient_,
-      sizeRows_  = hidden::Traits< Const::Vector <Type_, Size_> >::sizeRows_,
-      sizeCols_  = hidden::Traits< Const::Vector <Type_, Size_> >::sizeCols_,
-      storage_   = hidden::Traits< Const::Vector <Type_, Size_> >::storage_
+      structure_ = hidden::Traits< Vector <Type_, Size_> >::structure_,
+      orient_    = hidden::Traits< Vector <Type_, Size_> >::orient_,
+      sizeRows_  = hidden::Traits< Vector <Type_, Size_> >::sizeRows_,
+      sizeCols_  = hidden::Traits< Vector <Type_, Size_> >::sizeCols_,
+      storage_   = hidden::Traits< Vector <Type_, Size_> >::storage_
     };
     /** default constructor */
     Vector() : Base() {}
@@ -581,12 +600,12 @@ class Vector : public IConstArray<Vector<Type_, Size_>, Size_, Size_ >
     /** @return the i-th element of the constant vector.
      *  @param i index of the element
      **/
-    inline Type const elt1Impl(int i) const { return (Type(1));}
+    inline ReturnType elt1Impl(int i) const { return (Type(1));}
     /** @return the element (i,j) of the constant vector.
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const { return (Type(1));}
+    inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };
 
 

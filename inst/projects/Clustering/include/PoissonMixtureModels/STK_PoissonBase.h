@@ -54,7 +54,7 @@ class PoissonBase : public IMixtureModel<Derived >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
 
   protected:
@@ -75,7 +75,7 @@ class PoissonBase : public IMixtureModel<Derived >
     {
       Real sum = 0.;
       for (int k= p_tik()->beginCols(); k < components().end(); ++k)
-      { sum += p_tik()->elt(i,k) * p_param(k)->lambda(j);}
+      { sum += p_tik()->elt(i,k) * param(k).lambda(j);}
       return sum;
     }
     /** @return a simulated value for the jth variable of the ith sample
@@ -84,7 +84,7 @@ class PoissonBase : public IMixtureModel<Derived >
     Real sample(int i, int j) const
     {
       int k = Law::Categorical::rand(p_tik()->row(i));
-      return Law::Poisson::rand(p_param(k)->lambda(j));
+      return Law::Poisson::rand(param(k).lambda(j));
     }
     /** get the parameters of the model
      *  @param params the array to fill with the parameters of the model
@@ -105,7 +105,7 @@ void PoissonBase<Derived>::writeParameters(ostream& os) const
   {
     // store shape and scale values in an array for a nice output
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    { lambda[j] = p_param(k)->lambda(j);}
+    { lambda[j] = param(k).lambda(j);}
     os << _T("---> Component ") << k << _T("\n");
     os << _T("lambda = ") << lambda;
   }
@@ -119,7 +119,7 @@ void PoissonBase<Derived>::getParameters(Array2D<Real>& params) const
   for (int k= params.beginRows(); k < params.endRows(); ++k)
   {
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    { params(k, j) = p_param(k)->lambda(j);}
+    { params(k, j) = param(k).lambda(j);}
   }
 }
 /* get the parameters of the model in an array of size (K * d). */
@@ -131,7 +131,7 @@ ArrayXX PoissonBase<Derived>::getParametersImpl() const
   for (int k= params.beginRows(); k < params.endRows(); ++k)
   {
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    { params(k, j) = p_param(k)->lambda(j);}
+    { params(k, j) = param(k).lambda(j);}
   }
   return params;
 }

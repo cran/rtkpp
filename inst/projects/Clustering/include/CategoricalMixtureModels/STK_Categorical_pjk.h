@@ -76,7 +76,7 @@ class Categorical_pjk : public CategoricalBase<Categorical_pjk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::modalities_;
 
@@ -105,10 +105,10 @@ void Categorical_pjk<Array>::randomInit()
 {
   for (int k = baseIdx; k < components().end(); ++k)
   {
-    for (int j=baseIdx; j< p_param(k)->proba_.end(); ++j)
+    for (int j=baseIdx; j< param(k).proba_.end(); ++j)
     {
-      p_param(k)->proba_[j].randUnif();
-      p_param(k)->proba_[j] /= p_param(k)->proba_[j].sum();
+      param(k).proba_[j].randUnif();
+      param(k).proba_[j] /= param(k).proba_[j].sum();
     }
   }
 }
@@ -123,13 +123,13 @@ bool Categorical_pjk<Array>::mStep()
     for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
       // count the number of modalities weighted by the tik
-      p_param(k)->proba_[j] = 0.;
+      param(k).proba_[j] = 0.;
       for (int i = p_tik()->beginRows(); i < p_tik()->endRows(); ++i)
-      { p_param(k)->proba_[j][(*p_data())(i, j)] += (*p_tik())(i, k);}
+      { param(k).proba_[j][(*p_data())(i, j)] += (*p_tik())(i, k);}
       // normalize the probabilities
-      Real sum = p_param(k)->proba_[j].sum();
+      Real sum = param(k).proba_[j].sum();
       if (sum<=0.) return false;
-      p_param(k)->proba_[j] /= sum;
+      param(k).proba_[j] /= sum;
     }
   }
   return true;

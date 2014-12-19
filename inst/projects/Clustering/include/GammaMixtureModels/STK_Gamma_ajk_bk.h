@@ -82,7 +82,7 @@ class Gamma_ajk_bk : public GammaBase< Gamma_ajk_bk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -127,10 +127,10 @@ void Gamma_ajk_bk<Array>::randomInit()
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand((mean*mean/variance));
+      param(k).shape_[j] = Law::Exponential::rand((mean*mean/variance));
       value += variance/mean;
     }
-    p_param(k)->scale_ = Law::Exponential::rand(value/(this->nbVariable()));
+    param(k).scale_ = Law::Exponential::rand(value/(this->nbVariable()));
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_ajk_bk<Array>::randomInit done\n");
@@ -156,15 +156,15 @@ bool Gamma_ajk_bk<Array>::mStep()
       {
         // moment estimate and oldest value
         Real x0 = meanjk(j,k)*meanjk(j,k)/variancejk(j,k);
-        Real x1 = p_param(k)->shape_[j];
+        Real x1 = param(k).shape_[j];
         if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
         // compute shape
-        hidden::invPsi f(p_param(k)->meanLog_[j] - std::log(p_param(k)->scale_));
+        hidden::invPsi f(param(k).meanLog_[j] - std::log(param(k).scale_));
         Real a =  Algo::findZero(f, x0, x1, TOL);
 
         if (!Arithmetic<Real>::isFinite(a))
         {
-           p_param(k)->shape_[j] = x0; // use moment estimate
+           param(k).shape_[j] = x0; // use moment estimate
 #ifdef STK_MIXTURE_DEBUG
           stk_cout << _T("ML estimation failed in Gamma_ajk_bj::mStep()\n");
           stk_cout << "x0 =" << x0 << _T("\n";);
@@ -173,10 +173,10 @@ bool Gamma_ajk_bk<Array>::mStep()
           stk_cout << "f(x1) =" << f(x1) << _T("\n";);
 #endif
         }
-        else { p_param(k)->shape_[j] = a;}
+        else { param(k).shape_[j] = a;}
       }
       // compute bk
-      p_param(k)->scale_ = p_param(k)->mean_.sum()/p_param(k)->shape_.sum();
+      param(k).scale_ = param(k).mean_.sum()/param(k).shape_.sum();
     } // end ajk
     // check convergence
     Real value = this->qValue();

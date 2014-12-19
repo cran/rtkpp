@@ -52,10 +52,6 @@ namespace hidden
 template<typename UnaryOp, typename Lhs>
 struct Traits< UnaryOperator <UnaryOp, Lhs> >
 {
-  typedef typename UnaryOp::result_type Type;
-  typedef RowOperator<UnaryOperator <UnaryOp, Lhs> > Row;
-  typedef ColOperator<UnaryOperator <UnaryOp, Lhs> > Col;
-
   enum
   {
       structure_ = Lhs::structure_,
@@ -64,6 +60,11 @@ struct Traits< UnaryOperator <UnaryOp, Lhs> >
       sizeCols_  = Lhs::sizeCols_,
       storage_   = Lhs::storage_
   };
+  typedef RowOperator<UnaryOperator <UnaryOp, Lhs> > Row;
+  typedef ColOperator<UnaryOperator <UnaryOp, Lhs> > Col;
+
+  typedef typename UnaryOp::result_type Type;
+  typedef Type ReturnType;
 };
 
 } // end namespace hidden
@@ -117,20 +118,20 @@ class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Lhs >, public TRef<1>
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return lhs_.rows();}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return lhs_.beginRows();}
+    inline int beginRowsImpl() const { return lhs_.beginRows();}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return lhs_.endRows();}
+    inline int endRowsImpl() const { return lhs_.endRows();}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return lhs_.sizeRows();}
+    inline int sizeRowsImpl() const { return lhs_.sizeRows();}
 
     /** @return the range of the Columns */
     inline ColRange const& colsImpl() const { return lhs_.cols();}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return lhs_.beginCols();}
+    inline int beginColsImpl() const { return lhs_.beginCols();}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return lhs_.endCols();}
+    inline int endColsImpl() const { return lhs_.endCols();}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return lhs_.sizeCols();}
+    inline int sizeColsImpl() const { return lhs_.sizeCols();}
 
     /** @return the left hand side expression */
     inline Lhs const& rhs() const { return lhs_; }
@@ -149,23 +150,26 @@ template<typename UnaryOp, typename Lhs>
 class UnaryOperatorBase : public ExprBase< UnaryOperator<UnaryOp, Lhs> >
 {
   public:
-    typedef ExprBase< UnaryOperator<UnaryOp, Lhs> > Base;
-    typedef typename UnaryOp::result_type Type;
+    typedef UnaryOperator<UnaryOp, Lhs> Derived;
+    typedef ExprBase< Derived > Base;
+    typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
+
     /** constructor. */
     inline UnaryOperatorBase() : Base() {}
     /** @return the element (i,j) of the operator.
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline Type const elt2Impl(int i, int j) const
+    inline ReturnType elt2Impl(int i, int j) const
     { return this->asDerived().functor()(this->asDerived().rhs().elt(i, j));}
     /** @return the ith element of the operator
      *  @param i index of the ith element
      **/
-    inline Type const elt1Impl(int i) const
+    inline ReturnType elt1Impl(int i) const
     { return this->asDerived().functor()(this->asDerived().rhs().elt(i));}
     /** @return the element of the operator */
-    inline Type const elt0Impl() const
+    inline ReturnType elt0Impl() const
     { return this->asDerived().functor()(this->asDerived().rhs().elt());}
 };
 

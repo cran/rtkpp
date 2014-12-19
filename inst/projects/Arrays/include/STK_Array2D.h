@@ -57,20 +57,21 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for the Array2D class.
  **/
-template<class _Type>
-struct Traits< Array2D<_Type> >
+template<class Type_>
+struct Traits< Array2D<Type_> >
 {
   private:
     class Void {};
   public:
-    typedef _Type                Type;
-    typedef Array2DPoint<_Type>  Row;
-    typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type>  SubRow;
-    typedef Array2DVector<_Type> SubCol;
-    typedef Array2D<_Type>       SubArray;
+    typedef Array2DPoint<Type_>  Row;
+    typedef Array2DVector<Type_> Col;
+    typedef Array2DPoint<Type_>  SubRow;
+    typedef Array2DVector<Type_> SubCol;
+    typedef Array2D<Type_>       SubArray;
     typedef Void                 SubVector;
 
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::array2D_,
@@ -105,20 +106,23 @@ struct Traits< Array2D<_Type> >
  *
  * @sa Array2DVector, Array2DPoint, Array2DSquare, Array2DUpperTriangular, Array2DLowerTriangular
  **/
-template<class Type >
-class Array2D : public IArray2D< Array2D<Type> >
+template<class Type_ >
+class Array2D : public IArray2D< Array2D<Type_> >
 {
-  /** Type for the Interface base Class. */
-  typedef IArray2D< Array2D<Type> > Base;
-  typedef ArrayBase < Array2D<Type> > LowBase;
-
   public:
-    typedef typename hidden::Traits<Array2D<Type> >::Row Row;
-    typedef typename hidden::Traits<Array2D<Type> >::Col Col;
-    typedef typename hidden::Traits<Array2D<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array2D<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array2D<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array2D<Type> >::SubArray SubArray;
+    /** Type for the Interface base Class. */
+    typedef IArray2D< Array2D<Type_> > Base;
+    typedef ArrayBase < Array2D<Type_> > LowBase;
+
+    typedef typename hidden::Traits<Array2D<Type_> >::Row Row;
+    typedef typename hidden::Traits<Array2D<Type_> >::Col Col;
+    typedef typename hidden::Traits<Array2D<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2D<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2D<Type_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2D<Type_> >::SubArray SubArray;
+
+    typedef typename hidden::Traits<Array2D<Type_> >::Type Type;
+    typedef typename hidden::Traits<Array2D<Type_> >::ReturnType ReturnType;
 
     enum
     {

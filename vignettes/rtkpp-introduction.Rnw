@@ -37,7 +37,12 @@
 %---------------------
 
 \usepackage{Sweave}
-
+%% need no \usepackage{Sweave.sty}
+<<prelim,echo=FALSE,print=FALSE>>=
+library(rtkpp)
+rtkpp.version <- packageDescription("rtkpp")$Version
+rtkpp.date <- packageDescription("rtkpp")$Date
+@
 % Title Page
 \title{ rtkpp: R and stk++ integration using Rcpp}
 \author{Serge Iovleff}
@@ -57,14 +62,19 @@ methods or Lapack), arrays (with an Eigen-like API \cite{JSS:RcppEigen}),
 regression, dimension reduction, etc. Some functionalities provided by the
 library are available in the \texttt{R} environment as \texttt{R} functions.
 
+
 The \texttt{rtkpp} package provides the header files composing the
 \texttt{stk++} \texttt{C++} library (thus users do not need to
-install \texttt{stk++} itself in order to use rtkpp), along with implementations
-of \texttt{Rcpp::as} and \texttt{Rcpp::wrap} for the \texttt{C++}
-classes defined in \texttt{stk++}. In this sense it is similar
+install \texttt{stk++} itself in order to use rtkpp), along with
+implementations of \texttt{Rcpp::as} and \texttt{Rcpp::wrap} for the
+\texttt{C++} classes defined in \texttt{stk++}. In this sense it is similar
 to the \texttt{RcppEigen} \cite{CRAN:RcppEigen,JSS:RcppEigen} and
 \texttt{RcppArmadillo} \cite{CRAN:RcppArmadillo} packages.
 
+The current version of the stk++ library is given below
+<< >>=
+.Call("stk_version", FALSE, PACKAGE="rtkpp")
+@
 
 \section{Wrapping \texttt{R} data by \texttt{stk++} arrays}
 
@@ -106,13 +116,14 @@ need, for example, to convert expression rather than arrays then you can use the
 
 \section{An example}
 
-The package countMissings can be downloaded at the \url{www.stkpp.org} url.
-It is basically composed of one R-script file (countNA.R) and one C++ file
+The package countMissings can be downloaded at the 
+\url{http://sourceforge.net/projects/stkpp/files/R%20packages/countMissings_1.0.tar.gz/download}
+url. It is basically composed of one R-script file (countNA.R) and one C++ file
 (countNA.cpp).
 
 Given a R matrix, it is possible to get a list composed of two vectors
 constaining respectively the number of missing values in each rows and the
-number of missing values in each columns of the R matrixs.
+number of missing values in each columns of the R matrix.
 
 The R-script \texttt{countNA.R} looks
 \begin{lstlisting}[style=customcpp]
@@ -144,9 +155,9 @@ The only thing to do is to include the header file
 // Rcpp.h will be include by rtkpp
 #include <RTKpp.h>
 \end{lstlisting}
-in the code. When compiling the sources, you indicate the location of the stk++
-library using \verb+rtkpp:::CxxFlags()+, \verb+rtkpp:::CppFlags()+ and
-\verb+rtkpp:::LdFlags()+ in the \texttt{Makevars}.
+in the C++ code. When compiling the sources, you indicate the location of the
+stk++ library using \verb+rtkpp:::CxxFlags()+, \verb+rtkpp:::CppFlags()+ and
+\verb+rtkpp:::LdFlags()+ in package \texttt{Makevars} file.
 
 If you are building a package with a lot of cpp files, you may find
 convenient to locate your sources in a separate directory. Hereafter we give an
@@ -162,10 +173,13 @@ PKGDIR    = FULL_PATH_TO_YOUR_PACKAGE
 PKGLIBDIR = $(PKGDIR)/lib
 PKGLIB    = $(PKGLIBDIR)/lib$(PKGNAME).a
 
-## Use the R_HOME indirection to support installations of multiple R version
-## use $(SHLIB_OPENMP_CXXFLAGS) if you want openmp
+## Use the R_HOME indirection to support installations of multiple R version.
+## use $(SHLIB_OPENMP_CXXFLAGS) if you want openmp.
+## It is not necessary to use Rcpp:::CxxFlags() if there is already
+## LinkingTo: Rcpp in your DESCRIPTION file
 PKG_CXXFLAGS = `${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()"` \
                `${R_HOME}/bin/Rscript -e "rtkpp:::CxxFlags()"`
+
 PKG_CPPFLAGS = `${R_HOME}/bin/Rscript -e "rtkpp:::CppFlags()"` \
                 $(SHLIB_OPENMP_CXXFLAGS)
 

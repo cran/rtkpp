@@ -87,7 +87,7 @@ class SymEigen : public ISymEigen<SymEigen>
      */
     template<class Derived>
     SymEigen( ArrayBase<Derived> const& data)
-            : ISymEigen(data), range_(data.range())
+            : Base(data), range_(data.range())
             , JOBZ_('V'), RANGE_('A'), UPLO_('U')
             , VL_(0.0), VU_(0.0), IL_(0), IU_(0)
             , data_(data)

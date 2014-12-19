@@ -57,7 +57,7 @@ class CategoricalBase : public IMixtureModel<Derived >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
 
     /** default constructor
@@ -73,6 +73,10 @@ class CategoricalBase : public IMixtureModel<Derived >
     inline ~CategoricalBase() {}
 
   public:
+    /** @return the array with the number of modalities of each columns in data set */
+    inline PointXi const& nbModalities() const { return nbModalities_;}
+    /** @return the range of the modalities */
+    inline Range  const& modalities() const { return modalities_;}
     /** @return an imputation value for the jth variable of the ith sample
      *  @param i,j indexes of the data to impute */
     int impute(int i, int j) const;
@@ -101,7 +105,7 @@ class CategoricalBase : public IMixtureModel<Derived >
       modalities_ = _R(amin, amax);
       // resize vectors of probabilities
       for(int k=baseIdx; k < components().end(); ++k)
-      { p_param(k)->initializeParameters(modalities_);}
+      { param(k).initializeParameters(modalities_);}
     }
     /** Write the parameters on the output stream os */
     void writeParameters(ostream& os) const
@@ -113,7 +117,7 @@ class CategoricalBase : public IMixtureModel<Derived >
         for (int j= baseIdx;  j < proba.endCols(); ++j)
         {
           for (int l= modalities_.begin(); l < modalities_.end(); ++l)
-          { proba(l, j) = p_param(k)->proba(j,l);}
+          { proba(l, j) = param(k).proba(j,l);}
         }
         os << _T("---> Component ") << k << _T("\n");
         os << _T("probabilities =\n") << proba  << _T("\n");
@@ -122,7 +126,7 @@ class CategoricalBase : public IMixtureModel<Derived >
 
   protected:
     /** Array with the number of modalities of each columns of the data set */
-    Array2DPoint<int> nbModalities_;
+    PointXi nbModalities_;
     /** range of the modalities */
     Range modalities_;
 };
@@ -138,7 +142,7 @@ int CategoricalBase<Derived>::impute(int i, int j) const
   {
     Real proba = 0.;
     for (int k= p_pk()->begin(); k < p_pk()->end(); ++k)
-    { proba += p_tik()->elt(i,k) * p_param(k)->proba(j, l);}
+    { proba += p_tik()->elt(i,k) * param(k).proba(j, l);}
 
     if (pmax < proba) { pmax = proba; lmax = l;}
   }
@@ -152,14 +156,14 @@ int CategoricalBase<Derived>::sample(int i, int j) const
   // sample class
   int k = Law::Categorical::rand(p_tik()->row(i));
   // sample from conditional probability
-  return Law::Categorical::rand(p_param(k)->proba(j));
+  return Law::Categorical::rand(param(k).proba(j));
 }
 
 /* get the parameters of the model
  *  @param params the parameters of the model
  **/
 template<class Derived>
-void CategoricalBase<Derived>::getParameters(Array2D<Real>& params) const
+void CategoricalBase<Derived>::getParameters(ArrayXX& params) const
 {
   int nbCluster    = this->nbCluster();
   int nbModalities = modalities_.size();
@@ -170,7 +174,7 @@ void CategoricalBase<Derived>::getParameters(Array2D<Real>& params) const
     for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
       for (int l = 0; l < nbModalities; ++l)
-      { params(baseIdx + k * nbModalities + l, j) = p_param(baseIdx + k)->proba(j, modalities_.begin() + l);}
+      { params(baseIdx+k * nbModalities + l, j) = param(baseIdx+k).proba(j, modalities_.begin() + l);}
     }
   }
 }
@@ -190,7 +194,7 @@ ArrayXX CategoricalBase<Derived>::getParametersImpl() const
     for (int k = 0; k < nbCluster; ++k)
     {
       for (int l = 0; l < nbModalities; ++l)
-      { params(baseIdx + k * nbModalities + l, j) = p_param(baseIdx + k)->proba(j, modalities_.begin() + l);}
+      { params(baseIdx+k * nbModalities + l, j) = param(baseIdx+k).proba(j, modalities_.begin() + l);}
     }
   }
   return params;

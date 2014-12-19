@@ -81,7 +81,7 @@ class Gamma_ak_b : public GammaBase<Gamma_ak_b<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -105,7 +105,7 @@ class Gamma_ak_b : public GammaBase<Gamma_ak_b<Array> >
     {
       scale_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_scale_ = &scale_;}
+      { param(k).p_scale_ = &scale_;}
     }
     /** Store the intermediate results of the Mixture.
      *  @param iteration Provides the iteration number beginning after the burn-in period.
@@ -154,8 +154,8 @@ void Gamma_ak_b<Array>::randomInit()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     Real mean = this->meank(k), variance = this->variancek(k);
-    p_param(k)->shape_ = Law::Exponential::rand((mean*mean/variance));
-    value += p_param(k)->tk_ * variance/mean;
+    param(k).shape_ = Law::Exponential::rand((mean*mean/variance));
+    value += param(k).tk_ * variance/mean;
   }
   // simulate b
   scale_ = Law::Exponential::rand(value/(this->nbVariable()));
@@ -180,17 +180,17 @@ bool Gamma_ak_b<Array>::mStep()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       // moment estimate and oldest value
-      Real x0 = (p_param(k)->mean_.square()/p_param(k)->variance_).mean();
-      Real x1 = p_param(k)->shape_;
+      Real x0 = (param(k).mean_.square()/param(k).variance_).mean();
+      Real x1 = param(k).shape_;
       if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
 
       // compute shape
-      hidden::invPsi f((p_param(k)->meanLog_ - std::log(scale_)).mean());
+      hidden::invPsi f((param(k).meanLog_ - std::log(scale_)).mean());
       Real a =  Algo::findZero(f, x0, x1, TOL);
 
       if (!Arithmetic<Real>::isFinite(a))
       {
-        p_param(k)->shape_ = x0; // use moment estimate
+        param(k).shape_ = x0; // use moment estimate
 #ifdef STK_MIXTURE_DEBUG
         stk_cout << _T("ML estimation failed in Gamma_ak_bj::mStep()\n");
         stk_cout << "x0 =" << x0 << _T("\n";);
@@ -199,10 +199,10 @@ bool Gamma_ak_b<Array>::mStep()
         stk_cout << "f(x1) =" << f(x1) << _T("\n";);
 #endif
       }
-      else { p_param(k)->shape_ = a;}
+      else { param(k).shape_ = a;}
       // update num and den
-      num += this->meank(k)     * p_param(k)->tk_;
-      den += p_param(k)->shape_ * p_param(k)->tk_;
+      num += this->meank(k)     * param(k).tk_;
+      den += param(k).shape_ * param(k).tk_;
     }
     // compute b
     Real b = num/den;

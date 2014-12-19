@@ -101,9 +101,10 @@ struct Traits< CArraySquare<Type_, Size_, Orient_> >
 //                       , typename If<SizeCols_ != UnknownSize, FixedRowArrayIndirect, FixedColArrayDirect>::Result
 //                       >::Result SubArray;
     // The CAllocator have to have the same structure than the CArray
-    typedef CAllocator<Type_, Arrays::square_, Size_, Size_, Orient_> Allocator;
+    typedef CAllocator<Type_, Size_, Size_, Orient_> Allocator;
 
-    typedef Type_ Type;
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::square_,
@@ -128,6 +129,8 @@ class CArraySquare
     typedef ArrayBase < CArraySquare<Type_, Size_, Orient_> > LowBase;
 
     typedef typename hidden::Traits< CArraySquare <Type_, Size_> >::Type Type;
+    typedef typename hidden::Traits< CArraySquare <Type_, Size_> >::ReturnType ReturnType;
+
     enum
     {
       structure_ = hidden::Traits< CArraySquare <Type_, Size_, Orient_> >::structure_,

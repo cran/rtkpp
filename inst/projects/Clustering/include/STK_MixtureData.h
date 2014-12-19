@@ -54,16 +54,16 @@ class MixtureData : public IMixtureData
     typedef typename Data::Type Type;
 
     /** default constructor. */
-    inline MixtureData(std::string const& idData) : IMixtureData(idData), m_dataij_() {}
+    inline MixtureData(std::string const& idData) : IMixtureData(idData), dataij_() {}
     /** copy constructor (Warning: will copy the data set)
      *  @param manager the MixtureData to copy
      **/
     MixtureData( MixtureData const& manager)
-               : IMixtureData(manager), m_dataij_(manager.m_dataij_) {}
+               : IMixtureData(manager), dataij_(manager.dataij_) {}
     /** getter. @return a constant reference on the data set */
-    Data const& m_dataij() const { return m_dataij_;}
+    Data const& dataij() const { return dataij_;}
     /** data set (public) */
-    Data m_dataij_;
+    Data dataij_;
     /** utility function for lookup the data set and find missing values
      *  coordinates. */
    virtual void findMissing()
@@ -71,11 +71,11 @@ class MixtureData : public IMixtureData
 #ifdef STK_MIXTURE_VERBOSE
      stk_cout << _T("Entering findMissing()\n");
 #endif
-     for (int j=m_dataij_.beginCols(); j< m_dataij_.endCols(); ++j)
+     for (int j=dataij_.beginCols(); j< dataij_.endCols(); ++j)
      {
-       for (int i=m_dataij_.beginRows(); i< m_dataij_.endRows(); ++i)
+       for (int i=dataij_.beginRows(); i< dataij_.endRows(); ++i)
        {
-         if (Arithmetic<Type>::isNA(m_dataij_(i,j)))
+         if (Arithmetic<Type>::isNA(dataij_(i,j)))
          { v_missing_.push_back(std::pair<int,int>(i,j));}
        }
      }
@@ -94,7 +94,7 @@ class MixtureData : public IMixtureData
      for(size_t i = 0; i< v_missing_.size(); ++i)
      {
        data[i].first  = v_missing_[i];
-       data[i].second = m_dataij_(v_missing_[i].first, v_missing_[i].second);
+       data[i].second = dataij_(v_missing_[i].first, v_missing_[i].second);
      }
    }
 };

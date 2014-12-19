@@ -113,6 +113,15 @@ class Categorical_pjkParameters: public CategoricalParametersBase<Categorical_pj
     {}
     /** destructor */
     inline ~Categorical_pjkParameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Categorical_pjkParameters& operator=( Categorical_pjkParameters const& other)
+    {
+      proba_ = other.proba_;
+      stat_proba_ = other.stat_proba_;
+      return *this;
+    }
     /** @return the j-th probability value of the l-th modality */
     inline Real probaImpl(int j, int l) const {return proba_[j][l];}
     /** @return the j-th probability distribution */
@@ -185,6 +194,15 @@ class Categorical_pkParameters: public CategoricalParametersBase<Categorical_pkP
     {}
     /** destructor */
     inline ~Categorical_pkParameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Categorical_pkParameters& operator=( Categorical_pkParameters const& other)
+    {
+      proba_ = other.proba_;
+      stat_proba_ = other.stat_proba_;
+      return *this;
+    }
     /** @return the j-th probability value of the l-th modality (does not depend of j) */
     inline Real probaImpl(int j, int l) const { return proba_[l];}
     /** @return the j-th probability distribution (does not depend of j) */

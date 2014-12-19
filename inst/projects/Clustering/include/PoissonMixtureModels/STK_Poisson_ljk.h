@@ -76,7 +76,7 @@ class Poisson_ljk : public PoissonBase<Poisson_ljk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
 
     /** default constructor
@@ -107,7 +107,7 @@ void Poisson_ljk<Array>::randomInit()
     for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
     {
       Real m = (Real)p_data()->col(j).sum() / this->nbSample();
-      p_param(k)->lambda_[j] = Law::Exponential::rand(m);
+      param(k).lambda_[j] = Law::Exponential::rand(m);
     }
   }
 }
@@ -121,7 +121,7 @@ bool Poisson_ljk<Array>::mStep()
   {
     for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
-      p_param(k)->lambda_[j] = p_data()->col(j).template cast<Real>().wmean(p_tik()->col(k));
+      param(k).lambda_[j] = p_data()->col(j).template cast<Real>().wmean(p_tik()->col(k));
     }
   }
   return true;

@@ -1,4 +1,3 @@
-
 /*--------------------------------------------------------------------*/
 /*     Copyright (C) 2004-2012  Serge Iovleff
 
@@ -24,19 +23,27 @@
 */
 
 /*
- * Project:  stkpp::Sdk::Base
+ * Project:  stkpp::Sdk
  * created on: 23 août 2012
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
 /** @file STK_Macros.h
- *  @brief In this file we define the macro and utilities function for
- *  errors messages and errors exceptions.
+ *  @brief In this file we define the macro and utilities function used
+ *  throughout the stk++ library. This is in most case a support for
+ *  handling errors messages and errors exceptions.
  **/
 
 
 #ifndef STK_MACROS_H
 #define STK_MACROS_H
+
+// any number
+#define STK_WORLD_VERSION 0
+// between 0 and 99
+#define STK_MAJOR_VERSION 8
+// between 0 and 99
+#define STK_MINOR_VERSION 6
 
 #include "STKernel/include/STK_Exceptions.h"
 

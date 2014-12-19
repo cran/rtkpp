@@ -76,7 +76,7 @@ class Poisson_lk : public PoissonBase<Poisson_lk<Array> >
     using Base::p_nk;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -103,7 +103,7 @@ void Poisson_lk<Array>::randomInit()
   Real m = p_data()->mean();
   for (int k = baseIdx; k < components().end(); ++k)
   {
-    p_param(k)->lambda_ = Law::Exponential::rand(m);
+    param(k).lambda_ = Law::Exponential::rand(m);
   }
 }
 
@@ -113,7 +113,7 @@ template<class Array>
 bool Poisson_lk<Array>::mStep()
 {
   for (int k = baseIdx; k < components().end(); ++k)
-  { p_param(k)->lambda_ = (p_data()->transpose() * p_tik()->col(k)).sum()
+  { param(k).lambda_ = (p_data()->transpose() * p_tik()->col(k)).sum()
                         / (p_data()->sizeCols()*p_nk()->elt(k));
   }
   return true;

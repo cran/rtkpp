@@ -77,8 +77,10 @@ template<typename Type_, int SizeCols_, bool Orient_>
 struct Traits< CArrayPoint<Type_, SizeCols_, Orient_> >
 {
     typedef CArrayNumber<Type_, Orient_> Number;
-    typedef CArrayNumber<Type_, Orient_> Col;
-    typedef CArrayNumber<Type_, Orient_> SubCol;
+//    typedef CArrayNumber<Type_, Orient_> Col;
+//    typedef CArrayNumber<Type_, Orient_> SubCol;
+    typedef CArrayVector<Type_, 1, Orient_> Col;
+    typedef CArrayVector<Type_, 1, Orient_> SubCol;
 
     typedef CArrayPoint<Type_, SizeCols_, Orient_> Row;
     typedef CArrayPoint<Type_, UnknownSize, Orient_> SubRow;
@@ -87,10 +89,10 @@ struct Traits< CArrayPoint<Type_, SizeCols_, Orient_> >
     typedef typename If<(SizeCols_ == 1), Number, SubRow>::Result SubVector;
     typedef typename If<(SizeCols_ == 1), Number, SubRow>::Result SubArray;
     // The CAllocator have to have the same structure than the CArray
-    typedef CAllocator<Type_, Arrays::point_, 1, SizeCols_, Orient_> Allocator;
+    typedef CAllocator<Type_, 1, SizeCols_, Orient_> Allocator;
 
-    typedef Type_ Type;
-
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::point_,
@@ -107,12 +109,16 @@ struct Traits< CArrayPoint<Type_, SizeCols_, Orient_> >
 /** @ingroup Arrays
  * @brief declaration of  the point case.
  */
-template <typename Type, int SizeCols_, bool Orient_>
-class CArrayPoint : public ICArray < CArrayPoint<Type, SizeCols_, Orient_> >
+template <typename Type_, int SizeCols_, bool Orient_>
+class CArrayPoint : public ICArray < CArrayPoint<Type_, SizeCols_, Orient_> >
 {
   public:
-    typedef ICArray < CArrayPoint<Type, SizeCols_, Orient_> > Base;
-    typedef ArrayBase < CArrayPoint<Type, SizeCols_, Orient_> > LowBase;
+    typedef ICArray < CArrayPoint<Type_, SizeCols_, Orient_> > Base;
+    typedef ArrayBase < CArrayPoint<Type_, SizeCols_, Orient_> > LowBase;
+
+    typedef typename hidden::Traits<CArrayPoint<Type_, SizeCols_, Orient_> >::Type Type;
+    typedef typename hidden::Traits<CArrayPoint<Type_, SizeCols_, Orient_> >::ReturnType ReturnType;
+
     enum
     {
       structure_ = Arrays::point_,

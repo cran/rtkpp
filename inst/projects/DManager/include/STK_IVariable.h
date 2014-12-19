@@ -49,7 +49,7 @@ typedef Variable<String> VariableString;
   * @brief IVariable is an Interface class for all Variables classes.
   *
   * A Variable have a name and a type, the implementation have to choose
-  * some one-dimensional container class derived from ICAllocator
+  * some one-dimensional container class derived from IArrayBase
   * for storing the data.
   *
   * The pure virtual function defined in this class are the one needed by

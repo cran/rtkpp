@@ -76,7 +76,7 @@ class Categorical_pk : public CategoricalBase<Categorical_pk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::modalities_;
 
@@ -110,8 +110,8 @@ void Categorical_pk<Array>::randomInit()
 {
   for (int k = baseIdx; k < components().end(); ++k)
   {
-    p_param(k)->proba_.randUnif();
-    p_param(k)->proba_ /= p_param(k)->proba_.sum();
+    param(k).proba_.randUnif();
+    param(k).proba_ /= param(k).proba_.sum();
   }
 }
 
@@ -121,15 +121,15 @@ bool Categorical_pk<Array>::mStep()
 {
   for (int k = baseIdx; k < components().end(); ++k)
   {
-    p_param(k)->proba_ = 0.;
+    param(k).proba_ = 0.;
     for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
       for (int i = p_tik()->beginRows(); i < p_tik()->endRows(); ++i)
-      { p_param(k)->proba_[(*p_data())(i, j)] += (*p_tik())(i, k);}
+      { param(k).proba_[(*p_data())(i, j)] += (*p_tik())(i, k);}
     }
-    Real sum = p_param(k)->proba_.sum();
+    Real sum = param(k).proba_.sum();
     if (sum<=0.) return false;
-    p_param(k)->proba_ /= sum;
+    param(k).proba_ /= sum;
   }
   return true;
 }

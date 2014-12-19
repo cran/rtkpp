@@ -77,7 +77,7 @@ class Gamma_a_bjk : public GammaBase< Gamma_a_bjk<Array> >
 
     using Base::p_tik;using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -101,7 +101,7 @@ class Gamma_a_bjk : public GammaBase< Gamma_a_bjk<Array> >
     {
       shape_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_shape_ = &shape_;}
+      { param(k).p_shape_ = &shape_;}
       stat_shape_.initialize();
     }
     /** Store the intermediate results of the Mixture.
@@ -151,8 +151,8 @@ void Gamma_a_bjk<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->scale_[j] = Law::Exponential::rand((variance/mean));
-      value += p_param(k)->tk_ * (mean*mean/variance);
+      param(k).scale_[j] = Law::Exponential::rand((variance/mean));
+      value += param(k).tk_ * (mean*mean/variance);
     }
   }
   shape_ = Law::Exponential::rand(value/(this->nbSample()*this->nbVariable()));
@@ -174,8 +174,8 @@ bool Gamma_a_bjk<Array>::mStep()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k);
-      y  += p_param(k)->tk_ * (p_param(k)->meanLog_[j]-std::log(mean));
-      x0 += p_param(k)->tk_ * (mean*mean/variancejk(j,k));
+      y  += param(k).tk_ * (param(k).meanLog_[j]-std::log(mean));
+      x0 += param(k).tk_ * (mean*mean/variancejk(j,k));
     }
   }
   y  /= (this->nbSample()*this->nbVariable());
@@ -203,7 +203,7 @@ bool Gamma_a_bjk<Array>::mStep()
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
   {
     for (int k= baseIdx; k < components().end(); ++k)
-    { p_param(k)->scale_[j] = p_param(k)->mean_[j]/a;}
+    { param(k).scale_[j] = param(k).mean_[j]/a;}
   }
   return true;
 }

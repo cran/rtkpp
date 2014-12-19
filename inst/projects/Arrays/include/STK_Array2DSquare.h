@@ -55,19 +55,21 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for the Array2DSquare class.
  **/
-template<class _Type>
-struct Traits<Array2DSquare<_Type> >
+template<class Type_>
+struct Traits<Array2DSquare<Type_> >
 {
   private:
     class Void {};
   public:
-    typedef _Type                Type;
-    typedef Array2DPoint<_Type>  Row;
-    typedef Array2DVector<_Type> Col;
-    typedef Array2DPoint<_Type>  SubRow;
-    typedef Array2DVector<_Type> SubCol;
-    typedef Array2D<_Type>       SubArray;
+    typedef Array2DPoint<Type_>  Row;
+    typedef Array2DVector<Type_> Col;
+    typedef Array2DPoint<Type_>  SubRow;
+    typedef Array2DVector<Type_> SubCol;
+    typedef Array2D<Type_>       SubArray;
     typedef Void                 SubVector;
+
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
 
     enum
     {
@@ -90,16 +92,23 @@ struct Traits<Array2DSquare<_Type> >
   *
   * The range of the rows and the columns is the same.
   **/
-template<class Type>
-class Array2DSquare : public IArray2D< Array2DSquare<Type> >
+template<class Type_>
+class Array2DSquare : public IArray2D< Array2DSquare<Type_> >
 {
   public:
-    typedef typename hidden::Traits<Array2DSquare<Type> >::Row Row;
-    typedef typename hidden::Traits<Array2DSquare<Type> >::Col Col;
-    typedef typename hidden::Traits<Array2DSquare<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array2DSquare<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array2DSquare<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array2DSquare<Type> >::SubArray SubArray;
+    /** Type for the Interface Class. */
+    typedef IArray2D< Array2DSquare<Type_> > Base;
+    typedef ArrayBase <  Array2DSquare<Type_> > LowBase;
+
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::Row Row;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::Col Col;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::SubArray SubArray;
+
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::Type Type;
+    typedef typename hidden::Traits<Array2DSquare<Type_> >::ReturnType ReturnType;
 
     enum
     {
@@ -109,10 +118,6 @@ class Array2DSquare : public IArray2D< Array2DSquare<Type> >
       sizeCols_  = UnknownSize,
       storage_   = Arrays::dense_ // always dense
     };
-    /** Type for the Interface Class. */
-    typedef IArray2D< Array2DSquare<Type> > Base;
-    typedef ArrayBase <  Array2DSquare<Type> > LowBase;
-
     /** Default constructor with cols_=(1:0) and rows_=(1:0). */
     Array2DSquare(): Base() {}
     /** Default constructor with specified Range

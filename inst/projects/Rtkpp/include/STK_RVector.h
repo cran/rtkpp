@@ -62,13 +62,15 @@ struct Traits< RVector<Type_> >
   private:
     class Void {};
   public:
-    typedef Type_ Type;
     typedef RowOperator< RVector<Type_> > Row;
     typedef ColOperator< RVector<Type_> > Col;
     typedef RowOperator< RMatrix<Type_> > SubRow;
     typedef ColOperator< RMatrix<Type_> > SubCol;
     typedef SubOperator< RMatrix<Type_> > SubVector;
     typedef Void SubArray;
+
+    typedef Type_ Type;
+    typedef Type const& ReturnType;
 
     enum
     {
@@ -86,13 +88,14 @@ template <typename Type_>
 class RVector : public ArrayBase< RVector<Type_> >
 {
   public:
-    typedef typename hidden::Traits<RVector >::Type Type;
-    typedef typename hidden::Traits<RVector >::Row Row;
-    typedef typename hidden::Traits<RVector >::Col Col;
-    typedef typename hidden::Traits<RVector >::SubRow SubRow;
-    typedef typename hidden::Traits<RVector >::SubCol SubCol;
-    typedef typename hidden::Traits<RVector >::SubVector SubVector;
+    typedef typename hidden::Traits<RVector<Type_> >::Row Row;
+    typedef typename hidden::Traits<RVector<Type_> >::Col Col;
+    typedef typename hidden::Traits<RVector<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<RVector<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<RVector<Type_> >::SubVector SubVector;
 
+    typedef typename hidden::Traits<RVector<Type_> >::Type Type;
+    typedef typename hidden::Traits<RVector<Type_> >::ReturnType ReturnType;
     enum
     {
       structure_ = hidden::Traits<RVector<Type_> >::structure_,
@@ -151,27 +154,36 @@ class RVector : public ArrayBase< RVector<Type_> >
      *  @param i index of the ith element
      **/
     inline Type const& elt1Impl(int i) const { return static_cast<Type const&>(vector_[i]);}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param T the container to copy
+    /** overwrite the RVector with vec using Rcpp::operator=.
+     *  @param vec the vector to copy
      **/
-    inline RVector& operator=( RVector const& T)
-    { vector_ = T.vector_; return *this;}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param T the container to transfer
+    inline RVector& operator=( RVector const& vec)
+    {
+      vector_ = vec.vector_RVector; rows_ = vec.rows_;
+      return *this;
+    }
+    /** overwrite the RVector with vec using Rcpp::operator=.
+     *  @param vec the vector to transfer
      **/
     template<class OtherType>
-    inline RVector& operator=( RVector<OtherType> const& T)
-    { vector_ = T.vector_; return *this;}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param vector the container to copy
+    inline RVector& operator=( RVector<OtherType> const& vec)
+    {
+      vector_ = vec.vector_; rows_ = vec.rows_;
+      return *this;
+    }
+    /** overwrite the RVector with vec using Rcpp::operator=.
+     *  @param vec the vector to copy
      **/
     template<int OtherRtype>
-    inline RVector& operator=( Rcpp::Vector<OtherRtype> const& vector)
-    { vector_ = vector; return *this;}
+    inline RVector& operator=( Rcpp::Vector<OtherRtype> const& vec)
+    {
+      vector_ = vec;  rows_ = RowRange(0, vec.size());
+      return *this;
+    }
   private:
     Rcpp::Vector<Rtype_> vector_;
     RowRange rows_;
-    ColRange cols_;
+    const ColRange cols_;
 };
 
 } // namespace STK

@@ -60,8 +60,9 @@ struct Traits< DotProduct < Lhs, Rhs> >
     sizeCols_  = 1,
     storage_   = Arrays::dense_
   };
-  typedef typename hidden::Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
-  typedef CAllocator<Type, (Arrays::Structure)structure_, sizeRows_, sizeCols_, (Arrays::Orientation)orient_> Allocator;
+  typedef typename Promote< typename Lhs::Type, typename Rhs::Type>::result_type Type;
+  typedef typename RemoveConst<Type>::Type const& ReturnType;
+  typedef CAllocator<Type, sizeRows_, sizeCols_, (Arrays::Orientation)orient_> Allocator;
 };
 
 } // end namespace hidden
@@ -88,6 +89,7 @@ class DotProduct : public ExprBase< DotProduct<Lhs, Rhs> >
 {
   public:
     typedef typename hidden::Traits<DotProduct>::Type Type;
+    typedef typename hidden::Traits<DotProduct>::ReturnType ReturnType;
     typedef typename hidden::Traits<DotProduct>::Allocator Allocator;
 
     enum
@@ -114,20 +116,30 @@ class DotProduct : public ExprBase< DotProduct<Lhs, Rhs> >
     }
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return result_.rows();}
+    /** @return the beginning of the rows */
+    inline int beginRowsImpl() const { return result_.beginRows();}
+    /** @return the end of the rows */
+    inline int endRowsImpl() const { return result_.endRows();}
     /** @return the number of rows */
     inline int sizeRowsImpl() const { return result_.sizeRows();}
     /** @return the range of the columns */
     inline ColRange const& colsImpl() const { return result_.cols();}
+    /** @return the beginning of the columns */
+    inline int beginColsImpl() const { return result_.beginCols();}
+    /** @return the end of the columns */
+    inline int endColsImpl() const { return result_.endCols();}
     /** @return the number of columns */
     inline int sizeColsImpl() const { return result_.sizeCols();}
+
+    /** access to the element */
+    inline ReturnType elt0Impl() const { return result_.elt();}
+
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
     /** @return the right hand side nested expression */
     inline Rhs const& rhs() const { return rhs_; }
     /** @return the result */
     inline Allocator const& result() const { return result_; }
-    /** access to the element */
-    inline Type const elt0Impl() const { return result_.elt();}
 
   protected:
     Lhs const& lhs_;

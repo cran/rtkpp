@@ -78,7 +78,7 @@ class Gamma_ajk_bjk : public GammaBase< Gamma_ajk_bjk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -122,8 +122,8 @@ void Gamma_ajk_bjk<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand((mean*mean/variance));
-      p_param(k)->scale_[j] = Law::Exponential::rand((variance/mean));
+      param(k).shape_[j] = Law::Exponential::rand((mean*mean/variance));
+      param(k).scale_[j] = Law::Exponential::rand((variance/mean));
     }
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
@@ -144,11 +144,11 @@ bool Gamma_ajk_bjk<Array>::mStep()
     {
       // moment estimate and oldest value
       Real x0 = meanjk(j,k)*meanjk(j,k)/variancejk(j,k);
-      Real x1 = p_param(k)->shape_[j];
+      Real x1 = param(k).shape_[j];
       if ((x0 <=0.) || (isNA(x0))) return false;
 
       // get shape
-      hidden::invPsiMLog f(p_param(k)->meanLog_[j]-std::log(p_param(k)->mean_[j]));
+      hidden::invPsiMLog f(param(k).meanLog_[j]-std::log(param(k).mean_[j]));
       Real a = Algo::findZero(f, x0, x1, 1e-08);
       if (!Arithmetic<Real>::isFinite(a))
       {
@@ -162,8 +162,8 @@ bool Gamma_ajk_bjk<Array>::mStep()
         a = x0; // use moment estimate
       }
       // set values
-      p_param(k)->shape_[j] = a;
-      p_param(k)->scale_[j] = p_param(k)->mean_[j]/a;
+      param(k).shape_[j] = a;
+      param(k).scale_[j] = param(k).mean_[j]/a;
     }
   }
   return true;

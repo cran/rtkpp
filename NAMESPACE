@@ -1,49 +1,7 @@
-export(clusterAlgo
-      ,clusterInit
-      ,clusterStrategy
-      ,clusterFastStrategy
-      ,clusterDiagGaussianNames
-      ,clusterGammaNames
-      ,clusterCategoricalNames
-      ,clusterPoissonNames
-      ,clusterValidGammaNames
-      ,clusterValidCategoricalNames
-      ,clusterValidPoissonNames
-      ,clusterValidDiagGaussianNames
-      ,clusterDiagGaussian
-      ,clusterGamma
-      ,clusterCategorical
-      ,clusterPoisson
-      ,clusterHeterogeneous
+export(CxxFlags
+      ,CppFlags
+      ,LdFlags
       )
-
-export(CxxFlags,
-       LdFlags
-      )
-
-exportClasses(ClusterAlgo
-             ,ClusterInit
-             ,ClusterStrategy
-             ,IClusterModelBase
-             ,IClusterComponent
-             ,ClusterDiagGaussianComponent
-             ,ClusterDiagGaussian
-             ,ClusterGammaComponent
-             ,ClusterGamma
-             ,ClusterCategoricalComponent
-             ,ClusterCategorical
-             ,ClusterPoissonComponent
-             ,ClusterPoisson
-             ,ClusterHeterogeneous
-             )
-
-exportMethods(print)
-exportMethods(plot)
-exportMethods(show)
-exportMethods(summary)
-exportMethods(missingValues)
 
 import(Rcpp)
-importFrom(methods,show)
-
 useDynLib(rtkpp)

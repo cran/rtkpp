@@ -58,16 +58,18 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for Array2DPoint class.
  **/
-template<class _Type>
-struct Traits< Array2DPoint<_Type> >
+template<class Type_>
+struct Traits< Array2DPoint<Type_> >
 {
-  typedef _Type          Type;
-  typedef Array2DPoint<_Type>  Row;
-  typedef Array2DVector<_Type> Col;
-  typedef Array2DPoint<_Type>  SubRow;
-  typedef Array2DVector<_Type> SubCol;
-  typedef Array2DPoint<_Type>  SubArray;
-  typedef Array2DPoint<_Type>  SubVector;
+  typedef Array2DPoint<Type_>  Row;
+  typedef Array2DVector<Type_> Col;
+  typedef Array2DPoint<Type_>  SubRow;
+  typedef Array2DVector<Type_> SubCol;
+  typedef Array2DPoint<Type_>  SubArray;
+  typedef Array2DPoint<Type_>  SubVector;
+
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type const& ReturnType;
   enum
   {
     structure_ = Arrays::point_,
@@ -89,18 +91,24 @@ struct Traits< Array2DPoint<_Type> >
  *  By default the index of the first element is 1 but this can be
  *  modified using the appropriate constructor or using the method @c shift.
  **/
-template<class Type>
-class Array2DPoint : public IArray2D< Array2DPoint<Type> >
+template<class Type_>
+class Array2DPoint : public IArray2D< Array2DPoint<Type_> >
 {
   public:
-    typedef typename hidden::Traits<Array2DPoint<Type> >::Row Row;
-    typedef typename hidden::Traits<Array2DPoint<Type> >::Col Col;
-    typedef typename hidden::Traits<Array2DPoint<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array2DPoint<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array2DPoint<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array2DPoint<Type> >::SubArray SubArray;
+    typedef IArray2D< Array2DPoint<Type_> > Base;
+    typedef ArrayBase < Array2DPoint<Type_> > LowBase;
 
-    enum
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::Row Row;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::Col Col;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::SubArray SubArray;
+
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::Type Type;
+    typedef typename hidden::Traits<Array2DPoint<Type_> >::ReturnType ReturnType;
+
+   enum
     {
       structure_ = Arrays::point_,
       orient_    = Arrays::by_col_,
@@ -108,10 +116,6 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type> >
       sizeCols_  = UnknownSize,
       storage_   = Arrays::dense_ // always dense
     };
-
-    typedef AllocatorBase<Type*> Allocator;
-    typedef IArray2D< Array2DPoint<Type> > Base;
-    typedef ArrayBase < Array2DPoint<Type> > LowBase;
 
     /** Default constructor */
     Array2DPoint() : Base(Range(1), Range()) {}

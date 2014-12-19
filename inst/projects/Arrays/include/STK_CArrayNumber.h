@@ -72,10 +72,10 @@ struct Traits< CArrayNumber<Type_, Orient_> >
     typedef Number SubVector;
     typedef Number SubArray;
     // The CAllocator have to have the same structure than the CArrayNumber
-    typedef CAllocator<Type_, Arrays::number_, 1, 1, Orient_> Allocator;
+    typedef CAllocator<Type_, 1, 1, Orient_> Allocator;
 
-    typedef Type_ Type;
-
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::number_,
@@ -92,12 +92,16 @@ struct Traits< CArrayNumber<Type_, Orient_> >
 /** @ingroup Arrays
  * @brief specialization for the number case.
  */
-template <typename Type, bool Orient_>
-class CArrayNumber: public ICArray < CArrayNumber<Type, Orient_> >
+template <typename Type_, bool Orient_>
+class CArrayNumber: public ICArray < CArrayNumber<Type_, Orient_> >
 {
   public:
-    typedef ICArray < CArrayNumber<Type, Orient_> > Base;
-    typedef ArrayBase < CArrayNumber<Type, Orient_> > LowBase;
+    typedef ICArray < CArrayNumber<Type_, Orient_> > Base;
+    typedef ArrayBase < CArrayNumber<Type_, Orient_> > LowBase;
+
+    typedef typename hidden::Traits<CArrayNumber<Type_, Orient_> >::Type Type;
+    typedef typename hidden::Traits<CArrayNumber<Type_, Orient_> >::ReturnType ReturnType;
+
     enum
     {
       structure_ = Arrays::number_,

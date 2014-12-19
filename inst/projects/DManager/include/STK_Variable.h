@@ -59,6 +59,7 @@ struct Traits< Variable<Type_> >
   typedef Variable<Type_> SubVector;
 
   typedef Type_          Type;
+  typedef typename RemoveConst<Type>::Type const& ReturnType;
   enum
   {
     structure_ = Arrays::vector_,

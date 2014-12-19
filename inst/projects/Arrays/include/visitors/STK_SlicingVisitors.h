@@ -81,6 +81,7 @@ struct Traits< VisitorByCol <Derived, Visitor> >
 {
   typedef typename Derived::Type Type_;
   typedef typename Visitor<Type_>::return_type Type;
+  typedef Type ReturnType;
 
   typedef RowOperator< VisitorByCol <Derived, Visitor> > Row;
   typedef ColOperator< VisitorByCol <Derived, Visitor> > Col;
@@ -93,7 +94,7 @@ struct Traits< VisitorByCol <Derived, Visitor> >
       sizeCols_  = Derived::sizeCols_,
       storage_   = Arrays::dense_
   };
-  typedef CAllocator<Type, Arrays::point_, sizeRows_, sizeCols_, orient_> Allocator;
+  typedef CAllocator<Type, sizeRows_, sizeCols_, orient_> Allocator;
 };
 
 } // end namespace hidden
@@ -121,7 +122,7 @@ class VisitorByCol : public VisitorByColBase< Derived, Visitor >, public TRef<1>
       orient_    = hidden::Traits<VisitorByCol<Derived, Visitor> >::orient_,
       sizeRows_  = hidden::Traits<VisitorByCol<Derived, Visitor> >::sizeRows_,
       sizeCols_  = hidden::Traits<VisitorByCol<Derived, Visitor> >::sizeCols_,
-      storage_   = hidden::Traits<VisitorByCol<Derived, Visitor> >::storage_,
+      storage_   = hidden::Traits<VisitorByCol<Derived, Visitor> >::storage_
     };
     /** Type of the Range for the rows */
     typedef TRange<sizeRows_> RowRange;
@@ -141,20 +142,20 @@ class VisitorByCol : public VisitorByColBase< Derived, Visitor >, public TRef<1>
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return result_.rows();}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return(result_.beginRows());}
+    inline int beginRowsImpl() const { return(result_.beginRows());}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return(result_.endRows());}
+    inline int endRowsImpl() const { return(result_.endRows());}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return(result_.sizeRows());}
+    inline int sizeRowsImpl() const { return(result_.sizeRows());}
 
     /** @return the range of the columns */
     inline ColRange const& colsImpl() const { return result_.cols();}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return(result_.beginCols());}
+    inline int beginColsImpl() const { return(result_.beginCols());}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return(result_.endCols());}
+    inline int endColsImpl() const { return(result_.endCols());}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return result_.sizeCols();}
+    inline int sizeColsImpl() const { return result_.sizeCols();}
 
     /** @return the left hand side expression */
     inline Derived const& lhs() const { return lhs_; }
@@ -206,6 +207,7 @@ struct Traits< VisitorByRow <Derived, Visitor> >
 {
   typedef typename Derived::Type Type_;
   typedef typename Visitor<Type_>::return_type Type;
+  typedef Type ReturnType;
 
   typedef RowOperator< VisitorByRow <Derived, Visitor> > Row;
   typedef ColOperator< VisitorByRow <Derived, Visitor> > Col;
@@ -218,7 +220,7 @@ struct Traits< VisitorByRow <Derived, Visitor> >
       sizeCols_  = 1,
       storage_   = Arrays::dense_
   };
-  typedef CAllocator<Type, Arrays::vector_, sizeRows_, sizeCols_, orient_> Allocator;
+  typedef CAllocator<Type, sizeRows_, sizeCols_, orient_> Allocator;
 };
 
 } // end namespace hidden
@@ -266,20 +268,20 @@ class VisitorByRow : public VisitorByRowBase< Derived, Visitor >, public TRef<1>
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return result_.rows();}
     /** @return the first index of the rows */
-    inline int const beginRowsImpl() const { return(result_.beginRows());}
+    inline int beginRowsImpl() const { return(result_.beginRows());}
     /** @return the ending index of the rows */
-    inline int const endRowsImpl() const { return(result_.endRows());}
+    inline int endRowsImpl() const { return(result_.endRows());}
     /** @return the number of rows */
-    inline int const sizeRowsImpl() const { return(result_.sizeRows());}
+    inline int sizeRowsImpl() const { return(result_.sizeRows());}
 
     /** @return the range of the columns */
     inline ColRange const& colsImpl() const { return result_.cols();}
     /** @return the first index of the columns */
-    inline int const beginColsImpl() const { return(result_.beginCols());}
+    inline int beginColsImpl() const { return(result_.beginCols());}
     /** @return the ending index of the columns */
-    inline int const endColsImpl() const { return(result_.endCols());}
+    inline int endColsImpl() const { return(result_.endCols());}
     /** @return the number of columns */
-    inline int const sizeColsImpl() const { return result_.sizeCols();}
+    inline int sizeColsImpl() const { return result_.sizeCols();}
 
     /** @return the left hand side expression */
     inline Derived const& lhs() const { return lhs_; }

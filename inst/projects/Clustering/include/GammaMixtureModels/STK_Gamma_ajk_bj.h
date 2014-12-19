@@ -80,7 +80,7 @@ class Gamma_ajk_bj : public GammaBase<Gamma_ajk_bj<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -105,7 +105,7 @@ class Gamma_ajk_bj : public GammaBase<Gamma_ajk_bj<Array> >
       scale_.resize(p_data()->cols());
       scale_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_scale_ = &scale_;}
+      { param(k).p_scale_ = &scale_;}
       stat_scale_.initialize(p_data()->cols());
     }
     /** Store the intermediate results of the Mixture.
@@ -157,8 +157,8 @@ void Gamma_ajk_bj<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->shape_[j] = Law::Exponential::rand((mean*mean/variance));
-      value += p_param(k)->tk_ * variance/mean;
+      param(k).shape_[j] = Law::Exponential::rand((mean*mean/variance));
+      value += param(k).tk_ * variance/mean;
     }
     scale_[j] = Law::Exponential::rand(value/(this->nbSample()));
   }
@@ -186,15 +186,15 @@ bool Gamma_ajk_bj<Array>::mStep()
       {
         // moment estimate and oldest value
         Real x0 = this->meanjk(j,k)*this->meanjk(j,k)/this->variancejk(j,k);
-        Real x1 = p_param(k)->shape_[j];
+        Real x1 = param(k).shape_[j];
         if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
         // compute shape
-        hidden::invPsi f(p_param(k)->meanLog_[j] - std::log(scale_[j]));
+        hidden::invPsi f(param(k).meanLog_[j] - std::log(scale_[j]));
         Real a =  Algo::findZero(f, x0, x1, TOL);
 
         if (!Arithmetic<Real>::isFinite(a))
         {
-          p_param(k)->shape_[j] = x0; // use moment estimate
+          param(k).shape_[j] = x0; // use moment estimate
 #ifdef STK_MIXTURE_DEBUG
           stk_cout << _T("ML estimation failed in Gamma_ajk_bj::mStep()\n");
           stk_cout << "x0 =" << x0 << _T("\n";);
@@ -203,9 +203,9 @@ bool Gamma_ajk_bj<Array>::mStep()
           stk_cout << "f(x1) =" << f(x1) << _T("\n";);
 #endif
         }
-        else { p_param(k)->shape_[j] = a;}
-        num += p_param(k)->mean_[j]  * p_param(k)->tk_;
-        den += p_param(k)->shape_[j] * p_param(k)->tk_;
+        else { param(k).shape_[j] = a;}
+        num += param(k).mean_[j]  * param(k).tk_;
+        den += param(k).shape_[j] * param(k).tk_;
       }
       // compute b_j
       Real b = num/den;

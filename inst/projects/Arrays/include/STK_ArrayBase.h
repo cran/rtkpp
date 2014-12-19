@@ -157,8 +157,7 @@ class ArrayBase :  public ExprBase<Derived>
     Derived& operator/=( Type const& other);
 
     /** @return the element (i,j) of the 2D container.
-     *  @param i index of the row
-     *  @param j index of the column
+     *  @param i,j indexes of the row and column
      **/
     inline Type& elt(int i, int j)
     {
@@ -277,60 +276,6 @@ class ArrayBase :  public ExprBase<Derived>
       { STKOUT_OF_RANGE_2ARG(ArrayBase::elt, i, j, endCols() <= j);}
 #endif
       return this->asDerived().elt2Impl(i,j);
-    }
-    /** @return safely the element (i, j).
-     *  @param i index of the row
-     *  @param j index of the col
-     **/
-    Type& at(int i, int j)
-    {
-      if (this->beginRows() > i)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, beginRows() > i);}
-      if (this->endRows() <= i)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, endRows() <= i);}
-      if (this->beginCols() > j)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, beginCols() > j);}
-      if (this->endCols() <= j)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, endCols() <= j);}
-      return this->asDerived().elt2Impl(i,j);
-    }
-    /** @return safely the constant element (i, j).
-     *  @param i index of the row
-     *  @param j index of the col
-     **/
-    Type const& at(int i, int j) const
-    {
-      if (this->beginRows() > i)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, beginRows() > i);}
-      if (this->lastIdxRows() < i)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, lastIdxRows() < i);}
-      if (this->beginCols() > j)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, beginCols() > j);}
-      if (this->lastIdxCols() < j)
-      { STKOUT_OF_RANGE_2ARG(ArrayBase::at, i, j, lastIdxCols() < j);}
-      return this->asDerived().elt2Impl(i, j);
-    }
-    /** @return safely ith element
-     *  @param i index of the element
-     **/
-    Type& at(int i)
-    {
-      if (this->asDerived().begin() > i)
-      { STKOUT_OF_RANGE_1ARG(ArrayBase::at, i, begin() > i);}
-      if (this->asDerived().end() <= i)
-      { STKOUT_OF_RANGE_1ARG(ArrayBase::at, i, end() <= i);}
-      return this->asDerived().elt1Impl(i);
-    }
-    /** @return safely the constant ith element
-     *  @param i index of the element
-     **/
-    Type const& at(int i) const
-    {
-      if (this->asDerived().begin() > i)
-      { STKOUT_OF_RANGE_1ARG(ArrayBase::at, i, begin() > i);}
-      if (this->asDerived().end() <= i)
-      { STKOUT_OF_RANGE_1ARG(ArrayBase::at, i, end() <= i);}
-      return this->asDerived().elt1Impl(i);
     }
     /** @return a constant reference on the number */
     inline Type const& operator()() const

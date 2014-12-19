@@ -62,7 +62,6 @@ struct Traits< RMatrix<Type_> >
   private:
     class Void {};
   public:
-    typedef Type_ Type;
     typedef RowOperator< RMatrix<Type_> > Row;
     typedef RowOperator< RMatrix<Type_> > SubRow;
     typedef ColOperator< RMatrix<Type_> > Col;
@@ -70,6 +69,8 @@ struct Traits< RMatrix<Type_> >
     typedef Void SubVector;
     typedef Void SubArray;
 
+    typedef Type_ Type;
+    typedef Type const& ReturnType;
     enum
     {
       structure_ = Arrays::array2D_,
@@ -86,11 +87,13 @@ template <typename Type_>
 class RMatrix : public ArrayBase< RMatrix<Type_> >
 {
   public:
-    typedef typename hidden::Traits<RMatrix >::Type Type;
-    typedef typename hidden::Traits<RMatrix >::Row Row;
-    typedef typename hidden::Traits<RMatrix >::Col Col;
-    typedef typename hidden::Traits<RMatrix >::SubRow SubRow;
-    typedef typename hidden::Traits<RMatrix >::SubCol SubCol;
+    typedef typename hidden::Traits<RMatrix<Type_> >::Row Row;
+    typedef typename hidden::Traits<RMatrix<Type_> >::Col Col;
+    typedef typename hidden::Traits<RMatrix<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<RMatrix<Type_> >::SubCol SubCol;
+
+    typedef typename hidden::Traits<RMatrix<Type_> >::Type Type;
+    typedef typename hidden::Traits<RMatrix<Type_> >::ReturnType ReturnType;
     enum
     {
       structure_ = hidden::Traits<RMatrix<Type_> >::structure_,
@@ -158,23 +161,32 @@ class RMatrix : public ArrayBase< RMatrix<Type_> >
      *  @param i, j indexes of the row and of the column
      **/
     inline Type& elt2Impl(int i, int j) { return (matrix_(i,j));}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param T the container to copy
+    /** overwrite the RMatrix with mat using Rcpp::operator=.
+     *  @param mat the RMatrix to copy
      **/
-    inline RMatrix& operator=( RMatrix const& T)
-    { matrix_ = T.matrix_; return *this;}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param T the container to copy
+    inline RMatrix& operator=( RMatrix const& mat)
+    {
+      matrix_ = mat.matrix_;  rows_ = mat.rows_; cols_ = mat.cols_;
+      return *this;
+    }
+    /** overwrite the RMatrix with mat, using Rcpp::operator=.
+     *  @param mat the matrix to copy
      **/
     template<class OtherType>
-    inline RMatrix& operator=( RMatrix<OtherType> const& T)
-    { matrix_ = T.matrix_; return *this;}
-    /** overwrite the RMatrix with T, using Rcpp operator=.
-     *  @param T the container to copy
+    inline RMatrix& operator=( RMatrix<OtherType> const& mat)
+    {
+      matrix_ = mat.matrix_;  rows_ = mat.rows_; cols_ = mat.cols_;
+      return *this;
+    }
+    /** overwrite the RMatrix with mat, using Rcpp::operator=.
+     *  @param mat the matrix to copy
      **/
     template<int OtherRtype>
-    inline RMatrix& operator=( Rcpp::Matrix<OtherRtype> const& matrix)
-    { matrix_ = matrix; return *this;}
+    inline RMatrix& operator=( Rcpp::Matrix<OtherRtype> const& mat)
+    {
+      matrix_ = mat; rows_ = mat.rows_; cols_ = mat.cols_;
+      return *this;
+    }
   private:
     Rcpp::Matrix<Rtype_> matrix_;
     RowRange rows_;

@@ -121,9 +121,10 @@ struct Traits< CArray<Type_, SizeRows_, SizeCols_, Orient_> >
     typedef CArray<Type_, UnknownSize, UnknownSize, Orient_> SubArray;
 
     // The CAllocator have to have the same structure than the CArray
-    typedef CAllocator<Type_, Arrays::array2D_, SizeRows_, SizeCols_, Orient_> Allocator;
+    typedef CAllocator<Type_, SizeRows_, SizeCols_, Orient_> Allocator;
 
-    typedef Type_ Type;
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::array2D_,
@@ -140,12 +141,16 @@ struct Traits< CArray<Type_, SizeRows_, SizeCols_, Orient_> >
  * @brief A CArray is a two dimensional array with a continuous storage like
  * a C-array.
  */
-template <typename Type, int SizeRows_, int SizeCols_, bool Orient_>
-class CArray: public ICArray < CArray<Type, SizeRows_, SizeCols_, Orient_> >
+template <typename Type_, int SizeRows_, int SizeCols_, bool Orient_>
+class CArray: public ICArray < CArray<Type_, SizeRows_, SizeCols_, Orient_> >
 {
   public:
-    typedef ICArray < CArray<Type, SizeRows_, SizeCols_, Orient_> > Base;
-    typedef ArrayBase < CArray<Type, SizeRows_, SizeCols_, Orient_> > LowBase;
+    typedef ICArray < CArray<Type_, SizeRows_, SizeCols_, Orient_> > Base;
+    typedef ArrayBase < CArray<Type_, SizeRows_, SizeCols_, Orient_> > LowBase;
+
+    typedef typename hidden::Traits<CArray<Type_, SizeRows_, SizeCols_, Orient_> >::Type Type;
+    typedef typename hidden::Traits<CArray<Type_, SizeRows_, SizeCols_, Orient_> >::ReturnType ReturnType;
+
     enum
     {
       structure_ = Arrays::array2D_,
@@ -205,6 +210,18 @@ class CArray: public ICArray < CArray<Type, SizeRows_, SizeCols_, Orient_> >
      **/
     inline CArray& operator=(CArray const& rhs) { return LowBase::assign(rhs);}
 };
+
+/** @ingroup Arrays
+ *  output stream for CAllocator.
+ *  @param s the output stream
+ *  @param V the CArray to write
+ **/
+template <typename Type, int SizeRows_, int SizeCols_, bool Orient_>
+ostream& operator<<(ostream& s, const CAllocator<Type, SizeRows_, SizeCols_, Orient_>& V)
+{
+  CArray<Type, SizeRows_, SizeCols_, Orient_> wrap(V);
+  return out2D(s,wrap);}
+
 
 } // namespace STK
 

@@ -63,7 +63,7 @@ class NoAssignOperator
 } // hidden namespace
 
 /** @ingroup Arrays
- * @brief Interface base class for 2D containers.
+ *  @brief Interface base class for 2D containers.
  *
  * Use the curious recursive template paradigm : the template
  * parameter @c Derived is the name of the class that
@@ -93,23 +93,25 @@ class NoAssignOperator
  * @endcode
  * and for the accessors the following definitions:
  * @code
- *   Type const elt2Impl( int i, int j) const;
+ *   Type elt2Impl( int i, int j) const;
  *   Type& elt2Impl( int i, int j);
  * @endcode
- * for the 2D arrays (@ref Arrays::array2D_, @ref Arrays::square_, @ref Arrays::upper_triangular_
- * and @ref Arrays::lower_triangular_),
+ * for all kind of arrays.
+ *
+ * For the diagonal arrays, vectors and points (row-vectors) the following
+ * accessors have to be implemented
  * @code
- *   Type const elt1Impl( int i) const;
+ *   Type elt1Impl( int i) const; // when return by reference is not possible
  *   Type& elt1Impl( int i);
+ *   Type const& elt1Impl( int i) const;
  * @endcode
- * for the diagonal arrays (@ref Arrays::diagonal_) and the 1D arrays
- * (@ref Arrays::vector_, @ref Arrays::point_)
- * and
+ *
+ * Finaly the following accesors have to be implemented for number-like arrays
  * @code
- *   Type const elt0Impl() const;
+ *   Type elt0Impl() const; // when return by reference is not possible
  *   Type& elt0Impl();
+ *   Type const& elt0Impl() const;
  * @endcode
- * for the @ref Arrays::number_ arrays.
  **/
 template <class Derived>
 class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOperator
@@ -117,6 +119,7 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
   public:
     typedef IRecursiveTemplate<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -165,6 +168,11 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
     /** @return the index of the last row */
     inline int lastIdxRows() const { return endRows()-1;}
 
+    /** @return the range of the effectively stored elements in the column. */
+    inline Range rangeRowsInCol(int) const { return rows();}
+    /** @return the range of the effectively stored elements in the row. */
+    inline Range rangeColsInRow(int) const { return cols();}
+
     /** @return @c true if the container is empty, @c false otherwise */
     inline bool empty() const { return (sizeCols()<=0 || sizeRows()<=0);}
 
@@ -173,7 +181,7 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
     /** @return a constant reference on element (i,j) of the 2D container
      *  @param i,j indexes of the row and of the column
      **/
-    inline Type const elt(int i, int j) const
+    inline ReturnType elt(int i, int j) const
     {
 #ifdef STK_BOUNDS_CHECK
       if (this->beginRows() > i)
@@ -187,10 +195,10 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
 #endif
       return this->asDerived().elt2Impl(i,j);
     }
-    /** @return a constant reference on the element (i,j) of the 2D container.
+    /** @return safely a constant value of the element (i,j) of the 2D container.
      *  @param i,j indexes of the row and column
      **/
-    inline Type const operator()(int i, int j) const
+    inline ReturnType operator()(int i, int j) const
     {
 #ifdef STK_BOUNDS_CHECK
       if (this->beginRows() > i)
@@ -203,45 +211,75 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
       { STKOUT_OF_RANGE_2ARG(ITContainerBase::elt, i, j, endCols() <= j);}
 #endif
       return this->asDerived().elt2Impl(i,j);
-    }
-    /** @return safely the constant element (i, j).
-     *  @param i,j indexes of the row and column
-     **/
-    Type const at(int i, int j) const
-    {
-      if (this->beginRows() > i)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
-      if (this->lastIdxRows() < i)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxRows() < i);}
-      if (this->beginCols() > j)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
-      if (this->lastIdxCols() < j)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxCols() < j);}
-      return this->asDerived().elt2Impl(i, j);
     }
     /** @return the constant ith element
      *  @param i index of the ith element
      **/
-    inline Type const elt(int i) const { return this->asDerived().elt1Impl(i);}
+    inline ReturnType elt(int i) const { return this->asDerived().elt1Impl(i);}
     /** @return the ith element
      *  @param i index of the ith element
      **/
-    inline Type const operator[](int i) const { return this->asDerived().elt1Impl(i);}
+    inline ReturnType operator[](int i) const { return this->asDerived().elt1Impl(i);}
+    /** @return a value on the number */
+    inline ReturnType elt() const { return this->asDerived().elt0Impl();}
+    /** @return a constant reference on the number */
+    inline ReturnType operator()() const { return this->asDerived().elt0Impl();}
+    /** @return safely the constant element (i, j).
+     *  @param i,j indexes of the row and column
+     **/
+    ReturnType at(int i, int j) const
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, beginRows() > i);}
+      if (this->lastIdxRows() < i)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, lastIdxRows() < i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, beginCols() > j);}
+      if (this->lastIdxCols() < j)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, lastIdxCols() < j);}
+      return this->asDerived().elt2Impl(i, j);
+    }
     /** @return safely the constant ith element
      *  @param i index of the element
      **/
-    Type const at(int i) const
+    ReturnType at(int i) const
     {
       if (this->asDerived().begin() > i)
-      { STKOUT_OF_RANGE_1ARG(ITContainer::at, i, begin() > i);}
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, begin() > i);}
       if (this->asDerived().end() <= i)
-      { STKOUT_OF_RANGE_1ARG(ITContainer::at, i, end() <= i);}
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, end() <= i);}
       return this->asDerived().elt1Impl(i);
     }
-    /** @return a constant reference on the number */
-    inline Type const elt() const { return this->asDerived().elt0Impl();}
-    /** @return a constant reference on the number */
-    inline Type const operator()() const { return this->asDerived().elt0Impl();}
+    /** @return safely a reference on the element (i, j)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i,j indexes of the row and column
+     **/
+    Type& at(int i, int j)
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, beginRows() > i);}
+      if (this->endRows() <= i)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, endRows() <= i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, beginCols() > j);}
+      if (this->endCols() <= j)
+      { STKOUT_OF_RANGE_2ARG(ITContainerBase::at, i, j, endCols() <= j);}
+      return this->asDerived().elt2Impl(i,j);
+    }
+    /** @return safely a reference on the element (i)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i index of the element
+     **/
+    Type& at(int i)
+    {
+      if (this->asDerived().begin() > i)
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, begin() > i);}
+      if (this->asDerived().end() <= i)
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, end() <= i);}
+      return this->asDerived().elt1Impl(i);
+    }
 };
 
 /** @ingroup Arrays
@@ -259,6 +297,7 @@ class ITContainer<Derived, Arrays::array2D_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -267,11 +306,11 @@ class ITContainer<Derived, Arrays::array2D_> : public ITContainerBase<Derived>
       sizeCols_  = hidden::Traits<Derived>::sizeCols_,
       storage_   = hidden::Traits<Derived>::storage_
     };
+    /** Type of the Range for the rows */
+    typedef TRange<sizeRows_> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<sizeCols_> ColRange;
 
-    /** compute the range of the stored elements in a column. */
-    inline Range rangeRowsInCol(int) const { return this->rows();}
-    /** compute the range of the stored elements in a row. */
-    inline Range rangeColsInRow(int) const { return this->cols();}
 
   protected:
     /** default constructor. */
@@ -287,6 +326,7 @@ class ITContainer<Derived, Arrays::square_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -322,12 +362,7 @@ class ITContainer<Derived, Arrays::square_> : public ITContainerBase<Derived>
     /** @return the last index of the square container. */
     inline int lastIdx() const { return this->endRows()-1;}
 
-    /** compute the range of the stored elements in a column. */
-    inline Range rangeRowsInCol(int) const { return this->asDerived().rows();}
-    /** compute the range of the stored elements in a row. */
-    inline Range rangeColsInRow(int) const { return this->asDerived().rows();}
-
-    Type const trace() const
+    Type trace() const
     {
       Type sum = 0.0;
       for (int k = begin(); k< end(); k++) sum += this->elt(k, k);
@@ -343,6 +378,7 @@ class ITContainer<Derived, Arrays::lower_triangular_> : public ITContainerBase<D
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
 
   protected:
     /** default constructor. */
@@ -351,10 +387,20 @@ class ITContainer<Derived, Arrays::lower_triangular_> : public ITContainerBase<D
     inline ~ITContainer() {}
 
   public:
+    /** @return the Range of the effectively stored elements in the column @c icol.
+     *  @param icol the number of the column to compute the range
+     **/
+    inline Range rangeRowsInCol( int icol) const
+    { return Range(icol, this->lastIdxRows(), 0);}
+    /** compute the range of the effectively stored elements in the row @c irow.
+     *  @param irow the index of the row
+     **/
+    inline Range rangeColsInRow( int irow) const
+    { return Range(this->beginCols(), std::min(irow, this->lastIdxCols()), 0);}
     /** @return safely the constant element (i, j).
      *  @param i,j indexes of the row and column
      **/
-    Type const at(int i, int j) const
+    Type at(int i, int j) const
     {
       if (this->beginRows() > i)
       { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
@@ -366,16 +412,25 @@ class ITContainer<Derived, Arrays::lower_triangular_> : public ITContainerBase<D
       { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxCols() < j);}
       return (j>i) ? Type() : this->asDerived().elt2Impl(i, j);
     }
-    /** @return the Range of the effectively stored elements in the column @c icol.
-     *  @param icol the number of the column to compute the range
+    /** @return safely a reference on the element (i, j)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i,j indexes of the row and column
      **/
-    inline Range rangeRowsInCol( int const& icol) const
-    { return Range(icol, this->lastIdxRows(), 0);}
-    /** compute the range of the effectively stored elements in the row @c irow.
-     *  @param irow the index of the row
-     **/
-    inline Range rangeColsInRow( int const& irow) const
-    { return Range(this->beginCols(), std::min(irow, this->lastIdxCols()), 0);}
+    Type& at(int i, int j)
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
+      if (this->endRows() <= i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endRows() <= i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
+      if (this->endCols() <= j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endCols() <= j);}
+      if (j > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, j > i);}
+      return this->asDerived().elt2Impl(i,j);
+    }
 };
 
 /** @ingroup Arrays
@@ -386,6 +441,7 @@ class ITContainer<Derived, Arrays::upper_triangular_> : public ITContainerBase<D
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
 
   protected:
     /** default constructor. */
@@ -394,21 +450,6 @@ class ITContainer<Derived, Arrays::upper_triangular_> : public ITContainerBase<D
     inline ~ITContainer() {}
 
   public:
-    /** @return safely the constant element (i, j).
-     *  @param i, j indexes of the row and of the column
-     **/
-    Type const at(int i, int j) const
-    {
-      if (this->beginRows() > i)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
-      if (this->lastIdxRows() < i)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxRows() < i);}
-      if (this->beginCols() > j)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
-      if (this->lastIdxCols() < j)
-      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxCols() < j);}
-      return (i>j) ? Type() : this->asDerived().elt2Impl(i, j);
-    }
     /** @return the range of the effectively stored elements in the row @c irow.
      *  @param irow the index of the row we want to compute the range
      **/
@@ -420,6 +461,40 @@ class ITContainer<Derived, Arrays::upper_triangular_> : public ITContainerBase<D
      **/
     inline Range rangeRowsInCol( int icol) const
     { return Range(this->beginRows(), std::min(icol, this->lastIdxRows()), 0);}
+    /** @return safely the constant element (i, j).
+     *  @param i, j indexes of the row and of the column
+     **/
+    Type at(int i, int j) const
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
+      if (this->lastIdxRows() < i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxRows() < i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
+      if (this->lastIdxCols() < j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, lastIdxCols() < j);}
+      return (i>j) ? Type() : this->asDerived().elt2Impl(i, j);
+    }
+    /** @return safely a reference on the element (i, j)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i,j indexes of the row and column
+     **/
+    Type& at(int i, int j)
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
+      if (this->endRows() <= i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endRows() <= i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
+      if (this->endCols() <= j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endCols() <= j);}
+      if (i > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, i > j);}
+      return this->asDerived().elt2Impl(i,j);
+    }
 };
 
 /** @ingroup Arrays
@@ -430,6 +505,8 @@ class ITContainer<Derived, Arrays::diagonal_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
+
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -461,19 +538,24 @@ class ITContainer<Derived, Arrays::diagonal_> : public ITContainerBase<Derived>
 
     // for backward compatibility
     /** @return the first index of the diagonal container */
-    inline int firstIdx() const { return this->beginRows();}
+    inline int firstIdx() const { return this->begin();}
     /** @return the last index of the diagonal container. */
-    inline int lastIdx() const { return this->endRows()-1;}
+    inline int lastIdx() const { return this->end()-1;}
 
-    /** @return the first diagonal element */
-    inline Type const front() const { return this->asDerived().elt(begin());}
-    /** @return the last diagonal element */
-    inline Type const back() const { return this->asDerived().elt(lastIdx());}
+    /** @return the Range of the column pos. */
+    inline Range rangeRowsInCol(int pos) const { return Range(pos,1);}
+    /** @return the Range of the row pos. */
+    inline Range rangeColsInRow(int pos) const { return Range(pos,1);}
+
+    /** @return the first element */
+    inline ReturnType front() const { return this->elt(firstIdx());}
+    /** @return the last element */
+    inline ReturnType back() const { return this->elt(lastIdx());}
+
     /** @return safely the constant element (i, j).
-     *  @param i index of the row
-     *  @param j index of the col
+     *  @param i,j indexes of the rows and columns
      **/
-    Type const at(int i, int j) const
+    Type at(int i, int j) const
     {
       if (this->begin() > i)
       { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, begin() > i);}
@@ -488,11 +570,46 @@ class ITContainer<Derived, Arrays::diagonal_> : public ITContainerBase<Derived>
     /** @return safely the constant ith diagonal element.
      *  @param i index of the diagonal element
      **/
-    inline Type const at(int i) const { return at(i, i);}
-    /** @return the Range of the column pos. */
-    inline Range rangeRowsInCol(int pos) const { return Range(pos,1);}
-    /** @return the Range of the row pos. */
-    inline Range rangeColsInRow(int pos) const { return Range(pos,1);}
+    inline Type at(int i) const
+    {
+      if (this->begin() > i)
+      { STKOUT_OF_RANGE_1ARG(ITContainer::at, i, begin() > i);}
+      if (this->lastIdx() < i)
+      { STKOUT_OF_RANGE_1ARG(ITContainer::at, i, lastIdx() < i);}
+      return this->asDerived().elt1Impl(i);
+    }
+    /** @return safely a reference on the element (i, j)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i,j indexes of the row and column
+     **/
+    Type& at(int i, int j)
+    {
+      if (this->beginRows() > i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginRows() > i);}
+      if (this->endRows() <= i)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endRows() <= i);}
+      if (this->beginCols() > j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, beginCols() > j);}
+      if (this->endCols() <= j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, endCols() <= j);}
+      if (i != j)
+      { STKOUT_OF_RANGE_2ARG(ITContainer::at, i, j, i != j);}
+      return this->asDerived().elt2Impl(i,j);
+    }
+    /** @return safely a reference on the element (i)
+     *  @note this method is only valid for arrays as it allow to modify the
+     *  element.
+     *  @param i index of the element
+     **/
+    Type& at(int i)
+    {
+      if (this->asDerived().begin() > i)
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, begin() > i);}
+      if (this->asDerived().end() <= i)
+      { STKOUT_OF_RANGE_1ARG(ITContainerBase::at, i, end() <= i);}
+      return this->asDerived().elt1Impl(i);
+    }
 };
 
 /** @ingroup Arrays
@@ -503,6 +620,8 @@ class ITContainer<Derived, Arrays::vector_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
+
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -538,18 +657,13 @@ class ITContainer<Derived, Arrays::vector_> : public ITContainerBase<Derived>
     /** @return the last index of the vector */
     inline int lastIdx() const { return this->endRows()-1;}
 
-    /** @return the first element */
-    inline Type const front() const { return this->asDerived().elt(begin());}
-    /** @return the last element */
-    inline Type const back() const { return this->asDerived().elt(lastIdx());}
-
     /** @return the index of the column of the vector */
     inline int colIdx() const { return this->beginCols();}
 
-    /** @return the range of the effectively stored elements in the column. */
-    inline Range rangeRowsInCol(int) const { return this->rows();}
-    /** @return the range of the effectively stored elements in the row. */
-    inline Range rangeColsInRow(int) const { return this->cols();}
+    /** @return the first element */
+    inline ReturnType front() const { return this->elt(firstIdx());}
+    /** @return the last element */
+    inline ReturnType back() const { return this->elt(lastIdx());}
 };
 
 /** @ingroup Arrays
@@ -560,6 +674,8 @@ class ITContainer<Derived, Arrays::point_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
+
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -599,16 +715,10 @@ class ITContainer<Derived, Arrays::point_> : public ITContainerBase<Derived>
     inline int lastIdx() const { return this->endCols()-1;}
 
     /** @return the first element */
-    inline Type const front() const { return this->asDerived().elt(begin());}
+    inline ReturnType front() const { return this->elt(firstIdx());}
     /** @return the last element */
-    inline Type const back() const { return this->asDerived().elt(lastIdx());}
-
-    /** @return the range of the effectively stored elements in the column. */
-    inline Range rangeRowsInCol(int) const { return this->rows();}
-    /** @return the range of the effectively stored elements in the row. */
-    inline Range rangeColsInRow(int) const { return this->cols();}
+    inline ReturnType back() const { return this->elt(lastIdx());}
 };
-
 /** @ingroup Arrays
  *  Specialization for number_ */
 template <class Derived>
@@ -617,6 +727,7 @@ class ITContainer<Derived, Arrays::number_> : public ITContainerBase<Derived>
   public:
     typedef ITContainerBase<Derived> Base;
     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
 
   protected:
     /** default constructor. */
@@ -625,12 +736,10 @@ class ITContainer<Derived, Arrays::number_> : public ITContainerBase<Derived>
     inline ~ITContainer() {}
 
   public:
-    /** @return the range of the effectively stored elements in the column. */
-    inline Range rangeRowsInCol(int) const { return this->rows();}
-    /** @return the range of the effectively stored elements in the row. */
-    inline Range rangeColsInRow(int) const { return this->cols();}
+    /**  @return the size of the container */
+    inline int size() const  { return 1;}
     /** Conversion to scalar */
-    inline operator Type const() const {return this->asDerived().elt0Impl();}
+    inline operator ReturnType const() const {return this->asDerived().elt0Impl();}
 };
 
 } // namespace STK

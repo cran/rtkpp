@@ -66,7 +66,7 @@ typename Visitor::return_type ExprBase<Derived>::visit(Visitor& visitor) const
 
 /* count the number of not-zero values in the expression */
 template<typename Derived>
-int const ExprBase<Derived>::count() const
+int ExprBase<Derived>::count() const
 {
   hidden::CountVisitor<Type> visitor;
   return visit(visitor);
@@ -90,7 +90,7 @@ bool const ExprBase<Derived>::all() const
 
 /* count the number values in the expression */
 template<typename Derived>
-int const ExprBase<Derived>::nbAvailableValues() const
+int ExprBase<Derived>::nbAvailableValues() const
 { return isFinite().count();}
 
 // general min elt

@@ -64,6 +64,14 @@ class PoissonParametersBase : public IRecursiveTemplate<Parameters>
     /** Destructor */
     inline ~PoissonParametersBase() {}
   public:
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline PoissonParametersBase& operator=( PoissonParametersBase const& other)
+    {
+      tk_ = other.tk_;
+      return *this;
+    }
     /** resize the parameters (default implementation).
      *  @param range range of the parameters
      **/
@@ -104,6 +112,15 @@ class Poisson_ljk_Parameters: public PoissonParametersBase<Poisson_ljk_Parameter
     {}
     /** destructor */
     inline ~Poisson_ljk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Poisson_ljk_Parameters& operator=( Poisson_ljk_Parameters const& other)
+    {
+      Base::operator =(other);
+      lambda_ = other.lambda_;
+      return *this;
+    }
     /** @return the j-th scale value */
     inline Real lambdaImpl(int j) const {return lambda_[j];}
     /** resize the parameters.
@@ -154,6 +171,15 @@ class Poisson_lk_Parameters: public PoissonParametersBase<Poisson_lk_Parameters>
     {}
     /** destructor */
     inline ~Poisson_lk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Poisson_lk_Parameters& operator=( Poisson_lk_Parameters const& other)
+    {
+      Base::operator =(other);
+      lambda_ = other.lambda_;
+      return *this;
+    }
     /** @return the j-th scale value */
     inline Real lambdaImpl(int j) const {return lambda_;}
     /** Store the intermediate results of the Mixture.
@@ -197,6 +223,16 @@ class Poisson_ljlk_Parameters: public PoissonParametersBase<Poisson_ljlk_Paramet
     {}
     /** destructor */
     inline ~Poisson_ljlk_Parameters() {}
+    /** overwrite the parameters with other.
+     *  @param other the parameters to copy
+     **/
+    inline Poisson_ljlk_Parameters& operator=( Poisson_ljlk_Parameters const& other)
+    {
+      Base::operator =(other);
+      lambdak_ = other.lambdak_;
+      p_lambdaj_ = other.p_lambdaj_;
+      return *this;
+    }
     /** @return the j-th lambda value */
     inline Real lambdaImpl(int j) const {return lambdak_ * p_lambdaj_->elt(j);}
     /** Store the intermediate results of the Mixture.

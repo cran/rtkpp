@@ -63,16 +63,18 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for the Array2DVector class.
  **/
-template<class _Type>
-struct Traits< Array2DVector<_Type> >
+template<class Type_>
+struct Traits< Array2DVector<Type_> >
 {
-  typedef _Type                Type;
-  typedef Array2DPoint<_Type>  Row;
-  typedef Array2DVector<_Type> Col;
-  typedef Array2DPoint<_Type>  SubRow;
-  typedef Array2DVector<_Type> SubCol;
-  typedef Array2DVector<_Type> SubArray;
-  typedef Array2DVector<_Type> SubVector;
+  typedef Array2DPoint<Type_>  Row;
+  typedef Array2DVector<Type_> Col;
+  typedef Array2DPoint<Type_>  SubRow;
+  typedef Array2DVector<Type_> SubCol;
+  typedef Array2DVector<Type_> SubArray;
+  typedef Array2DVector<Type_> SubVector;
+
+  typedef Type_                Type;
+  typedef typename RemoveConst<Type_>::Type const& ReturnType;
   enum
   {
     structure_ = Arrays::vector_,
@@ -95,16 +97,22 @@ struct Traits< Array2DVector<_Type> >
  *
  *  @sa Array2DPoint
  **/
-template<class Type>
-class Array2DVector : public IArray2D< Array2DVector<Type> >
+template<class Type_>
+class Array2DVector : public IArray2D< Array2DVector<Type_> >
 {
   public:
-    typedef typename hidden::Traits<Array2DVector<Type> >::Row Row;
-    typedef typename hidden::Traits<Array2DVector<Type> >::Col Col;
-    typedef typename hidden::Traits<Array2DVector<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array2DVector<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array2DVector<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array2DVector<Type> >::SubArray SubArray;
+    typedef IArray2D< Array2DVector<Type_> > Base;
+    typedef ArrayBase < Array2DVector<Type_> > LowBase;
+
+    typedef typename hidden::Traits<Array2DVector<Type_> >::Row Row;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::Col Col;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::SubArray SubArray;
+
+    typedef typename hidden::Traits<Array2DVector<Type_> >::Type Type;
+    typedef typename hidden::Traits<Array2DVector<Type_> >::ReturnType ReturnType;
 
     enum
     {
@@ -114,10 +122,6 @@ class Array2DVector : public IArray2D< Array2DVector<Type> >
       sizeRows_  = UnknownSize,
       storage_ = Arrays::dense_ // always dense
     };
-    typedef AllocatorBase<Type*> Allocator;
-    typedef IArray2D< Array2DVector<Type> > Base;
-    typedef ArrayBase < Array2DVector<Type> > LowBase;
-
     /** Default constructor */
     Array2DVector() : Base( Range(), Range(1)) {}
     /** constructor with specified range.

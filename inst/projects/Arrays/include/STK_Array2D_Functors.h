@@ -55,6 +55,7 @@ template<typename> class Array2DLowerTriangular;
 template<typename> class Array2DDiagonal;
 template<typename> class Array2DPoint;
 template<typename> class Array2DVector;
+template<typename> class Array2DNumber;
 
 namespace hidden
 {
@@ -203,7 +204,7 @@ template<typename Type> struct ProductArray2DReturnType<Type, Arrays::point_, Ar
 template<typename Type> struct ProductArray2DReturnType<Type, Arrays::point_, Arrays::upper_triangular_>
 { typedef Array2DPoint<Type> result_type;};
 template<typename Type> struct ProductArray2DReturnType<Type, Arrays::point_, Arrays::vector_>
-{ typedef Array2DPoint<Type> result_type;};
+{ typedef Array2DNumber<Type> result_type;};
 template<typename Type> struct ProductArray2DReturnType<Type, Arrays::point_, Arrays::point_>
 {}; // not possible
 
@@ -240,14 +241,14 @@ struct SumOp
     for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, lhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) += lhs_(i,j);}
     }
     cols = Range::inf(cols_, rhs_.cols());
     for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, rhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) += rhs_(i,j);}
     }
     return res_;
@@ -287,14 +288,14 @@ struct DifferenceOp
     for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, lhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) += lhs_(i,j);}
     }
     cols = Range::inf(cols_, rhs_.cols());
     for (int j= cols.begin(); j <= cols.lastIdx(); ++j)
     {
       Range rows = Range::inf(rows_, rhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) -= rhs_(i,j);}
     }
     return res_;
@@ -330,10 +331,10 @@ struct Product
   inline result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
-    for (int j= cols_.begin(); j <= cols_.lastIdx(); ++j)
+    for (int j= cols_.begin(); j< cols_.end(); ++j)
     {
       Range rows = Range::inf(lhs_.rangeRowsInCol(j), rhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) = lhs_(i,j) * rhs_(i,j);}
     }
     return res_;
@@ -370,10 +371,10 @@ struct DivOp
   inline result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
-    for (int j= cols_.begin(); j <= cols_.lastIdx(); ++j)
+    for (int j= cols_.begin(); j< cols_.end(); ++j)
     {
       Range rows = Range::inf(lhs_.rangeRowsInCol(j), rhs_.rangeRowsInCol(j));
-      for (int i= rows.begin(); i <= rows.lastIdx(); ++i)
+      for (int i= rows.begin(); i< rows.end(); ++i)
       { res_(i,j) = lhs_(i,j) / rhs_(i,j);}
     }
     return res_;
@@ -410,10 +411,10 @@ struct MultOp
    {
      res_.resize(rows_, cols_);
      // for all cols and for all rows
-     for (int j=res_.beginCols(); j<=res_.lastIdxCols(); j++)
+     for (int j=res_.beginCols(); j<res_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = dot(lhs_.row(i), rhs_.col(j));}
      }
      return res_;
@@ -423,10 +424,10 @@ struct MultOp
    {
      res_.resize(rows_, cols_);
      // for all cols and for all rows
-     for (int j=res_.beginCols(); j<=res_.lastIdxCols(); j++)
+     for (int j=res_.beginCols(); j<res_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = weightedDot(lhs_.row(i), rhs_.col(j), weights);}
      }
      return res_;
@@ -463,10 +464,10 @@ struct MultLeftTransposeOp
    inline result_type operator()()
    {
      res_.resize(rows_, cols_);
-     for (int j=res_.beginCols(); j<=res_.lastIdxCols(); j++)
+     for (int j=res_.beginCols(); j<res_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = dot(lhs_.col(i), rhs_.col(j));}
      }
      return res_;
@@ -475,10 +476,10 @@ struct MultLeftTransposeOp
    inline result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
-     for (int j=rhs_.beginCols(); j<=rhs_.lastIdxCols(); j++)
+     for (int j=rhs_.beginCols(); j<rhs_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = weightedDot(lhs_.col(i), rhs_.col(j), weights);}
      }
      return res_;
@@ -515,10 +516,10 @@ struct MultRightTransposeOp
    inline result_type operator()()
    {
      res_.resize(rows_, cols_);
-     for (int j=res_.beginCols(); j<=res_.lastIdxCols(); j++)
+     for (int j=res_.beginCols(); j<res_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = dot(lhs_.row(i), rhs_.row(j));}
      }
      return res_;
@@ -527,10 +528,10 @@ struct MultRightTransposeOp
    inline result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
-     for (int j=res_.beginCols(); j<=res_.lastIdxCols(); j++)
+     for (int j=res_.beginCols(); j<res_.endCols(); j++)
      {
-       Integer const last = res_.rangeRowsInCol(j).lastIdx();
-       for (int i=res_.rangeRowsInCol(j).begin(); i<=last; i++)
+       Integer const end = res_.rangeRowsInCol(j).end();
+       for (int i=res_.rangeRowsInCol(j).begin(); i<end; i++)
        { res_(i, j) = weightedDot(lhs_.row(i), rhs_.row(j), weights);}
      }
      return res_;
@@ -629,21 +630,13 @@ inline typename Arrays::MultRightTransposeOp<Lhs, Rhs>::result_type
  *  @return the dot product of the two vectors
  **/
 template<class Container1D1, class Container1D2>
-Real dot( ExprBase< Container1D1> const& x
-        , ExprBase< Container1D2> const& y
-        )
+Real dot( ExprBase< Container1D1> const& x, ExprBase< Container1D2> const& y)
 {
   // compute the valid range
-  const int first = std::max(x.begin(), y.begin()) , last = std::min(x.lastIdx(), y.lastIdx());
+  const int first = std::max(x.begin(), y.begin()) , end = std::min(x.end(), y.end());
   // compute the sum product
   Real sum=0.0;
-  int i;
-//  for (i = first; i<last; i+=2)
-//    sum += x[i] * y[i] + x[i+1] * y[i+1];
-  for (i = first; i<=last; ++i)
-    sum += x[i] * y[i];// + x[i+1] * y[i+1];
-  // check if the number of element is odd
-//  if (i==last) sum+=x[last]*y[last];
+  for (int i = first; i<end; ++i) sum += x[i] * y[i];
   return (sum);
 }
 

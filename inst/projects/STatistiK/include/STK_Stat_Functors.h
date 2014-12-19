@@ -390,7 +390,7 @@ struct VarianceOp
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
 
-      int const nobs = V_.size();
+      int nobs = V_.size();
       // Compute the mean and sum
       Type mu = MeanOp<Derived>(V_)();
       Type sum  = 0.0, var  = 0.0, dev;
@@ -559,7 +559,7 @@ struct VarianceWithFixedMeanOp
     {
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
-      int const nobs = V_.size();
+      int nobs = V_.size();
       // sum
       Type sum = 0., var = 0., dev;
       for (int i=V_.begin(); i<V_.end(); i++)

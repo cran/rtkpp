@@ -278,18 +278,12 @@ void MixtureComposer::releaseMixture( String const& idData)
     }
   }
 }
-/** Utility method allowing to create all the mixtures using the DataHandler
- *  info of the manager.
- **/
-void MixtureComposer::createMixtures(IMixtureManager& manager)
-{ manager.createMixtures(*this, nbCluster());}
 /* Utility method allowing to create a mixture with a given data set
  *  and register it. The Mixture Manager will find the associated model
  *  to use with this data set.
  *  @param manager the manager with the responsibility of the creation.
  *  @param idData the id name of the data to modelize.
  **/
-//    template<class MixtureManager>
 void MixtureComposer::createMixture(IMixtureManager& manager, String const& idData)
 {
   IMixture* p_mixture = manager.createMixture( idData, nbCluster());

@@ -77,7 +77,7 @@ class Poisson_ljlk : public PoissonBase<Poisson_ljlk<Array> >
     using Base::p_nk;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
 
     /** default constructor
@@ -100,7 +100,7 @@ class Poisson_ljlk : public PoissonBase<Poisson_ljlk<Array> >
       lambdaj_.resize(p_data()->cols());
       lambdaj_ = 1./this->nbVariable();
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_lambdaj_ = &lambdaj_;}
+      { param(k).p_lambdaj_ = &lambdaj_;}
       stat_lambdaj_.initialize(p_data()->cols());
     }
     /** Store the intermediate results of the Mixture.
@@ -143,7 +143,7 @@ void Poisson_ljlk<Array>::randomInit()
     for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
     {
       Real m = (Real)p_data()->col(j).sum() / this->nbSample();
-      p_param(k)->lambdak_ = Law::Exponential::rand(m)/lambdaj_[j];
+      param(k).lambdak_ = Law::Exponential::rand(m)/lambdaj_[j];
     }
   }
 }
@@ -158,7 +158,7 @@ bool Poisson_ljlk<Array>::mStep()
   PointX lk = Stat::sumByRow(*p_data()).transpose() * (*p_tik())/(*p_nk());
 
   for (int k = baseIdx; k < components().end(); ++k)
-  { p_param(k)->lambdak_ = lk[k];}
+  { param(k).lambdak_ = lk[k];}
   return true;
 }
 

@@ -37,13 +37,18 @@
 #define STK_MIXTUREMANAGER_H
 
 #include "DManager/include/STK_IDataHandler.h"
-#include "MixturesBridges/STK_MixtureBridge.h"
+
+#include "CategoricalMixtureModels/STK_CategoricalBridge.h"
+#include "GammaMixtureModels/STK_GammaBridge.h"
+#include "DiagGaussianMixtureModels/STK_DiagGaussianBridge.h"
+#include "PoissonMixtureModels/STK_PoissonBridge.h"
+
 #include "STK_IMixtureManager.h"
 
 #define STK_CREATE_MIXTURE(Data, Bridge) \
           Data* p_data = new Data(idData); \
           registerMixtureData(p_data); \
-          p_handler_->getData(idData, p_data->m_dataij_, p_data->nbVariable_ ); \
+          p_handler_->getData(idData, p_data->dataij_, p_data->nbVariable_ ); \
           p_data->initialize(); \
           Bridge* p_bridge = new Bridge( p_data, idData, nbCluster);  \
           return p_bridge;
@@ -52,11 +57,12 @@ namespace STK
 {
 /** @ingroup Clustering
  *  @brief A mixture manager is a factory class for injection dependency in the
- *  STK++ derived class of the IMixtureComposer interface
- *  (aka: the MixtureComposer class).
+ *  STK++ derived class of the MixtureComposer class.
  *
- *  It allow to handle all the creation and initialization stuff needed by the
+ *  It allows to handle all the creation and initialization stuff needed by the
  *  (bridged) mixture models of the stkpp library.
+ *
+ *  @tparam DataHandler is any concrete class from the interface IDataHandler
  */
 template<class DataHandler>
 class MixtureManager : public IMixtureManager
@@ -72,40 +78,50 @@ class MixtureManager : public IMixtureManager
     typedef MixtureData<DataInt>  MixtureDataInt;
 
     // All Gamma bridges
-    typedef MixtureBridge<Clust::Gamma_ajk_bjk_, DataReal> MixtureBridge_ajk_bjk;
-    typedef MixtureBridge<Clust::Gamma_ajk_bk_,  DataReal> MixtureBridge_ajk_bk;
-    typedef MixtureBridge<Clust::Gamma_ajk_bj_,  DataReal> MixtureBridge_ajk_bj;
-    typedef MixtureBridge<Clust::Gamma_ajk_b_,   DataReal> MixtureBridge_ajk_b;
-    typedef MixtureBridge<Clust::Gamma_ak_bjk_,  DataReal> MixtureBridge_ak_bjk;
-    typedef MixtureBridge<Clust::Gamma_ak_bk_,   DataReal> MixtureBridge_ak_bk;
-    typedef MixtureBridge<Clust::Gamma_ak_bj_,   DataReal> MixtureBridge_ak_bj;
-    typedef MixtureBridge<Clust::Gamma_ak_b_,    DataReal> MixtureBridge_ak_b;
-    typedef MixtureBridge<Clust::Gamma_aj_bjk_,  DataReal> MixtureBridge_aj_bjk;
-    typedef MixtureBridge<Clust::Gamma_aj_bk_,   DataReal> MixtureBridge_aj_bk;
-    typedef MixtureBridge<Clust::Gamma_a_bjk_,   DataReal> MixtureBridge_a_bjk;
-    typedef MixtureBridge<Clust::Gamma_a_bk_,    DataReal> MixtureBridge_a_bk;
+    typedef GammaBridge<Clust::Gamma_ajk_bjk_, DataReal> MixtureBridge_ajk_bjk;
+    typedef GammaBridge<Clust::Gamma_ajk_bk_,  DataReal> MixtureBridge_ajk_bk;
+    typedef GammaBridge<Clust::Gamma_ajk_bj_,  DataReal> MixtureBridge_ajk_bj;
+    typedef GammaBridge<Clust::Gamma_ajk_b_,   DataReal> MixtureBridge_ajk_b;
+    typedef GammaBridge<Clust::Gamma_ak_bjk_,  DataReal> MixtureBridge_ak_bjk;
+    typedef GammaBridge<Clust::Gamma_ak_bk_,   DataReal> MixtureBridge_ak_bk;
+    typedef GammaBridge<Clust::Gamma_ak_bj_,   DataReal> MixtureBridge_ak_bj;
+    typedef GammaBridge<Clust::Gamma_ak_b_,    DataReal> MixtureBridge_ak_b;
+    typedef GammaBridge<Clust::Gamma_aj_bjk_,  DataReal> MixtureBridge_aj_bjk;
+    typedef GammaBridge<Clust::Gamma_aj_bk_,   DataReal> MixtureBridge_aj_bk;
+    typedef GammaBridge<Clust::Gamma_a_bjk_,   DataReal> MixtureBridge_a_bjk;
+    typedef GammaBridge<Clust::Gamma_a_bk_,    DataReal> MixtureBridge_a_bk;
     // All Gaussian bridges
-    typedef MixtureBridge<Clust::Gaussian_sjk_, DataReal> MixtureBridge_sjk;
-    typedef MixtureBridge<Clust::Gaussian_sk_,  DataReal> MixtureBridge_sk;
-    typedef MixtureBridge<Clust::Gaussian_sj_,  DataReal> MixtureBridge_sj;
-    typedef MixtureBridge<Clust::Gaussian_s_,   DataReal> MixtureBridge_s;
+    typedef DiagGaussianBridge<Clust::Gaussian_sjk_, DataReal> MixtureBridge_sjk;
+    typedef DiagGaussianBridge<Clust::Gaussian_sk_,  DataReal> MixtureBridge_sk;
+    typedef DiagGaussianBridge<Clust::Gaussian_sj_,  DataReal> MixtureBridge_sj;
+    typedef DiagGaussianBridge<Clust::Gaussian_s_,   DataReal> MixtureBridge_s;
     // All Categorical bridges
-    typedef MixtureBridge<Clust::Categorical_pjk_, DataInt> MixtureBridge_pjk;
-    typedef MixtureBridge<Clust::Categorical_pk_,  DataInt> MixtureBridge_pk;
+    typedef CategoricalBridge<Clust::Categorical_pjk_, DataInt> MixtureBridge_pjk;
+    typedef CategoricalBridge<Clust::Categorical_pk_,  DataInt> MixtureBridge_pk;
     // All Poisson bridges
-    typedef MixtureBridge<Clust::Poisson_ljk_,  DataInt> MixtureBridge_ljk;
-    typedef MixtureBridge<Clust::Poisson_lk_,  DataInt> MixtureBridge_lk;
-    typedef MixtureBridge<Clust::Poisson_ljlk_, DataInt> MixtureBridge_ljlk;
+    typedef PoissonBridge<Clust::Poisson_ljk_,  DataInt> MixtureBridge_ljk;
+    typedef PoissonBridge<Clust::Poisson_lk_,  DataInt> MixtureBridge_lk;
+    typedef PoissonBridge<Clust::Poisson_ljlk_, DataInt> MixtureBridge_ljlk;
 
     /** Default constructor, need an instance of a DataHandler.  */
     MixtureManager(DataHandler const& handler) : IMixtureManager(&handler), p_handler_(&handler) {}
     /** destructor */
     virtual ~MixtureManager() {}
+    /** Utility function allowing to find the idModel from the idData
+     *  @param idData the id name of the data we want the idModel
+     *  @return the idModel
+     **/
+    Clust::Mixture getIdModel( String const& idData) const;
+    /** Utility function allowing to create and register all the STK++ mixtures
+     *  defined in the handler.
+     *  @param composer the composer claiming the mixtures
+     **/
+    void createMixtures(MixtureComposer& composer);
     /** get the parameters from an IMixture.
      *  @param p_mixture pointer on the mixture
      *  @param param the array to return with the parameters
      **/
-    void getParameters(IMixture* p_mixture, Array2D<Real>& param) const
+    void getParameters(IMixture* p_mixture, ArrayXX& param) const
     {
       Clust::Mixture idModel = getIdModel(p_mixture->idName());
       if (idModel == Clust::unknown_mixture_) return;
@@ -183,88 +199,6 @@ class MixtureManager : public IMixtureManager
         break;
       }
     }
-    /** get the parameters from an IMixture.
-     *  @param p_mixture pointer on the mixture
-     *  @return the array with the parameters
-     **/
-    ArrayXX getParameters(IMixture* p_mixture) const
-    {
-      Clust::Mixture idModel = getIdModel(p_mixture->idName());
-      if (idModel == Clust::unknown_mixture_) return ArrayXX();
-      // up-cast... (Yes it's bad....;)...)
-      switch (idModel)
-      {
-        // gamma models
-        case Clust::Gamma_ajk_bjk_:
-        { return static_cast<MixtureBridge_ajk_bjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ajk_bk_:
-        { return static_cast<MixtureBridge_ajk_bk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ajk_bj_:
-        { return static_cast<MixtureBridge_ajk_bj const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ajk_b_:
-        { return static_cast<MixtureBridge_ajk_b const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ak_bjk_:
-        { return static_cast<MixtureBridge_ak_bjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ak_bk_:
-        { return static_cast<MixtureBridge_ak_bk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ak_bj_:
-        { return static_cast<MixtureBridge_ak_bj const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_ak_b_:
-        { return static_cast<MixtureBridge_ak_b const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_aj_bjk_:
-        { return static_cast<MixtureBridge_aj_bjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_aj_bk_:
-        { return static_cast<MixtureBridge_aj_bk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_a_bjk_:
-        { return static_cast<MixtureBridge_a_bjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gamma_a_bk_:
-        { return static_cast<MixtureBridge_a_bk const*>(p_mixture)->getParameters();}
-        break;
-        // Gaussian models
-        case Clust::Gaussian_sjk_:
-        { return static_cast<MixtureBridge_sjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gaussian_sk_:
-        { return static_cast<MixtureBridge_sk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gaussian_sj_:
-        { return static_cast<MixtureBridge_sj const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Gaussian_s_:
-        { return static_cast<MixtureBridge_s const*>(p_mixture)->getParameters();}
-        break;
-        // Categorical models
-        case Clust::Categorical_pjk_:
-        { return static_cast<MixtureBridge_pjk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Categorical_pk_:
-        { return static_cast<MixtureBridge_pk const*>(p_mixture)->getParameters();}
-        break;
-        // Poisson models
-        case Clust::Poisson_ljk_:
-        { return static_cast<MixtureBridge_ljk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Poisson_lk_:
-        { return static_cast<MixtureBridge_lk const*>(p_mixture)->getParameters();}
-        break;
-        case Clust::Poisson_ljlk_:
-        { return static_cast<MixtureBridge_ljlk const*>(p_mixture)->getParameters();}
-        break;
-        default: // idModel is not implemented
-        break;
-      }
-    }
     /** get the missing values of a data set.
      *  @param idData Id name of the data set attached to the mixture
      *  @param data the array to return with the missing values
@@ -289,7 +223,7 @@ class MixtureManager : public IMixtureManager
     {
       typedef typename hidden::DataHandlerTraits<DataHandler, Type>::Data DataType;
       typedef MixtureData<DataType> MixtureDataType;
-      return static_cast<MixtureDataType const*>(getMixtureData(idData))->m_dataij_;
+      return static_cast<MixtureDataType const*>(getMixtureData(idData))->dataij_;
     }
 
   protected:
@@ -298,7 +232,18 @@ class MixtureManager : public IMixtureManager
      *  @param idData Id name of the data
      *  @param nbCluster number of cluster of the model
      **/
-    virtual IMixture* createMixtureImpl(Clust::Mixture idModel, String const& idData, int nbCluster)
+    virtual IMixture* createMixtureImpl(String const&  idModelName, String const& idData, int nbCluster)
+    {
+      Clust::Mixture idModel = Clust::stringToMixture(idModelName);
+      return createMixtureImpl(idModel, idData, nbCluster);
+    }
+  private:
+    /** create a concrete mixture and initialize it.
+     *  @param idModel Id name of the model
+     *  @param idData Id name of the data
+     *  @param nbCluster number of cluster of the model
+     **/
+    IMixture* createMixtureImpl(Clust::Mixture idModel, String const& idData, int nbCluster)
     {
       switch (idModel)
       {
@@ -376,6 +321,45 @@ class MixtureManager : public IMixtureManager
     /** pointer to the dataHandler */
     DataHandler const* const p_handler_;
 };
+
+/* Utility function allowing to find the idModel from the idData
+ *  @param idData the id name of the data we want the idModel
+ *  @return the idModel
+ **/
+template<class DataHandler>
+Clust::Mixture MixtureManager<DataHandler>::getIdModel( String const& idData) const
+{
+  std::string idModelName;
+  if (!p_handler_->getIdModelName( idData, idModelName))
+  {
+#ifdef STK_MIXTURE_VERY_VERBOSE
+    stk_cout << _T("In MixtureManager::getIdModel, fail to get idData = ") << idData << _T("\n");
+#endif
+    return Clust::unknown_mixture_;
+  }
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("In MixtureManager::getIdModel, success to get idData = ") << idData << _T("\n");
+  stk_cout << _T("In MixtureManager::getIdModel, idModelName = ") << idModelName << _T("\n");
+#endif
+  return Clust::stringToMixture(idModelName);
+}
+
+/* Utility function allowing to create and register all the STK++ mixtures
+ *  defined in the handler.
+ *  @param composer the composer claiming the mixtures
+ *  @param nbCluster the number of clusters
+ **/
+template<class DataHandler>
+void MixtureManager<DataHandler>::createMixtures(MixtureComposer& composer)
+{
+  int nbCluster = composer.nbCluster();
+  typedef IDataHandler::InfoMap InfoMap;
+  for (InfoMap::const_iterator it=p_handler_->info().begin(); it!=p_handler_->info().end(); ++it)
+  {
+    IMixture* p_mixture = createMixtureImpl(it->second, it->first, nbCluster);
+    if (p_mixture) composer.registerMixture(p_mixture);
+  }
+}
 
 } // namespace STK
 

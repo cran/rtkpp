@@ -77,6 +77,7 @@
 #include "../projects/Arrays/include/STK_Array2DDiagonal.h"
 #include "../projects/Arrays/include/STK_Array2DUpperTriangular.h"
 #include "../projects/Arrays/include/STK_Array2DLowerTriangular.h"
+#include "../projects/Arrays/include/STK_Array2DNumber.h"
 
 /* Functors applied to  Array2D */
 #include "../projects/Arrays/include/STK_Array2D_Functors.h"

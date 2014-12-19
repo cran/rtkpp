@@ -71,7 +71,7 @@ bool IDataHandler::addInfo(std::string const& idData, std::string const& idModel
  *  @return @c false if there exists already an idData matched with an other
  *  idModel, @c true otherwise.
  **/
-bool IDataHandler::getIdModel(std::string const& idData, std::string& idModel) const
+bool IDataHandler::getIdModelName(std::string const& idData, std::string& idModel) const
 {
   bool res = false;
   // show content

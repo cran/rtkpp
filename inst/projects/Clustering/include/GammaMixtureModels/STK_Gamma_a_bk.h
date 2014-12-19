@@ -77,7 +77,7 @@ class Gamma_a_bk : public GammaBase< Gamma_a_bk<Array> >
 
      using Base::p_tik;using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -101,7 +101,7 @@ class Gamma_a_bk : public GammaBase< Gamma_a_bk<Array> >
     {
       shape_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_shape_ = &shape_;}
+      { param(k).p_shape_ = &shape_;}
     }
     /** Store the intermediate results of the Mixture.
      *  @param iteration Provides the iteration number beginning after the burn-in period.
@@ -147,8 +147,8 @@ void Gamma_a_bk<Array>::randomInit()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     Real mean = this->meank(k), variance = this->variancek(k);
-    p_param(k)->scale_ = Law::Exponential::rand((variance/mean));
-    value += p_param(k)->tk_ * (mean*mean/variance);
+    param(k).scale_ = Law::Exponential::rand((variance/mean));
+    value += param(k).tk_ * (mean*mean/variance);
   }
   shape_ = STK::Law::Exponential::rand(value/(this->nbSample()));
 #ifdef STK_MIXTURE_VERY_VERBOSE
@@ -168,8 +168,8 @@ bool Gamma_a_bk<Array>::mStep()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     Real mean = this->meank(k);
-    y  += p_param(k)->tk_ * (p_param(k)->meanLog_ - std::log(mean)).sum();
-    x0 += p_param(k)->tk_ * (mean*mean/this->variancek(k));
+    y  += param(k).tk_ * (param(k).meanLog_ - std::log(mean)).sum();
+    x0 += param(k).tk_ * (mean*mean/this->variancek(k));
   }
   y  /= (this->nbSample()*this->nbVariable());
   x0 /= this->nbSample();
@@ -194,7 +194,7 @@ bool Gamma_a_bk<Array>::mStep()
   shape_ = a;
   // estimate b
   for (int k= baseIdx; k < components().end(); ++k)
-  { p_param(k)->scale_ = this->meank(k)/a;}
+  { param(k).scale_ = this->meank(k)/a;}
   return true;
 }
 

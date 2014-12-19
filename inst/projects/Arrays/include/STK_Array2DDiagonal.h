@@ -54,20 +54,21 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for the Array2DDiagonal class.
  **/
-template<class _Type>
-struct Traits<Array2DDiagonal<_Type> >
+template<class Type_>
+struct Traits<Array2DDiagonal<Type_> >
 {
   private:
     class Void {};
   public:
-    typedef _Type        Type;
-    typedef Array2DPoint<_Type>    Row;
-    typedef Array2DVector<_Type>   Col;
-    typedef Array2DPoint<_Type>    SubRow;
-    typedef Array2DVector<_Type>   SubCol;
-    typedef Array2DDiagonal<_Type> SubArray;
-    typedef Array2DDiagonal<_Type> SubVector;
+    typedef Array2DPoint<Type_>    Row;
+    typedef Array2DVector<Type_>   Col;
+    typedef Array2DPoint<Type_>    SubRow;
+    typedef Array2DVector<Type_>   SubCol;
+    typedef Array2DDiagonal<Type_> SubArray;
+    typedef Array2DDiagonal<Type_> SubVector;
 
+    typedef Type_                Type;
+    typedef typename RemoveConst<Type_>::Type const& ReturnType;
     enum
     {
       structure_ = Arrays::diagonal_,
@@ -89,16 +90,23 @@ struct Traits<Array2DDiagonal<_Type> >
   *
   * The range of the rows and the columns is the same.
   **/
-template<class Type>
-class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type> >
+template<class Type_>
+class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
 {
   public:
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::Row Row;
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::Col Col;
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array2DDiagonal<Type> >::SubArray SubArray;
+    /** Type for the Interface Class. */
+    typedef IArray2D< Array2DDiagonal<Type_> > Base;
+    typedef ArrayBase <  Array2DDiagonal<Type_> > LowBase;
+
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::Row Row;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::Col Col;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::SubArray SubArray;
+
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::Type Type;
+    typedef typename hidden::Traits<Array2DDiagonal<Type_> >::ReturnType ReturnType;
 
     enum
     {
@@ -108,10 +116,6 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type> >
       sizeCols_  = UnknownSize,
       storage_   = Arrays::dense_ // always dense
     };
-    /** Type for the Interface Class. */
-    typedef IArray2D< Array2DDiagonal<Type> > Base;
-    typedef ArrayBase <  Array2DDiagonal<Type> > LowBase;
-
     /** Default constructor. */
     Array2DDiagonal(): Base() {}
     /** Constructor with specified range.

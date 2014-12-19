@@ -40,7 +40,6 @@
 
 namespace STK
 {
-class MixtureComposer;
 class IMixtureData;
 class IMixture;
 class IDataHandler;
@@ -62,24 +61,22 @@ class IMixtureManager
     IMixtureManager(IDataHandler const* const p_handler);
     /** destructor */
     virtual ~IMixtureManager();
-    /** Utility function allowing to find the idModel from the idData
+    /** Utility function allowing to find the idModel name from the idData
      *  @param idData the id name of the data we want the idModel
-     *  @return the idModel
+     *  @return the idModel name
      **/
-    Clust::Mixture getIdModel( String const& idData) const;
-    /** create a mixture and initialize it.
+    String getIdModelName( String const& idData) const;
+    /** @brief create a mixture and initialize it.
+     *  This method get the idModelName from the DataHandler and then delegate
+     *  the concrete creation to derived class using the pure virtual method
+     *   @c createMixtureImpl.
      *  @param idData name of the model
      *  @param nbCluster number of cluster of the model
-     *  @return 0 if the idData is not find, the result of @c createMixture( idModel, idData, nbCluster)
+     *  @return 0 if the idData is not find, the result of
+     *  @c createMixture( idModelName, idData, nbCluster)
      *  otherwise.
      **/
     IMixture* createMixture(String const& idData, int nbCluster);
-    /** Utility function allowing to create and register all the STK++ mixtures
-     *  defined in the handler.
-     *  @param composer the composer claiming the mixtures
-     *  @param nbCluster the number of clusters
-     **/
-    void createMixtures(MixtureComposer& composer, int nbCluster);
     /** @brief register a data manager to the IMixtureManager.
      *  For each mixture created and registered, a data manager is created
      *  and registered so that it will be deleted when the mixture itself is
@@ -95,7 +92,7 @@ class IMixtureManager
      *  @param p_mixture pointer on the mixture
      *  @param data the array to return with the parameters
      **/
-    virtual void getParameters(IMixture* p_mixture, Array2D<Real>& data) const =0;
+    virtual void getParameters(IMixture* p_mixture, ArrayXX& data) const =0;
 
   protected:
     /** Utility lookup function allowing to find a MixtureData from its idData
@@ -106,11 +103,11 @@ class IMixtureManager
 
   private:
     /** create a concrete mixture and initialize it.
-     *  @param idModel Id name of the model
-     *  @param idData Id name of the data
+     *  @param idModelName string with the Id name of the model
+     *  @param idData string with the Id name of the data
      *  @param nbCluster number of cluster of the model
      **/
-    virtual IMixture* createMixtureImpl(Clust::Mixture idModel, String const& idData, int nbCluster) =0;
+    virtual IMixture* createMixtureImpl(String const& idModelName, String const& idData, int nbCluster) =0;
     /** A pointer on the concrete instance of the data handler */
     IDataHandler const* const p_handler_;
     /** vector of pointers to the data components */

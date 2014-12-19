@@ -101,7 +101,7 @@ class GammaBase : public IMixtureModel<Derived >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
 
   protected:
@@ -122,7 +122,7 @@ class GammaBase : public IMixtureModel<Derived >
     {
       Real sum = 0.;
       for (int k= p_tik()->beginCols(); k < components().end(); ++k)
-      { sum += p_tik()->elt(i,k) * p_param(k)->shape(j) * p_param(k)->scale(j);}
+      { sum += p_tik()->elt(i,k) * param(k).shape(j) * param(k).scale(j);}
       return sum;
     }
     /** @return a simulated value for the jth variable of the ith sample
@@ -131,7 +131,7 @@ class GammaBase : public IMixtureModel<Derived >
     Real sample(int i, int j) const
     {
       int k = Law::Categorical::rand(p_tik()->row(i));
-      return Law::Gamma::rand(p_param(k)->shape(j), p_param(k)->scale(j));
+      return Law::Gamma::rand(param(k).shape(j), param(k).scale(j));
     }
     /** get the parameters of the model
      *  @param params the array to fill with the parameters of the model
@@ -148,13 +148,13 @@ class GammaBase : public IMixtureModel<Derived >
     /** compute the weighted moments of a gamma mixture. */
     bool moments();
     /** get the weighted mean of the jth variable of the kth cluster. */
-    inline Real meanjk( int j, int k) { return p_param(k)->mean_[j];}
+    inline Real meanjk( int j, int k) { return param(k).mean_[j];}
     /** get the weighted variance of the jth variable of the kth cluster. */
-    inline Real variancejk( int j, int k) { return p_param(k)->variance_[j];}
+    inline Real variancejk( int j, int k) { return param(k).variance_[j];}
     /** get the weighted mean of the jth variable of the kth cluster. */
-    inline Real meank( int k) { return p_param(k)->mean_.mean();}
+    inline Real meank( int k) { return param(k).mean_.mean();}
     /** get the weighted variance of the jth variable of the kth cluster. */
-    inline Real variancek( int k) { return p_param(k)->variance_.mean();}
+    inline Real variancek( int k) { return param(k).variance_.mean();}
 };
 
 /*get the parameters of the model*/
@@ -167,8 +167,8 @@ void GammaBase<Derived>::getParameters(Array2D<Real>& params) const
   {
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
     {
-      params(2*k+  baseIdx, j) = p_param(baseIdx+k)->shape(j);
-      params(baseIdx+2*k+1, j) = p_param(baseIdx+k)->scale(j);
+      params(2*k+  baseIdx, j) = param(baseIdx+k).shape(j);
+      params(baseIdx+2*k+1, j) = param(baseIdx+k).scale(j);
     }
   }
 }
@@ -183,8 +183,8 @@ ArrayXX GammaBase<Derived>::getParametersImpl() const
   {
     for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
     {
-      params(2*k+  baseIdx, j) = p_param(baseIdx+k)->shape(j);
-      params(baseIdx+2*k+1, j) = p_param(baseIdx+k)->scale(j);
+      params(2*k+  baseIdx, j) = param(baseIdx+k).shape(j);
+      params(baseIdx+2*k+1, j) = param(baseIdx+k).scale(j);
     }
   }
   return params;
@@ -200,8 +200,8 @@ void GammaBase<Derived>::writeParameters(ostream& os) const
       // store shape and scale values in an array for a nice output
       for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
       {
-        shape[j] = p_param(k)->shape(j);
-        scale[j] = p_param(k)->scale(j);
+        shape[j] = param(k).shape(j);
+        scale[j] = param(k).scale(j);
       }
       os << _T("---> Component ") << k << _T("\n");
       os << _T("shape = ") << shape;
@@ -216,21 +216,21 @@ bool GammaBase<Derived>::moments()
   for (int k= p_tik()->beginCols(); k < components().end(); ++k)
   {
     CVectorX tikRowk(p_tik()->col(k), true); // create a reference
-    p_param(k)->tk_ = tikRowk.sum();
+    param(k).tk_ = tikRowk.sum();
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
     {
       // mean
       Real mean =  p_data()->col(j).wmean(tikRowk);
       if ( (mean<=0) || isNA(mean) ) { return false;}
-      p_param(k)->mean_[j] = mean;
+      param(k).mean_[j] = mean;
       // mean log
       Real meanLog =  p_data()->col(j).log().wmean(tikRowk);
       if (isNA(meanLog)) { return false;}
-      p_param(k)->meanLog_[j] = meanLog;
+      param(k).meanLog_[j] = meanLog;
       // variance
       Real variance =  p_data()->col(j).wvariance(mean, tikRowk);
       if ((variance<=0)||isNA(variance)){ return false;}
-      p_param(k)->variance_[j] = variance;
+      param(k).variance_[j] = variance;
     }
   }
   return true;
@@ -246,11 +246,11 @@ Real GammaBase<Derived>::qValue() const
     Real sumjk=0.0;
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
     {
-      Real shape = p_param(k)->shape(j), scale = p_param(k)->scale(j);
-      sumjk += shape * (p_param(k)->meanLog_[j] -std::log(scale))
-              - p_param(k)->mean_[j]/scale - STK::Funct::gammaLn(shape);
+      Real shape = param(k).shape(j), scale = param(k).scale(j);
+      sumjk += shape * (param(k).meanLog_[j] -std::log(scale))
+              - param(k).mean_[j]/scale - STK::Funct::gammaLn(shape);
     }
-    value += p_param(k)->tk_ * sumjk;
+    value += param(k).tk_ * sumjk;
   }
   return value;
 }

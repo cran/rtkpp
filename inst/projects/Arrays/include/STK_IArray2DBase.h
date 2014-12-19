@@ -41,6 +41,7 @@
 #ifndef STK_IARRAY2DBASE_H
 #define STK_IARRAY2DBASE_H
 
+#include "STK_IArrayBase.h"
 #include "STK_ArrayBase.h"
 
 #include "STK_ExprBaseProduct.h"
@@ -79,7 +80,7 @@ class IArray2DBase;
  * @tparam Derived is the name of the class that implements @c IArray2DBase.
  **/
 template < class PTRCOL, class Derived, int SizeRows_, int SizeCols_>
-class IArray2DBase :  protected ICAllocatorBase<SizeRows_, SizeCols_>, public ArrayBase<Derived>
+class IArray2DBase :  protected IArrayBase<SizeRows_, SizeCols_>, public ArrayBase<Derived>
 {
   template <class OTHERPTRCOL, class OtherDerived, int OtherSizeRows, int OtherSizeCols>
   friend    class IArray2DBase;
@@ -89,8 +90,8 @@ class IArray2DBase :  protected ICAllocatorBase<SizeRows_, SizeCols_>, public Ar
     typedef TRange<SizeRows_> RowRange;
     /** Type of the Range for the columns */
     typedef TRange<SizeCols_> ColRange;
-    /** Type for the ICAllocatorBase base Class. */
-    typedef ICAllocatorBase<SizeRows_, SizeCols_ > Base2D;
+    /** Type for the IArrayBase base Class. */
+    typedef IArrayBase<SizeRows_, SizeCols_ > Base2D;
     /** Type for the Base Class. */
     typedef AllocatorBase<PTRCOL> Allocator;
     /** type of the Base Container Class. */
@@ -420,7 +421,7 @@ class IArray2DBase :  protected ICAllocatorBase<SizeRows_, SizeCols_>, public Ar
     {
       // swap AllocatorBase part
       allocator_.exchange(T.allocator_);
-      // swap ICAllocatorBase part
+      // swap IArrayBase part
       Base2D::exchange(T);
       // swap this part
       std::swap(availableCols_, T.availableCols_);
@@ -538,7 +539,7 @@ class IArray2DBase :  protected ICAllocatorBase<SizeRows_, SizeCols_>, public Ar
       availableRows_.move(T.availableRows_);
       rangeCols_.move(T.rangeCols_);
       availableCols_ = T.availableCols_;
-      // Set ICAllocatorBase part
+      // Set IArrayBase part
       this->setCols(T.cols());
       this->setRows(T.rows());
     }

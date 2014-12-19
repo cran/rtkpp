@@ -33,9 +33,8 @@
  **/
 
 #include "DManager/include/STK_IDataHandler.h"
-#include "../include/STK_MixtureComposer.h"
-#include "../include/STK_IMixtureData.h"
 
+#include "../include/STK_IMixtureData.h"
 #include "../include/STK_IMixtureManager.h"
 
 namespace STK
@@ -50,40 +49,24 @@ IMixtureManager::~IMixtureManager()
   for (DataIterator it = v_data_.begin() ; it != v_data_.end(); ++it)
   { delete (*it);}
 }
-/* Utility function allowing to find the idModel from the idData
+/* Utility function allowing to find the idModel name from the idData
  *  @param idData the id name of the data we want the idModel
- *  @return the idModel
+ *  @return the idModel name
  **/
-Clust::Mixture IMixtureManager::getIdModel( String const& idData) const
+String IMixtureManager::getIdModelName( String const& idData) const
 {
   std::string idModelName;
-  if (!p_handler_->getIdModel( idData, idModelName))
+  if (!p_handler_->getIdModelName( idData, idModelName))
   {
 #ifdef STK_MIXTURE_VERY_VERBOSE
-    stk_cout << _T("In IMixtureManager::getIdModel, fail to get idData = ") << idData << _T("\n");
+    stk_cout << _T("In IMixtureManager::getIdModelName, fail to get idData = ") << idData << _T("\n");
 #endif
-    return Clust::unknown_mixture_;
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("In IMixtureManager::getIdModel, success to get idData = ") << idData << _T("\n");
+  stk_cout << _T("In IMixtureManager::getIdModeName, success to get idData = ") << idData << _T("\n");
   stk_cout << _T("In IMixtureManager::getIdModel, idModelName = ") << idModelName << _T("\n");
 #endif
-  return Clust::stringToMixture(idModelName);
-}
-/* Utility function allowing to create and register all the STK++ mixtures
- *  defined in the handler.
- *  @param composer the composer claiming the mixtures
- *  @param nbCluster the number of clusters
- **/
-void IMixtureManager::createMixtures(MixtureComposer& composer, int nbCluster)
-{
-  typedef IDataHandler::InfoMap InfoMap;
-  for (InfoMap::const_iterator it=p_handler_->info().begin(); it!=p_handler_->info().end(); ++it)
-  {
-    Clust::Mixture idModel = Clust::stringToMixture(it->second);
-    IMixture* p_mixture = createMixtureImpl(idModel, it->first, nbCluster);
-    if (p_mixture) composer.registerMixture(p_mixture);
-  }
+  return idModelName;
 }
 /* create a mixture and initialize it.
  *  @param idData name of the model
@@ -94,9 +77,8 @@ void IMixtureManager::createMixtures(MixtureComposer& composer, int nbCluster)
 IMixture* IMixtureManager::createMixture(String const& idData, int nbCluster)
 {
   std::string idModelName;
-  if (!p_handler_->getIdModel( idData, idModelName)) { return 0;};
-  Clust::Mixture idModel = Clust::stringToMixture(idModelName);
-  return createMixtureImpl( idModel, idData, nbCluster);
+  if (!p_handler_->getIdModelName( idData, idModelName)) { return 0;};
+  return createMixtureImpl( idModelName, idData, nbCluster);
 }
 /* @brief register a data manager to the IMixtureManager.
  *  For each mixture created and registered, a data manager is created

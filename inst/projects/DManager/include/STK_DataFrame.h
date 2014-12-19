@@ -36,8 +36,7 @@
 #ifndef STK_DATAFRAME_H
 #define STK_DATAFRAME_H
 
-#include "Arrays/include/STK_ICAllocator.h"
-
+#include <Arrays/include/STK_IArrayBase.h>
 #include "STK_List1D.h"
 #include "STK_IVariable.h"
 
@@ -49,17 +48,17 @@ namespace STK
   * @brief DataFrame is a List of Variable with the same number of rows.
   *  This is thus also a 2D container.
   *
-  * A DataFrame inherit from the class @c List1D and and @c ICAllocatorBase.
+  * A DataFrame inherit from the class @c List1D and and @c IArrayBase.
   * It is essentially a List, except that each column (the variables)
   * possess the same dimension.
   *
   * Each Cell of the List1D contain a pointer on a Variable.
  **/
-class DataFrame : protected List1D<IVariable* >, public ICAllocatorBase<UnknownSize,UnknownSize>
+class DataFrame : protected List1D<IVariable* >, public IArrayBase<UnknownSize,UnknownSize>
 {
   protected:
     /** Type of the Base container */
-    typedef ICAllocatorBase<UnknownSize, UnknownSize > Base2D;
+    typedef IArrayBase<UnknownSize, UnknownSize > Base2D;
     /** Type for the list container. */
     typedef List1D<IVariable*> Base;
 

@@ -81,10 +81,10 @@
 #include "../projects/Clustering/include/GammaMixtureModels/STK_Gamma_a_bjk.h"
 #include "../projects/Clustering/include/GammaMixtureModels/STK_Gamma_a_bk.h"
 
-#include "../projects/Clustering/include/GaussianMixtureModels/STK_Gaussian_sjk.h"
-#include "../projects/Clustering/include/GaussianMixtureModels/STK_Gaussian_sk.h"
-#include "../projects/Clustering/include/GaussianMixtureModels/STK_Gaussian_sj.h"
-#include "../projects/Clustering/include/GaussianMixtureModels/STK_Gaussian_s.h"
+#include "../projects/Clustering/include/DiagGaussianMixtureModels/STK_Gaussian_sjk.h"
+#include "../projects/Clustering/include/DiagGaussianMixtureModels/STK_Gaussian_sk.h"
+#include "../projects/Clustering/include/DiagGaussianMixtureModels/STK_Gaussian_sj.h"
+#include "../projects/Clustering/include/DiagGaussianMixtureModels/STK_Gaussian_s.h"
 
 #include "../projects/Clustering/include/CategoricalMixtureModels/STK_Categorical_pjk.h"
 #include "../projects/Clustering/include/CategoricalMixtureModels/STK_Categorical_pk.h"

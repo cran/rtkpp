@@ -63,6 +63,15 @@ struct MixtureStatReal
   Real param_;
   /** number of stored values */
   int iter_;
+  /** overwrite the statistics with other.
+   *  @param other the statistics to copy
+   **/
+  inline MixtureStatReal& operator=( MixtureStatReal const& other)
+  {
+    param_ = other.param_;
+    iter_  = other.iter_;
+    return *this;
+  }
 };
 
 /** @ingroup Clustering
@@ -85,6 +94,15 @@ struct MixtureStatVector
    **/
   template<class OtherArray>
   void update(OtherArray const& param) { iter_++; param_ += (param - param_)/iter_;}
+  /** overwrite the statistics with other.
+   *  @param other the statistics to copy
+   **/
+  inline MixtureStatVector& operator=( MixtureStatVector const& other)
+  {
+    param_ = other.param_;
+    iter_  = other.iter_;
+    return *this;
+  }
   /** Vector of the parameters */
   VectorX param_;
   /** number of stored values */

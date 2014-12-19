@@ -130,14 +130,14 @@ class IMixtureComposer : public IStatModelBase
     inline CPointX const& pk() const { return prop_;};
     /** @return the tik probabilities */
     inline CArrayXX const& tik() const { return tik_;};
-    /** @return the estimated proportions of individuals in each mixtures */
+    /** @return the sum of the columns of tik = estimated proportions of individuals */
     inline CPointX const& nk() const { return nk_;};
     /** @return the zi class label */
     inline CVectorXi const& zi() const { return zi_;};
 
     /** @return a pointer on the proportions of each mixtures */
     inline CPointX const* p_pk() const { return &prop_;};
-    /** @return a pointer on the the estimated proportions of individuals in each mixtures */
+    /** @return a pointer on the sum of the columns of tik = estimated proportions of individuals */
     inline CPointX const* p_nk() const { return &nk_;};
     /** @return a pointer on the the tik probabilities */
     inline CArrayXX const* p_tik() const { return &tik_;};

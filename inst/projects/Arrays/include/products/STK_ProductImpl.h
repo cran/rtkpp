@@ -51,21 +51,19 @@ namespace STK
 
 namespace hidden
 {
-/** In the general case, i.e. when some of the structures are triangular
- *  we use the usual matrix multiplication formula.
+/** In the general case, e.g. when some of the structures are triangular for
+ *  examples, we use the usual matrix multiplication formula.
  **/
 template < class Lhs, class Rhs, class Result
          , int lhsStructure_ = hidden::Traits<Lhs>::structure_
          , int RhsStructure_ = hidden::Traits<Rhs>::structure_ >
 struct ProductImpl
 {
-  typedef typename Result::Type Type;
-  typedef MultImpl<Type> Cmult;
   typedef MultCoefImpl<Lhs, Rhs, Result> MultCoeff;
 
   static void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   {
-    for (int j=res.beginCols(); j< res.endCols(); j++)
+    for (int j=rhs.beginCols(); j< rhs.endCols(); j++)
     {
       Integer const end = res.rangeRowsInCol(j).end();
       for (int i=res.rangeRowsInCol(j).begin(); i< end; i++)
@@ -74,7 +72,7 @@ struct ProductImpl
   }
   static void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
   {
-    for (int i=res.beginRows(); i< res.endRows(); i++)
+    for (int i=lhs.beginRows(); i< lhs.endRows(); i++)
     {
       Integer const end = res.rangeColsInRow(i).end();
       for (int j=res.rangeColsInRow(i).begin(); j< end; j++)
@@ -83,14 +81,10 @@ struct ProductImpl
   }
 };
 
+/** Specialization for the array2d by array2D case. */
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::array2D_>
 {
-  enum
-  {
-    orientLhs_ = Lhs::orient_,
-    orientRhs_ = Rhs::orient_
-  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -100,11 +94,6 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::array2D_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::square_>
 {
-  enum
-  {
-    orientLhs_ = Lhs::orient_,
-    orientRhs_ = Rhs::orient_
-  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -114,11 +103,6 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::array2D_, Arrays::square_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::square_>
 {
-  enum
-  {
-    orientLhs_ = Lhs::orient_,
-    orientRhs_ = Rhs::orient_
-  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )
@@ -128,11 +112,6 @@ struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::square_>
 template <class Lhs, class Rhs, class Result>
 struct ProductImpl<Lhs, Rhs, Result, Arrays::square_, Arrays::array2D_>
 {
-  enum
-  {
-    orientLhs_ = Lhs::orient_,
-    orientRhs_ = Rhs::orient_
-  };
   static inline void runbp(Lhs const& lhs, Rhs const& rhs, Result& res )
   { bp<Lhs,Rhs,Result>::run(lhs, rhs, res);}
   static inline void runpb(Lhs const& lhs, Rhs const& rhs, Result& res )

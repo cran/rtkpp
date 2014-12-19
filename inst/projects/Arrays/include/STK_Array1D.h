@@ -48,16 +48,19 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for Array1D class.
  **/
-template<class _TYPE>
-struct Traits< Array1D<_TYPE> >
+template<class Type_>
+struct Traits< Array1D<Type_> >
 {
-  typedef _TYPE          Type;
-  typedef Array1D<_TYPE> Row;
-  typedef Array1D<_TYPE> Col;
-  typedef Array1D<_TYPE> SubRow;
-  typedef Array1D<_TYPE> SubCol;
-  typedef Array1D<_TYPE> SubArray;
-  typedef Array1D<_TYPE> SubVector;
+  typedef Array1D<Type_> Row;
+  typedef Array1D<Type_> Col;
+  typedef Array1D<Type_> SubRow;
+  typedef Array1D<Type_> SubCol;
+  typedef Array1D<Type_> SubArray;
+  typedef Array1D<Type_> SubVector;
+
+  typedef Type_ Type;
+  typedef typename RemoveConst<Type_>::Type const& ReturnType;
+
   enum
   {
     structure_ = Arrays::vector_,

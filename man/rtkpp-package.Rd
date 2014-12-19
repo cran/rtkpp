@@ -14,16 +14,7 @@ other packages.
 As described at the STK++ project's home page, \url{http://www.stkpp.org},
 STK++ is a versatile, fast, reliable and elegant collection of C++ classes
 for statistics, clustering, linear algebra, arrays (with an Eigen-like API),
-regression, dimension reduction, etc. Some functionalities provided by the
-library are available in the R environment as R functions.
-
-The available functionalities are:
-\enumerate{
-   \item the clusterDiagGaussian method allowing to discover, group structures in
-multivariate data sets using diagonal Gaussian multidimensional models (8 models).
-   \item the clusterGamma method allowing to discover, group structures in
-multivariate data sets using gamma multidimensional models (24 models).
- }
+regression, dimension reduction, etc.
 
 \tabular{ll}{
   Package: \tab rtkpp\cr

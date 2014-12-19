@@ -153,6 +153,13 @@ class MixtureComposer : public IMixtureComposer
      * @param p_mixture a pointer on the mixture
      **/
     void registerMixture(IMixture* p_mixture);
+    /** @brief release a mixture from the composer.
+     *  When a mixture is released, the composer remove it from v_mixtures_.
+     *  @note the data set associated with the mixture is still in the manager
+     *  list of data set if you use a manager in order to register it.
+     *  @param idData the Id of the mixture to release.
+     **/
+    void releaseMixture(String const& idData);
     /** Utility method allowing to create a mixture with a given data set
      *  and register it. The Mixture Manager will find the associated model
      *  to use with this data set.
@@ -160,17 +167,6 @@ class MixtureComposer : public IMixtureComposer
      *  @param idData the id name of the data to modelize.
      **/
     void createMixture(IMixtureManager& manager, String const& idData);
-    /** Utility method allowing to create all the mixtures using the DataHandler
-     *  info of the manager.
-     **/
-    void createMixtures(IMixtureManager& manager);
-    /** @brief release a mixture from the composer.
-     *  When a mixture is released, the composer remove it from v_mixtures_.
-     *  @note the data set associated with the mixture is still in the manager
-     *  list of data set.
-     *  @param idData the Id of the mixture
-     **/
-    void releaseMixture(String const& idData);
     /** Utility method allowing to release completely a mixture with its data set.
      *  The MixtureManager will find and release the associated data set.
      *  @param manager the manager with the responsibility of the release.

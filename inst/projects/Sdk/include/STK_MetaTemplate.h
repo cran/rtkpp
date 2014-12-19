@@ -77,7 +77,7 @@ template<> struct isArithmetic<unsigned long> { enum { yes = true, no = false };
 //template<> struct isArithmetic<unsigned long long> { enum { yes = true, no = false }; };
 
 /* C/C++ fundamental Types */
-template<typename T>
+template<typename Type>
 struct isInt { enum { yes = false, no = true}; };
 
 template<> struct isInt<bool>          { enum { yes = true, no = false }; };
@@ -92,6 +92,14 @@ template<> struct isInt<signed long>   { enum { yes = true, no = false }; };
 template<> struct isInt<unsigned long> { enum { yes = true, no = false }; };
 //template<> struct isInt<signed long long>   { enum { yes = true, no = false }; };
 //template<> struct isInt<unsigned long long> { enum { yes = true, no = false }; };
+
+
+// remove const and const& to typename
+template<typename Type_> struct RemoveConst { typedef Type_ Type; };
+template<typename Type_> struct RemoveConst<Type_ const>   { typedef typename RemoveConst<Type_>::Type Type; };
+template<typename Type_> struct RemoveConst<Type_ const&>  { typedef typename RemoveConst<Type_>::Type Type; };
+
+
 
 /** check if T and U are of the same type. */
 template<typename T, typename U> struct isSame { enum { value = 0 }; };

@@ -80,7 +80,7 @@ class Gamma_ak_bj : public GammaBase<Gamma_ak_bj<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -105,7 +105,7 @@ class Gamma_ak_bj : public GammaBase<Gamma_ak_bj<Array> >
       scale_.resize(p_data()->cols());
       scale_ = 1.;
       for (int k= baseIdx; k < components().end(); ++k)
-      { p_param(k)->p_scale_ = &scale_;}
+      { param(k).p_scale_ = &scale_;}
       stat_scale_.initialize(p_data()->cols());
     }
     /** Store the intermediate results of the Mixture.
@@ -160,7 +160,7 @@ void Gamma_ak_bj<Array>::randomInit()
       Real mean = meanjk(j,k), variance = variancejk(j,k);
       value += mean*mean/variance;
     }
-    p_param(k)->shape_ = Law::Exponential::rand(value/(this->nbVariable()));
+    param(k).shape_ = Law::Exponential::rand(value/(this->nbVariable()));
   }
   // simulate bj
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
@@ -169,7 +169,7 @@ void Gamma_ak_bj<Array>::randomInit()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      value += p_param(k)->tk_ * variance/mean;
+      value += param(k).tk_ * variance/mean;
     }
     scale_[j] = Law::Exponential::rand(value/(this->nbSample()));
   }
@@ -193,17 +193,17 @@ bool Gamma_ak_bj<Array>::mStep()
     for (int k= baseIdx; k < components().end(); ++k)
     {
       // moment estimate and oldest value
-      Real x0 = (p_param(k)->mean_.square()/p_param(k)->variance_).mean();
-      Real x1 = p_param(k)->shape_;
+      Real x0 = (param(k).mean_.square()/param(k).variance_).mean();
+      Real x1 = param(k).shape_;
       if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
 
       // compute shape
-      hidden::invPsi f((p_param(k)->meanLog_ - scale_.log()).mean());
+      hidden::invPsi f((param(k).meanLog_ - scale_.log()).mean());
       Real a =  Algo::findZero(f, x0, x1, TOL);
 
       if (!Arithmetic<Real>::isFinite(a))
       {
-        p_param(k)->shape_ = x0; // use moment estimate
+        param(k).shape_ = x0; // use moment estimate
 #ifdef STK_MIXTURE_DEBUG
         stk_cout << _T("ML estimation failed in Gamma_ak_bj::mStep()\n");
         stk_cout << "x0 =" << x0 << _T("\n";);
@@ -212,7 +212,7 @@ bool Gamma_ak_bj<Array>::mStep()
         stk_cout << "f(x1) =" << f(x1) << _T("\n";);
 #endif
       }
-      else { p_param(k)->shape_ = a;}
+      else { param(k).shape_ = a;}
     }
     // update all the b^j
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
@@ -220,8 +220,8 @@ bool Gamma_ak_bj<Array>::mStep()
       Real num = 0., den = 0.;
       for (int k= baseIdx; k < components().end(); ++k)
       {
-        num += p_param(k)->mean_[j] * p_param(k)->tk_;
-        den += p_param(k)->shape_   * p_param(k)->tk_;
+        num += param(k).mean_[j] * param(k).tk_;
+        den += param(k).shape_   * param(k).tk_;
       }
       // compute b_j
       Real b = num/den;

@@ -78,7 +78,7 @@ class Gamma_ak_bjk : public GammaBase< Gamma_ak_bjk<Array> >
     using Base::p_tik;
     using Base::components;
     using Base::p_data;
-    using Base::p_param;
+    using Base::param;
 
     using Base::meanjk;
     using Base::variancejk;
@@ -121,10 +121,10 @@ void Gamma_ak_bjk<Array>::randomInit()
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      p_param(k)->scale_[j] = Law::Exponential::rand((variance/mean));
+      param(k).scale_[j] = Law::Exponential::rand((variance/mean));
       value += mean*mean/variance;
     }
-    p_param(k)->shape_ = Law::Exponential::rand(value/(this->nbVariable()));
+    param(k).shape_ = Law::Exponential::rand(value/(this->nbVariable()));
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_ak_bjk<Array>::randomInit done\n");
@@ -141,12 +141,12 @@ bool Gamma_ak_bjk<Array>::mStep()
   for (int k= baseIdx; k < components().end(); ++k)
   {
     // moment estimate and oldest value
-    Real x0 = (p_param(k)->mean_.square()/p_param(k)->variance_).mean();
-    Real x1 = p_param(k)->shape_;
+    Real x0 = (param(k).mean_.square()/param(k).variance_).mean();
+    Real x1 = param(k).shape_;
     if ((x0 <=0.) || (isNA(x0))) return false;
 
     // get shape
-    hidden::invPsiMLog f( (p_param(k)->meanLog_-p_param(k)->mean_.log()).mean() );
+    hidden::invPsiMLog f( (param(k).meanLog_-param(k).mean_.log()).mean() );
     Real a = Algo::findZero(f, x0, x1, 1e-08);
     if (!Arithmetic<Real>::isFinite(a))
     {
@@ -160,9 +160,9 @@ bool Gamma_ak_bjk<Array>::mStep()
       a = x0; // use moment estimate
     }
     // set values
-    p_param(k)->shape_ = a;
+    param(k).shape_ = a;
     for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
-    { p_param(k)->scale_[j] = p_param(k)->mean_[j]/a; }
+    { param(k).scale_[j] = param(k).mean_[j]/a; }
   }
   return true;
 }

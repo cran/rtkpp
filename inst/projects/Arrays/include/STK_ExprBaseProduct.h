@@ -51,12 +51,10 @@ template<typename Lhs, typename Rhs> class ArrayByVectorProduct;
 template<typename Lhs, typename Rhs> class ArrayByDiagonalProduct;
 
 template<typename Lhs, typename Rhs> class PointByArrayProduct;
-template<typename Lhs, typename Rhs> class PointByDiagonalProduct;
-
 template<typename Lhs, typename Rhs> class VectorByPointProduct;
 
 template<typename Lhs, typename Rhs> class DiagonalByArrayProduct;
-template<typename Lhs, typename Rhs> class DiagonalByVectorProduct;
+template<typename Lhs, typename Rhs> class DiagonalByArrayProduct;
 
 
 namespace hidden
@@ -75,50 +73,19 @@ template<typename Lhs, typename Rhs, int LStructure_>
 struct ProductSelector<Lhs, Rhs, LStructure_, Arrays::vector_>
 { typedef ArrayByVectorProduct<Lhs, Rhs> ReturnType;};
 
+template<typename Lhs, typename Rhs, int LStructure_>
+struct ProductSelector<Lhs, Rhs, LStructure_, Arrays::diagonal_>
+{ typedef ArrayByDiagonalProduct<Lhs, Rhs> ReturnType;};
+
+
+// point at left hand side
 template<typename Lhs, typename Rhs, int RStructure_>
 struct ProductSelector<Lhs, Rhs, Arrays::point_, RStructure_>
 { typedef PointByArrayProduct<Lhs, Rhs> ReturnType;};
 
 template<typename Lhs, typename Rhs>
 struct ProductSelector<Lhs, Rhs, Arrays::point_, Arrays::diagonal_>
-{  typedef PointByDiagonalProduct<Lhs, Rhs> ReturnType;};
-
-
-template<typename Lhs, typename Rhs>
-struct ProductSelector<Lhs, Rhs, Arrays::vector_, Arrays::point_>
-{  typedef VectorByPointProduct<Lhs, Rhs> ReturnType;};
-
-
-template<typename Lhs, typename Rhs, int LStructure_>
-struct ProductSelector<Lhs, Rhs, LStructure_, Arrays::diagonal_>
 { typedef ArrayByDiagonalProduct<Lhs, Rhs> ReturnType;};
-
-template<typename Lhs, typename Rhs, int RStructure_>
-struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, RStructure_>
-{ typedef DiagonalByArrayProduct<Lhs, Rhs> ReturnType;};
-
-
-
-template<typename Lhs, typename Rhs>
-struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, Arrays::vector_>
-{ typedef typename Lhs::Type LType;
-  typedef typename Rhs::Type RType;
-  typedef DiagonalByVectorProduct< Lhs, Rhs> ReturnType;
-};
-
-template<typename Lhs, typename Rhs>
-struct ProductSelector<Lhs, Rhs, Arrays::vector_, Arrays::vector_>
-{ typedef typename Lhs::Type LType;
-  typedef typename Rhs::Type RType;
-  typedef BinaryOperator<ProductOp<LType, RType>, Lhs, Rhs> ReturnType;
-};
-
-template<typename Lhs, typename Rhs>
-struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, Arrays::diagonal_>
-{ typedef typename Lhs::Type LType;
-  typedef typename Rhs::Type RType;
-  typedef BinaryOperator<ProductOp<LType, RType>, Lhs, Rhs> ReturnType;
-};
 
 template<typename Lhs, typename Rhs>
 struct ProductSelector<Lhs, Rhs, Arrays::point_, Arrays::point_>
@@ -133,6 +100,34 @@ struct ProductSelector<Lhs, Rhs, Arrays::point_, Arrays::vector_>
 { typedef typename Traits<Lhs>::Type LType;
   typedef typename Traits<Rhs>::Type RType;
   typedef DotProduct<Lhs, Rhs> ReturnType;
+};
+
+// vector as left hand side
+template<typename Lhs, typename Rhs>
+struct ProductSelector<Lhs, Rhs, Arrays::vector_, Arrays::point_>
+{  typedef VectorByPointProduct<Lhs, Rhs> ReturnType;};
+
+template<typename Lhs, typename Rhs>
+struct ProductSelector<Lhs, Rhs, Arrays::vector_, Arrays::vector_>
+{ typedef typename Lhs::Type LType;
+  typedef typename Rhs::Type RType;
+  typedef BinaryOperator<ProductOp<LType, RType>, Lhs, Rhs> ReturnType;
+};
+
+template<typename Lhs, typename Rhs, int RStructure_>
+struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, RStructure_>
+{ typedef DiagonalByArrayProduct<Lhs, Rhs> ReturnType;};
+
+// diagonal as left hand side
+template<typename Lhs, typename Rhs>
+struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, Arrays::vector_>
+{ typedef DiagonalByArrayProduct<Lhs, Rhs> ReturnType;};
+
+template<typename Lhs, typename Rhs>
+struct ProductSelector<Lhs, Rhs, Arrays::diagonal_, Arrays::diagonal_>
+{ typedef typename Lhs::Type LType;
+  typedef typename Rhs::Type RType;
+  typedef BinaryOperator<ProductOp<LType, RType>, Lhs, Rhs> ReturnType;
 };
 
 // FIXME: will not work as UnaryOperator constructor take only Lhs
