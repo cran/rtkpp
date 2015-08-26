@@ -76,6 +76,10 @@
 #include "../projects/DManager/include/STK_List1D.h"
 #include "../projects/DManager/include/STK_DataFrame.h"
 
+/* Interface class for data handlers */
+#include "../projects/DManager/include/STK_DataHandlerBase.h"
+#include "../projects/DManager/include/STK_IDataHandler.h"
+
 /* main classes for managing Csv data. */
 #include "../projects/DManager/include/STK_ReadWriteCsv.h"
 #include "../projects/DManager/include/STK_DataHandler.h"

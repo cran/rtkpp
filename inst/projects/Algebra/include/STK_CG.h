@@ -1,5 +1,5 @@
-/*--------------------------------------------------------------------*/
-/*     Copyright (C) 2013-2013  Serge Iovleff, Quentin Grimonprez
+ /*--------------------------------------------------------------------*/
+/*     Copyright (C) 2013-2015  Serge Iovleff, Quentin Grimonprez
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@
 /*
  * Project:  stkpp::Algebra
  * created on: 24 mai 2013
- * Author:   Quentin Grimonprez
+ * Author:   Quentin Grimonprez, Serge Iovleff
  **/
 
 /** @file STK_CG.h
@@ -36,10 +36,11 @@
 #ifndef STK_CG_H
 #define STK_CG_H
 
-#include "Sdk/include/STK_Macros.h"
-#include "Sdk/include/STK_IRunner.h"
+#include <Sdk/include/STK_Macros.h>
+#include <Sdk/include/STK_IRunner.h>
 
-#define MAXITER 100
+//#include "Arrays/include/STK_Display.h"
+
 namespace STK
 {
 
@@ -85,24 +86,28 @@ struct DefaultFunctor
  * @tparam ColVector The type of the containers for the vectors.
  */
 template<class MultFunctor, class ColVector, class InitFunctor = DefaultFunctor<ColVector> >
-class CG : public IRunnerBase
+class CG
 {
   public:
     typedef typename ColVector::Type Type;
+    /** Default Constructor */
+    CG(): x_(), r_(), eps_(0.), iter_(0), nbStart_(0), p_mult_(0), p_init_(0), p_b_(0) {}
     /**Constructor
-     * @param p_mult functor which compute @b Ax with @b A a matrix and @b x a vector
+     * @param mult functor which compute @b Ax with @b A a matrix and @b x a vector
      * @param b from @b Ax=b
      * @param p_init functor which initialize @b x
      * @param eps tolerance
      */
-    CG( MultFunctor const& mult, ColVector const& b, InitFunctor* const& p_init =0, Type eps=Arithmetic<Type>::epsilon())
-      : x_()
-      , r_()
-      , eps_(eps)
+    CG( MultFunctor const& mult
+      , ColVector const& b
+      , InitFunctor* const& p_init =0
+      , Type eps=Arithmetic<Type>::epsilon())
+      : x_(), r_()
+      , eps_(eps), iter_(0), nbStart_(0)
       , p_mult_(&mult)
       , p_init_(p_init)
       , p_b_(&b)
-    {};
+    {}
 
     /**Copy constructor. The constructor to copy.
      * @param cg the conjugate gradient to copy
@@ -110,13 +115,13 @@ class CG : public IRunnerBase
     CG( CG const& cg)
       : x_(cg.x_)
       , r_(cg.r_)
-      , eps_(cg.eps_)
+      , eps_(cg.eps_), iter_(cg.iter_), nbStart_(cg.nbStart_)
       , p_mult_(cg.p_mult_)
       , p_init_(cg.p_init_)
       , p_b_(cg.p_b_)
-    {};
+    {}
     /**destructor*/
-    virtual ~CG() {};
+    ~CG() {}
     /** clone pattern */
     CG* clone() const { return new CG(*this);}
 
@@ -124,6 +129,10 @@ class CG : public IRunnerBase
     inline ColVector const& x() const { return x_;}
     /**@return the ith coordinate of the solution of the linear system Ax=b*/
     inline Real const& x(int const& i) const { return x_[i];}
+    /**@return the number of iterations */
+    inline int const& iter() const { return iter_;}
+    /**@return the number of starting */
+    inline int const& nbStart() const { return nbStart_;}
     /**@return the residuals b-A*x*/
     inline ColVector const& r() const { return r_;}
     /** Set the tolerance*/
@@ -134,34 +143,32 @@ class CG : public IRunnerBase
     inline void setMultFunctor(MultFunctor const& mult) { p_mult_= &mult; }
     /** Set functor computing @b x at initialization */
     inline void setInitFunctor(InitFunctor* const& p_init) { p_init_=p_init; }
-    /** run the conjugate gradient */
-    virtual bool run()
-    {
-      try
-      {
-        cg();
-      }
-      catch (Exception const& e)
-      {
-        this->msg_error_ = e.error();
-        return false;
-      }
-      return true;
-    }
+    /** @return the number of iterations or -1 if the maximal number of iteration
+     *  is reached.
+     **/
+    int run() { return cg();}
+    /** get the last error message.
+     * @return the last error message
+     **/
+    inline String const& error() const { return msg_error_;}
 
   protected:
-    void cg()
+    /** String with the last error message. */
+    String msg_error_;
+    /** @return the number of iterations */
+    int cg()
     {
+      iter_ = 0;
       int nbStart = 0;
       ColVector xOld, z, p_;
 
-      Real bnorm2 = p_b_->norm2(), alpha, beta; //
-      int step = 0; //number of step
       // initialization
       if(!p_init_) {x_ = *p_b_;}
       else { x_ = (*p_init_)();}
-      while(nbStart<2)
+      while(nbStart<3)
       {
+        int step = 0; //number of step
+        Real bnorm2 = p_b_->norm2(), alpha, beta; //
         if (bnorm2 == 0.) bnorm2 = 1.;
         //compute the residuals
         r_ = *p_b_ - (*p_mult_)(x_);
@@ -178,6 +185,7 @@ class CG : public IRunnerBase
           //update x_
           xOld.exchange(x_);
           x_ = xOld + alpha * p_;
+          iter_++;
           //update residuals
           r_ = r_ - (alpha * z);
           //compute beta
@@ -187,11 +195,12 @@ class CG : public IRunnerBase
           //update p_
           p_ = (p_ * beta) + r_;
           step++;
-          if( step > MAXITER )
-            throw runtime_error("CG reaches MAXITER before convergence.");
+          if( step > 50 ) { break;}
         }
         nbStart++;
-      };
+      }
+      // return an error
+      return iter_;
     }
 
   private:
@@ -201,6 +210,10 @@ class CG : public IRunnerBase
     ColVector r_;
     /** tolerance */
     Type eps_;
+    /** number of iterations */
+    int iter_;
+    /** number of restart_ */
+    int nbStart_;
     /** pointer on the functor performing @b Ax */
     MultFunctor const*  p_mult_;
     /** pointer on the functor initializing @b x*/
@@ -251,7 +264,7 @@ class CG : public IRunnerBase
  * @tparam ColVector The type of the containers for the vectors.
  */
 template<class MultFunctor, class CondFunctor, class ColVector, class InitFunctor = DefaultFunctor<ColVector> >
-class PCG : public IRunnerBase
+class PCG
 {
   public:
     typedef typename ColVector::Type Type;
@@ -262,9 +275,8 @@ class PCG : public IRunnerBase
      * @param eps tolerance
      */
     PCG( MultFunctor const& mult, CondFunctor const& cond, ColVector const& b, InitFunctor* const& p_init =0, Type eps=Arithmetic<Type>::epsilon())
-       : x_()
-       , r_()
-       , eps_(eps)
+       : x_(), r_()
+       , iter_(0), eps_(eps)
        , p_mult_(&mult)
        , p_cond_(&cond)
        , p_init_(p_init)
@@ -274,16 +286,15 @@ class PCG : public IRunnerBase
      * @param pcg the preconditioned conjugate gradient to copy
      */
     PCG( PCG const& pcg)
-      : x_(pcg.x_)
-      , r_(pcg.r_)
-      , eps_(pcg.eps_)
+      : x_(pcg.x_), r_(pcg.r_)
+      , eps_(pcg.eps_), iter_(0)
       , p_mult_(pcg.p_mult_)
       , p_cond_(pcg.p_cond_)
       , p_init_(pcg.p_init_)
       , p_b_(pcg.p_b_)
     {};
     /**destructor*/
-    virtual ~PCG() {};
+    ~PCG() {};
     /** clone pattern */
     PCG* clone() const { return new PCG(*this);}
 
@@ -304,28 +315,23 @@ class PCG : public IRunnerBase
     /** Set functor computing the value \f$ \mathbf{M}^{-1} \mathbf{r}\f$ */
     inline void setCondFunctor(CondFunctor const& cond) { p_cond_= &cond; }
     /** run the conjugate gradient */
-    virtual bool run()
-    {
-      try
-      {
-        pcg();
-      }
-      catch (Exception const& e)
-      {
-        this->msg_error_ = e.error();
-        return false;
-      }
-      return true;
-    }
+    inline int run() { return pcg();}
+    /** get the last error message.
+     * @return the last error message
+     **/
+    inline String const& error() const { return msg_error_;}
 
   protected:
-    void pcg()
+    /** String with the last error message. */
+    String msg_error_;
+    /** preconditioned Gradient implementation */
+    int pcg()
     {
       int nbStart = 0;
       ColVector xOld, y, z, p;
 
       Real bnorm2 = p_b_->norm2(), alpha, beta; //
-      int step = 0; //number of step
+      iter_= 0;
       // initialization
       if(!p_init_) {x_ = *p_b_;}
       else { x_ = (*p_init_)();}
@@ -350,6 +356,7 @@ class PCG : public IRunnerBase
           //update x_
           xOld.exchange(x_);
           x_ = xOld + alpha * p;
+          iter_++;
           //update residuals
           r_ = r_ - (alpha * z);
           //update y
@@ -361,12 +368,10 @@ class PCG : public IRunnerBase
           beta *= rty;
           //update p_
           p = (p * beta) + y;
-          step++;
-          if( step > MAXITER )
-            throw runtime_error("CG reaches MAXITER before convergence.");
         }
         nbStart++;
-      };
+      }
+      return iter_;
     }
 
   private:
@@ -374,6 +379,8 @@ class PCG : public IRunnerBase
     ColVector x_;
     /** residuals of the system */
     ColVector r_;
+    /** number of iterations */
+    int iter_;
     /** tolerance */
     Type eps_;
     /** pointer on the functor performing @b Ax */

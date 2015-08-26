@@ -276,7 +276,7 @@ void Option::write( ostream& os) const
   // write option name if it's not a page
   if (type_ != page_)
   {  // write name and " = "
-    os << name_ << STRING_BLANK << CHAR_EQUAL << STRING_BLANK;
+    os << name_ << _T(" ") << CHAR_EQUAL << _T(" ");
   }
   // write option value
   switch (type_)

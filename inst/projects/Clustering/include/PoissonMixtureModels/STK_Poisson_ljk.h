@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Serge Iovleff
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -52,11 +52,71 @@ struct MixtureTraits< Poisson_ljk<_Array> >
 {
   typedef _Array                  Array;
   typedef typename Array::Type    Type;
-  typedef Poisson_ljk_Parameters  Parameters;
-  typedef Array2D<Real>           Param;
+  typedef ParametersHandler<Clust::Poisson_ljk_> ParamHandler;
 };
 
 } // namespace hidden
+
+/** Specialization of the ParametersHandler struct for Poisson_ljk model */
+template <>
+struct ParametersHandler<Clust::Poisson_ljk_>: public PoissonHandlerBase<  ParametersHandler<Clust::Poisson_ljk_> >
+{
+  /** Array of the rates */
+  MixtureParametersSet<PointX> lambda_;
+  /** @return the value of lambda of the kth cluster and jth variable */
+  inline Real const& lambdaImpl(int k, int j) const { return lambda_[k][j];}
+  /** copy operator */
+  inline ParametersHandler& operator=( ParametersHandler const& other)
+  { lambda_ = other.lambda_; return *this; }
+  /** copy operator using an array/expression storing the values */
+  template<class Array>
+  inline ParametersHandler& operator=( ExprBase<Array> const& param)
+  {
+    for (int k= param.beginRows(); k < param.endRows(); ++k)
+    {
+      for (int j= param.beginCols();  j < param.endCols(); ++j)
+      { lambda_[k][j] = param(k, j);}
+    }
+    return *this;
+  }
+
+  /** default constructor */
+  inline ParametersHandler(int nbCluster): lambda_(nbCluster) {}
+  /** copy constructor */
+  inline ParametersHandler(ParametersHandler const& model): lambda_(model.lambda_) {}
+  /** Initialize the parameters with an array/expression of value */
+  template<class Array>
+  inline ParametersHandler(int nbCluster, ExprBase<Array> const& param): lambda_(nbCluster)
+  {
+    lambda_.resize(param.cols());
+    for (int k= param.beginRows(); k < param.endRows(); ++k)
+    {
+      for (int j= param.beginCols();  j < param.endCols(); ++j)
+      { lambda_[k][j] = param(k, j);}
+    }
+  }
+
+  /** Initialize the parameters of the model.
+   *  This function initialize the parameter lambda and the statistics.
+   **/
+  void resize(Range const& range)
+  {
+    lambda_.resize(range);
+    lambda_.initialize(1.);
+  }
+  /** Store the intermediate results of the Mixture.
+   *  @param iteration Provides the iteration number beginning after the burn-in period.
+   **/
+  inline void storeIntermediateResults(int iteration)
+  { lambda_.storeIntermediateResults(iteration);}
+  /** Release the stored results. This is usually used if the estimation
+   *  process failed.
+   **/
+  inline void releaseIntermediateResults()
+  { lambda_.releaseIntermediateResults();}
+  /** set the parameters stored in stat_proba_ and release stat_proba_. */
+  inline void setParameters() { lambda_.setParameters();}
+};
 
 /** @ingroup Clustering
  *  The Poisson mixture model @c Poisson_ljk is the most general Poisson model
@@ -71,13 +131,9 @@ class Poisson_ljk : public PoissonBase<Poisson_ljk<Array> >
 {
   public:
     typedef PoissonBase<Poisson_ljk<Array> > Base;
-    typedef typename Clust::MixtureTraits< Poisson_ljk<Array> >::Parameters Parameters;
-
-    using Base::p_tik;
-    using Base::components;
+    typedef typename Clust::MixtureTraits< Poisson_ljk<Array> >::ParamHandler ParamHandler;
+    using Base::p_tik; using Base::param_;
     using Base::p_data;
-    using Base::param;
-
 
     /** default constructor
      * @param nbCluster number of cluster in the model
@@ -89,6 +145,19 @@ class Poisson_ljk : public PoissonBase<Poisson_ljk<Array> >
     Poisson_ljk( Poisson_ljk const& model) : Base(model) {}
     /** destructor */
     ~Poisson_ljk() {}
+    /** @return the value of the probability of the i-th sample in the k-th component.
+     *  @param i,k indexes of the sample and of the component
+     **/
+    inline Real lnComponentProbability(int i, int k) const
+    {
+      Real sum =0.;
+      for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
+      {
+        Real lambda = param_.lambda_.param_[k][j];
+        sum += Law::Poisson::lpdf(p_data()->elt(i,j), lambda);
+      }
+      return sum;
+    }
     /** Initialize randomly the parameters of the Poisson mixture. */
     void randomInit();
     /** Compute the weighted probabilities. */
@@ -102,13 +171,11 @@ class Poisson_ljk : public PoissonBase<Poisson_ljk<Array> >
 template<class Array>
 void Poisson_ljk<Array>::randomInit()
 {
-  for (int k = baseIdx; k < components().end(); ++k)
+  for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
   {
-    for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
-    {
-      Real m = (Real)p_data()->col(j).sum() / this->nbSample();
-      param(k).lambda_[j] = Law::Exponential::rand(m);
-    }
+    Real m = p_data()->col(j).template cast<Real>().mean();
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+    { param_.lambda_[k][j] = Law::Exponential::rand(m);}
   }
 }
 
@@ -117,12 +184,10 @@ void Poisson_ljk<Array>::randomInit()
 template<class Array>
 bool Poisson_ljk<Array>::mStep()
 {
-  for (int k = baseIdx; k < components().end(); ++k)
+  for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
   {
-    for (int j = p_data()->beginCols(); j < p_data()->endCols(); ++j)
-    {
-      param(k).lambda_[j] = p_data()->col(j).template cast<Real>().wmean(p_tik()->col(k));
-    }
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+    { param_.lambda_[k][j] =p_data()->col(j).template cast<Real>().wmean(p_tik()->col(k));}
   }
   return true;
 }

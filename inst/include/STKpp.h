@@ -99,6 +99,7 @@
  *  <li> @b Other @b tutorials
  *     <ul>
  *     <li> @subpage PageTutorialKernel
+ *     <li> @subpage TutorialSTatisitK
  *     <li> @subpage TutorialClustering
  *     <li> @subpage TutorialApplication
  *     <li> @subpage TutorialStatModel
@@ -140,6 +141,11 @@
  *  which are used internally by the STK++ classes. They are hidden to the
  *  end-user of theses classes.
  **/
+
+// add openmp support
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // STKernel project
 #include "STKernel.h"

@@ -168,13 +168,23 @@ class Array2DUpperTriangular : public IArray2D< Array2DUpperTriangular<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DUpperTriangular& operator=(ExprBase<Rhs> const& T)
+    Array2DUpperTriangular& operator=(ExprBase<Rhs> const& T)
     { return LowBase::operator=(T);}
     /** Operator = : overwrite the Array2DUpperTriangular with T.      */
     Array2DUpperTriangular& operator=(const Array2DUpperTriangular &T)
     { return LowBase::assign(T);}
     /** Operator = : overwrite with a constant value. */
-    inline Array2DUpperTriangular& operator=(Type const& v) { return LowBase::setValue(v);}
+    Array2DUpperTriangular& operator=(Type const& v) { return LowBase::setValue(v);}
+    /** New beginning index for the object.
+     *  @param beg first index of the container
+     **/
+    void shift1D(int beg)
+    { Base::shift(beg, beg);}
+    /** New size for the container.
+     *  @param I range of the columns and rows of the container
+     **/
+    Array2DUpperTriangular& resize1D( Range const& I)
+    { Base::resize(I, I); return *this;}
 };
 
 } // namespace STK

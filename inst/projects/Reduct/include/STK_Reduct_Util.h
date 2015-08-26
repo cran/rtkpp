@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -52,7 +52,7 @@ namespace Reduct
 enum TypeReduction
 {
   /** unknown reduction*/
-  unknown_ =0
+  unknown_reduction_ =0
   /** local projected variance */
   , localVariance_
   /** total projected variance (pca)*/
@@ -76,6 +76,29 @@ TypeReduction stringToTypeReduction( String const& type);
  **/
 String typeReductionToString( TypeReduction const& type);
 
+/** Type of proximity graph to used in order to compute the local variance:
+ * - prim_ the minimal spanning tree
+ * - distance_ the first neighbors
+ * - unknown_ unknown type of graph
+ */
+enum TypeGraph { unknown_graph_, prim_, distance_ };
+/** convert a String to a TypeGraph.
+ *  @param type the type of graph in a string
+ *  @return the TypeGraph represented by the String @c type. If the string
+ *  does not match any known name, the @c unknown_ type is returned.
+ **/
+TypeGraph stringToTypeGraph( String const& type);
+/** convert a TypeGraph to a String.
+ *  @param type the type of graph we want to convert to a string
+ *  @return the string associated to this type of graph
+ **/
+String typeGraphToString( TypeGraph const& type);
+/** Constructor. the TypeGraph and the number of neighbors are
+ *  given by the user and are not modified.
+ *  @param p_data the data set to process
+ *  @param type type of proximity graph to build
+ *  @param nbNeighbor number of neighbors to use in the proximity graph
+ */
 
 } // namespace Reduct
 

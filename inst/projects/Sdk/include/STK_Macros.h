@@ -41,9 +41,9 @@
 // any number
 #define STK_WORLD_VERSION 0
 // between 0 and 99
-#define STK_MAJOR_VERSION 8
+#define STK_MAJOR_VERSION 9
 // between 0 and 99
-#define STK_MINOR_VERSION 6
+#define STK_MINOR_VERSION 2
 
 #include "STKernel/include/STK_Exceptions.h"
 

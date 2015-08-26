@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -45,7 +45,6 @@ template<typename UnaryOp, typename Lhs> class UnaryOperator;
 
 namespace hidden
 {
-
 /** @ingroup hidden
  *  @brief Traits class for the unary operators
  */
@@ -54,11 +53,11 @@ struct Traits< UnaryOperator <UnaryOp, Lhs> >
 {
   enum
   {
-      structure_ = Lhs::structure_,
-      orient_    = Lhs::orient_,
-      sizeRows_  = Lhs::sizeRows_,
-      sizeCols_  = Lhs::sizeCols_,
-      storage_   = Lhs::storage_
+      structure_ = Traits<Lhs>::structure_,
+      orient_    = Traits<Lhs>::orient_,
+      sizeRows_  = Traits<Lhs>::sizeRows_,
+      sizeCols_  = Traits<Lhs>::sizeCols_,
+      storage_   = Traits<Lhs>::storage_
   };
   typedef RowOperator<UnaryOperator <UnaryOp, Lhs> > Row;
   typedef ColOperator<UnaryOperator <UnaryOp, Lhs> > Col;
@@ -92,13 +91,16 @@ class UnaryOperatorBase;
   * don't have to name UnaryOperator types explicitly.
   */
 template<typename UnaryOp,  typename Lhs>
-class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Lhs >, public TRef<1>
+class UnaryOperator: public ExprBase< UnaryOperator<UnaryOp, Lhs> >, public TRef<1>
 {
   public:
-    typedef UnaryOperatorBase< UnaryOp, Lhs > Base;
-    typedef typename hidden::Traits< UnaryOperator >::Type Type;
-    typedef typename hidden::Traits< UnaryOperator >::Row Row;
-    typedef typename hidden::Traits< UnaryOperator >::Col Col;
+    typedef ExprBase<  UnaryOperator<UnaryOp, Lhs> > Base;
+    typedef typename hidden::Traits< UnaryOperator<UnaryOp, Lhs> >::Type Type;
+    typedef typename hidden::Traits< UnaryOperator<UnaryOp, Lhs> >::ReturnType ReturnType;
+
+    typedef typename hidden::Traits< UnaryOperator<UnaryOp, Lhs> >::Row Row;
+    typedef typename hidden::Traits< UnaryOperator<UnaryOp, Lhs> >::Col Col;
+
     enum
     {
         structure_ = hidden::Traits< UnaryOperator >::structure_,
@@ -112,65 +114,34 @@ class UnaryOperator  : public UnaryOperatorBase< UnaryOp, Lhs >, public TRef<1>
     /** Type of the Range for the columns */
     typedef TRange<sizeCols_> ColRange;
 
-    inline UnaryOperator( Lhs const& rhs, UnaryOp const& functor = UnaryOp())
-                        : Base(), lhs_(rhs), functor_(functor)
+    inline UnaryOperator( Lhs const& lhs, UnaryOp const& functor = UnaryOp())
+                        : Base(), lhs_(lhs), functor_(functor)
     {}
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return lhs_.rows();}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return lhs_.beginRows();}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return lhs_.endRows();}
-    /** @return the number of rows */
-    inline int sizeRowsImpl() const { return lhs_.sizeRows();}
-
     /** @return the range of the Columns */
     inline ColRange const& colsImpl() const { return lhs_.cols();}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return lhs_.beginCols();}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return lhs_.endCols();}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return lhs_.sizeCols();}
 
     /** @return the left hand side expression */
-    inline Lhs const& rhs() const { return lhs_; }
+    inline Lhs const& lhs() const { return lhs_; }
     /** @return the functor representing the unary operation */
     inline UnaryOp const& functor() const { return functor_; }
 
-  protected:
-    Lhs const& lhs_;
-    UnaryOp const functor_;
-};
-
-/** @ingroup Arrays
-  * @brief implement the access to the elements of the unary operator.
-  **/
-template<typename UnaryOp, typename Lhs>
-class UnaryOperatorBase : public ExprBase< UnaryOperator<UnaryOp, Lhs> >
-{
-  public:
-    typedef UnaryOperator<UnaryOp, Lhs> Derived;
-    typedef ExprBase< Derived > Base;
-    typedef typename hidden::Traits<Derived>::Type Type;
-    typedef typename hidden::Traits<Derived>::ReturnType ReturnType;
-
-    /** constructor. */
-    inline UnaryOperatorBase() : Base() {}
     /** @return the element (i,j) of the operator.
      *  @param i index of the row
      *  @param j index of the column
      **/
-    inline ReturnType elt2Impl(int i, int j) const
-    { return this->asDerived().functor()(this->asDerived().rhs().elt(i, j));}
+    inline ReturnType elt2Impl(int i, int j) const { return functor_(lhs_.elt(i, j));}
     /** @return the ith element of the operator
      *  @param i index of the ith element
      **/
-    inline ReturnType elt1Impl(int i) const
-    { return this->asDerived().functor()(this->asDerived().rhs().elt(i));}
+    inline ReturnType elt1Impl(int i) const { return functor_(lhs_.elt(i));}
     /** @return the element of the operator */
-    inline ReturnType elt0Impl() const
-    { return this->asDerived().functor()(this->asDerived().rhs().elt());}
+    inline ReturnType elt0Impl() const { return functor_(lhs_.elt());}
+
+  protected:
+    Lhs const& lhs_;
+    UnaryOp const functor_;
 };
 
 } // namespace STK

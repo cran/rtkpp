@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -51,10 +51,62 @@
 
 namespace STK
 {
+
+namespace hidden
+{
+template<class Derived, int Structure_ = Derived::structure_>
+struct CheckArray;
+
+template<class Derived>
+struct CheckArray<Derived, Arrays::array2D_>
+{
+  static bool resize(Derived const& array, Range const& I, Range const& J)
+  { return (array.rows() == I && array.cols() == J) ? false : true;}
+  static bool shift(Derived const& array, int beginRow, int beginCol)
+  { return (array.beginRows() == beginRow && array.beginCols() == beginCol) ? false : true;}
+  static bool resize(Derived const& array, Range const& I)
+  { return (array.rows() == I && array.cols() == I) ? false : true;}
+  static bool shift(Derived const& array, int begin)
+  { return (array.beginRows() == begin && array.beginCols() == begin) ? false : true;}
+};
+template<class Derived>
+struct CheckArray<Derived, Arrays::upper_triangular_>
+{
+  static bool resize(Derived const& array, Range const& I, Range const& J)
+  { return (array.rows() == I && array.cols() == J) ? false : true;}
+  static bool shift(Derived const& array, int beginRow, int beginCol)
+  { return (array.beginRows() == beginRow && array.beginCols() == beginCol) ? false : true;}
+  static bool resize(Derived const& array, Range const& I)
+  { return (array.rows() == I && array.cols() == I) ? false : true;}
+  static bool shift(Derived const& array, int begin)
+  { return (array.beginRows() == begin && array.beginCols() == begin) ? false : true;}
+};
+template<class Derived>
+struct CheckArray<Derived, Arrays::lower_triangular_>
+{
+  static bool resize(Derived const& array, Range const& I, Range const& J)
+  { return (array.rows() == I && array.cols() == J) ? false : true;}
+  static bool shift(Derived const& array, int beginRow, int beginCol)
+  { return (array.beginRows() == beginRow && array.beginCols() == beginCol) ? false : true;}
+  static bool resize(Derived const& array, Range const& I)
+  { return (array.rows() == I && array.cols() == I) ? false : true;}
+  static bool shift(Derived const& array, int begin)
+  { return (array.beginRows() == begin && array.beginCols() == begin) ? false : true;}
+};
+
+template<class Derived, int Structure_>
+struct CheckArray
+{
+  static bool resize(Derived const& array, Range const& I)
+  { return (array.range() == I) ? false : true;}
+  static bool shift(Derived const& array, int begin)
+  { return (array.begin() == begin) ? false : true;}
+};
+}
 /** @class ICArray
   * @ingroup Arrays
   *
-  * @brief Interface class for all CArray, CPoint, CVector
+  * @brief Interface class for all CArray, CArrayPoint, CArrayVector and CArraySquare.
   *
   * This class is the base that is inherited by all objects (matrix, vector,
   * point) which are not expression and stored as CArrays. The common API for
@@ -79,7 +131,6 @@ class ICArray : public ArrayBase<Derived>
     typedef typename hidden::Traits<Derived>::SubArray SubArray;
 
     typedef typename hidden::Traits<Derived>::Allocator Allocator;
-
     enum
     {
       structure_ = hidden::Traits<Derived>::structure_,
@@ -88,6 +139,7 @@ class ICArray : public ArrayBase<Derived>
       sizeCols_  = hidden::Traits<Derived>::sizeCols_,
       storage_   = hidden::Traits<Derived>::storage_
     };
+    typedef hidden::CheckArray<Derived, structure_> Checker;
     /** Type of the Range for the rows */
     typedef TRange<sizeRows_> RowRange;
     /** Type of the Range for the columns */
@@ -97,92 +149,83 @@ class ICArray : public ArrayBase<Derived>
     /** allocator of the memory  */
     Allocator allocator_;
     /** default constructor. */
-    inline ICArray() : Base(), allocator_()
-    {}
+    ICArray() : Base(), allocator_() {}
     /** constructor with specified sizes.
      *  @param sizeRows,sizeCols size of the rows and columns
      **/
-    inline ICArray( int sizeRows, int sizeCols)
-                  : Base(), allocator_(sizeRows, sizeCols)
+    ICArray( int sizeRows, int sizeCols)
+           : Base(), allocator_(sizeRows, sizeCols)
     {}
     /** constructor with specified sizes and value.
      *  @param sizeRows,sizeCols size of the rows and columns
      *  @param value the value to set
      **/
-    inline ICArray( int sizeRows, int sizeCols, Type const& value)
-                  : Base(), allocator_(sizeRows, sizeCols, value)
+    ICArray( int sizeRows, int sizeCols, Type const& value)
+           : Base(), allocator_(sizeRows, sizeCols, value)
     {}
     /** copy or wrapper constructor.
      *  @param T size of the rows
      *  @param ref is this owning its own data ?
      **/
-    inline ICArray( Derived const& T, bool ref = false)
-                  : Base(), allocator_(T.allocator_, ref)
+    ICArray( Derived const& T, bool ref = false)
+           : Base(), allocator_(T.allocator_, ref)
     {}
     /** wrapper constructor for 0 based C-Array.
      *  @param q pointer on the array
      *  @param sizeRows,sizeCols size of the rows and columns
      **/
-    inline ICArray( Type* const& q, int sizeRows, int sizeCols)
-                  : Base(), allocator_(q, sizeRows, sizeCols)
+    ICArray( Type* const& q, int sizeRows, int sizeCols)
+           : Base(), allocator_(q, sizeRows, sizeCols)
+    {}
+    /** constructor by reference, ref_=1.
+     *  @param allocator the allocator to wrap
+     *  @param I,J range of the rows and columns to wrap
+     **/
+    template<class OtherAllocator>
+    inline ICArray( ITContainer2D<OtherAllocator> const& allocator, Range const& I, Range const& J)
+                  : Base(), allocator_(allocator.asDerived(), I, J)
     {}
     /** constructor by reference, ref_=1.
      *  @param allocator with the data
      **/
     template< class OtherAllocator>
-    inline ICArray( CAllocatorBase<OtherAllocator> const& allocator)
+    inline ICArray( ITContainer2D<OtherAllocator> const& allocator)
                   : Base(), allocator_(allocator.asDerived(), true)
     {}
     /**  destructor */
-    inline ~ICArray() {}
+    ~ICArray() {}
 
   public:
     /** @return the Horizontal range */
-    inline ColRange const& colsImpl() const { return allocator_.cols();};
-    /**  @return the index of the first column */
-    inline int beginColsImpl() const { return allocator_.beginCols();}
-    /**  @return the ending index of the columns */
-    inline int endColsImpl() const { return allocator_.endCols();}
-    /** @return the Horizontal size (the number of column) */
-    inline int sizeColsImpl() const { return allocator_.sizeCols();}
-
+    inline ColRange const&colsImpl() const { return allocator_.cols();};
     /** @return the Vertical range */
     inline RowRange const& rowsImpl() const { return allocator_.rows();}
-    /** @return the index of the first row*/
-    inline int beginRowsImpl() const { return allocator_.beginRows();}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return allocator_.endRows();}
-    /** @return the Vertical size (the number of rows) */
-    inline int sizeRowsImpl() const { return allocator_.sizeRows();}
-
-    /** @return the index of the last column */
-    inline int lastIdxCols() const { return allocator_.lastIdxCols();}
-    /** @return the index of the last row */
-    inline int lastIdxRows() const { return allocator_.lastIdxRows();}
 
     /** @return @c true if the container is empty, @c false otherwise */
-     inline bool empty() const { return allocator_.empty();}
-
+    bool empty() const { return allocator_.empty();}
     /** @return @c true if *this is reference container, @c false otherwise */
-    inline bool isRef() const { return allocator_.isRef();}
+    bool isRef() const { return allocator_.isRef();}
 
     /** Get a constant reference on the main allocator. */
     inline Allocator const& allocator() const { return allocator_;}
     /** Get the constant main pointer. */
     inline Type const* p_data() const { return allocator_.p_data();}
-    /** Get the main pointer. */
+    /** Get the writable main pointer. */
     inline Type* p_data() { return allocator_.p_data();}
 
-    // general arrays
+    /** implement the const element accessor */
     inline Type& elt2Impl( int i, int j) { return allocator_.elt(i, j);}
+    /** implement the writable element accessor */
     inline Type const& elt2Impl( int i, int j) const { return allocator_.elt(i, j);}
 
-    // vectors and points
+    /** implement the const element accessor for vector/point/diagonal arrays*/
     inline Type& elt1Impl( int j) { return allocator_.elt(j);}
+    /** implement the writable element accessor for vector/point/diagonal arrays*/
     inline Type const& elt1Impl( int j) const { return allocator_.elt(j);}
 
-    // numbers
+    /** implement the const element accessor for number arrays*/
     inline Type& elt0Impl() { return allocator_.elt();}
+    /** implement the writable element accessor for number arrays*/
     inline Type const& elt0Impl() const { return allocator_.elt();}
 
     /** implement the row operator using a reference on the row of the allocator */
@@ -195,13 +238,18 @@ class ICArray : public ArrayBase<Derived>
     /** implement the col operator using a reference on the column of the allocator */
     inline SubCol colImpl(Range const& I, int j) const { return SubCol( allocator_.col( I, j));}
 
+    /** implement the row operator using a reference on the rows of the allocator */
+    inline SubArray rowImpl(Range const& I) const { return SubArray( allocator_.sub(I, this->cols()));}
+    /** implement the col operator using a reference on the columns of the allocator */
+    inline SubArray colImpl(Range const& J) const { return SubArray( allocator_.sub( this->rows(), J));}
     /** implement the sub operator for 2D arrays using a reference on the column of the allocator */
     inline SubArray subImpl(Range const& I, Range const& J) const { return SubArray(allocator_.sub(I, J));}
-    /** implement the sub operator for 1D arrays using a reference on the column of the allocator */
+
+    /** implement the sub operator for 1D arrays using a reference on the raw/column of the allocator */
     inline SubVector subImpl( Range const& J) const { return SubVector( allocator_.sub(J));}
 
     /** swap two elements: only for vectors an points. */
-    inline void swap(int i, int  j) { std::swap(this->elt(i), this->elt(j)); }
+    void swap(int i, int  j) { std::swap(this->elt(i), this->elt(j)); }
     /** @param pos1, pos2 positions of the columns to swap */
     void swapCols(int pos1, int pos2)
     {
@@ -233,28 +281,34 @@ class ICArray : public ArrayBase<Derived>
     /** exchange this with T.
      *  @param T the container to exchange with this
      **/
-    inline void exchange(Derived& T) { allocator_.exchange(T.allocator_);}
+    void exchange(Derived& T) { allocator_.exchange(T.allocator_);}
     /** move T to this.
      *  @param T the array to move
      **/
-    inline void move(Derived const& T) { allocator_.move(T.allocator_);}
+    void move(Derived const& T) { allocator_.move(T.allocator_);}
     /** shift the Array.
      *  @param beginRows,beginCols  first indexes of the rows and columns
      **/
     Derived& shift(int beginRows, int beginCols)
     {
-      if((this->beginRows() == beginRows) && (this->beginCols()==beginCols)) return this->asDerived();
+      STK_STATIC_ASSERT((structure_ == (int)Arrays::array2D_)
+                      ||(structure_ == (int)Arrays::lower_triangular_)
+                      ||(structure_ == (int)Arrays::upper_triangular_)
+                      ,YOU_CANNOT_USED_THIS_METHOD_WITH_THIS_KIND_OF_ARRAY);
+      if (!Checker::shift(this->asDerived(), beginRows, beginCols)) return this->asDerived();
       if (this->isRef())
       { STKRUNTIME_ERROR_2ARG(ICArray::shift,beginRows,beginCols,cannot operate on reference);}
       allocator_.shift(beginRows, beginCols);
       return this->asDerived();
     }
     /** shift the Array.
-     *  @param firstIdx first index of the vector/point
+     *  @param firstIdx first index of the vector/point/diagonal/square array.
+     *  @note if this method is used with arrays, upper triangular and lower triangular
+     *  arrays, both indexes will be shifted.
      **/
     Derived& shift(int firstIdx)
     {
-      if((this->beginRows() == firstIdx)&&(this->beginCols() == firstIdx)) return this->asDerived();
+      if (!Checker::shift(this->asDerived(), firstIdx)) return this->asDerived();
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(ICArray::shift,firstIdx,cannot operate on reference);}
       allocator_.shift(firstIdx);
@@ -265,63 +319,27 @@ class ICArray : public ArrayBase<Derived>
      **/
     Derived& resize(Range const& I, Range const& J)
     {
-      if((this->rows() == I) && (this->cols()==J)) return this->asDerived();
+      STK_STATIC_ASSERT((structure_ == (int)Arrays::array2D_)
+                      ||(structure_ == (int)Arrays::lower_triangular_)
+                      ||(structure_ == (int)Arrays::upper_triangular_)
+                      ,YOU_CANNOT_USED_THIS_METHOD_WITH_THIS_KIND_OF_ARRAY);
+      if (!Checker::resize(this->asDerived(), I, J)) return this->asDerived();
       if (this->isRef())
       { STKRUNTIME_ERROR_2ARG(ICArray::resize,I,J,cannot operate on reference);}
-      allocator_.resize(I.size(), J.size());
-      allocator_.shift(I.begin(), J.begin());
+      allocator_.resize(I.size(), J.size()).shift(I.begin(), J.begin());
       return this->asDerived();
     }
-    /** Resize the vector.
+    /** Resize the vector/point/diagonal/square array.
      *  @param I Range of the vector
+     *  @note if this method is used with arrays, upper triangular and lower triangular
+     *  arrays, both ranges will be resized.
      **/
     Derived& resize(Range const& I)
     {
-      if (this->range() == I) return this->asDerived();
+      if (!Checker::resize(this->asDerived(), I)) return this->asDerived();
       if (this->isRef())
       { STKRUNTIME_ERROR_1ARG(ICArray::resize,I,cannot operate on reference);}
-      allocator_.resize(I.size());
-      allocator_.shift(I.begin());
-      return this->asDerived();
-    }
-  private:
-    /** TODO: overwrite @c this with @c src.
-     *  @note If the size match, @c this is not resized, and in this case,
-     *  the method take care of the possibly of overlapping.
-     *  @param src the container to copy
-     **/
-    Derived& copy( ICArray const& src)
-    {
-      // Resize if necessary.
-      if ( (this->sizeRows() != src.sizeRows()) || (this->sizeCols() != src.sizeCols()) )
-        this->resize(src.rows(), src.cols());
-
-      // Copy without overlapping
-      if (src.beginRows()>=this->beginRows())
-      {
-        if (src.beginCols()>this->beginCols())
-        {
-          for ( int jSrc=src.beginCols(), jDst=this->beginCols(); jSrc<=src.lastIdxCols(); jDst++, jSrc++)
-          { this->copyColumnForward(src, jDst, jSrc);}
-        }
-        else
-        {
-          for ( int jSrc=src.lastIdxCols(), jDst=this->lastIdxCols(); jSrc>=src.beginCols(); jDst--, jSrc--)
-          { this->copyColumnForward(src, jDst, jSrc);}
-        }
-        return this->asDerived();
-      }
-      // src.beginRows()<this->beginRows()
-      if (src.beginCols()>=this->beginCols())
-      {
-        for ( int jSrc=src.beginCols(), jDst=this->beginCols(); jSrc<=src.lastIdxCols(); jDst++, jSrc++)
-        { this->copyColumnBackward(src, jDst, jSrc);}
-      }
-      else // src.beginCols()<this->beginCols()
-      {
-        for ( int jSrc=src.lastIdxCols(), jDst=this->lastIdxCols(); jSrc>=src.beginCols(); jDst--, jSrc--)
-        { this->copyColumnBackward(src, jDst, jSrc);}
-      }
+      allocator_.resize(I.size()).shift(I.begin());
       return this->asDerived();
     }
 };

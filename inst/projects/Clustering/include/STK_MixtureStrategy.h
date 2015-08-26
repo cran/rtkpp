@@ -240,9 +240,10 @@ class FullStrategy: public IMixtureStrategy
     FullStrategyParam* p_param_;
     /** Perform the Initialization step
      *  Initialize nbInitRun_ (should be  > 0) model and select the best model
-     *  among them
+     *  among them.
+     *  @param p_bestModel a pointer initialized to
      **/
-    void initStep(IMixtureComposer*& p_current, IMixtureComposer*& pcurrentBestModel);
+    bool initStep(IMixtureComposer*& p_bestModel);
 };
 
 }  // namespace STK

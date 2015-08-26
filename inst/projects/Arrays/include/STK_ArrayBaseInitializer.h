@@ -52,7 +52,7 @@ class ArrayInitializer
   public:
     typedef typename Derived::Type Type;
     /** Constructor */
-    inline ArrayInitializer( Derived& array, Type const& s)
+    ArrayInitializer( Derived& array, Type const& s)
                            : array_(array), row_(array.beginRows()), col_(array.beginCols())
     { // check if there is space
       if (array.empty())
@@ -68,7 +68,7 @@ class ArrayInitializer
       return *this;
     }
     /** destructor */
-    inline ~ArrayInitializer() {}
+    ~ArrayInitializer() {}
 
   protected:
     /** Set (row_, col_) to the first element of the array.
@@ -114,13 +114,13 @@ class ArrayInitializer
  * the size of the matrix. Otherwise an assertion is raised.
  */
 template<typename Derived>
-inline ArrayInitializer<Derived> ArrayBase<Derived>::operator<< (const Type& s)
+ArrayInitializer<Derived> ArrayBase<Derived>::operator<< (const Type& s)
 { return ArrayInitializer<Derived>(this->asDerived(), s);}
 
 // @sa operator<<(const Type&) */
 //template<typename Derived>
 //template<typename Rhs>
-//inline ArrayInitializer<Derived>
+//ArrayInitializer<Derived>
 //ArrayBase<Derived>::operator<<(const ArrayBase<Rhs>& other)
 //{ return ArrayInitializer<Derived>(this->asDerived(), other);}
 

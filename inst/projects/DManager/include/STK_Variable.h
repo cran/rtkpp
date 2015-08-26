@@ -97,7 +97,7 @@ class Variable : public IVariable
       sizeRows_  = UnknownSize,
       storage_ = Arrays::dense_ // always dense
     };
-    typedef AllocatorBase<Type*> Allocator;
+    typedef AllocatorBase<Type*, UnknownSize> Allocator;
     typedef IArray2D< Variable<Type> > Base;
     typedef ArrayBase < Variable<Type> > LowBase;
 
@@ -161,7 +161,7 @@ class Variable : public IVariable
             , Base(T, I, Range(col, 1))
     {
         enum { value_ = hidden::isSame<Type, typename OtherArray::Type>::value };
-        STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+        STK_STATIC_ASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
     }
     /** constructor by reference, ref_=1.
      *  @param T the container to wrap
@@ -180,8 +180,8 @@ class Variable : public IVariable
                || (OtherArray::struct_ == Arrays::diagonal_)
                )
       };
-      STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
-      STK_STATICASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
+      STK_STATIC_ASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+      STK_STATIC_ASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
     }
     /** constructor by reference, ref_=1.
      *  @param T the container to wrap
@@ -199,8 +199,8 @@ class Variable : public IVariable
                || (OtherArray::structure_ == (int)Arrays::diagonal_)
                )
       };
-      STK_STATICASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
-      STK_STATICASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
+      STK_STATIC_ASSERT(value_,YOU_TRIED_TO_WRAP_A_CONTAINER_WITH_THE_WRONG_TYPE_AS_A_VARIABLE);
+      STK_STATIC_ASSERT(is1D_,YOU_TRIED_TO_WRAP_A_CONTAINER_WHICH_IS_NOT_1D_AS_A_VARIABLE);
     }
     /** destructor. */
     ~Variable() {}
@@ -467,7 +467,7 @@ inline Variable<Type> const& Variable<Type>::operator>>(Variable< String >& V) c
 template<typename Type>
 inline ostream& operator<<(ostream& s, Variable<Type> const& V)
 {
-  s << V.name() << STRING_NL;
+  s << V.name() << _T("\n");
   return out2D(s,V);
 }
 

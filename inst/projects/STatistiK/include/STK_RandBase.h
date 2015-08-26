@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -38,8 +38,6 @@
 #define STK_RANDBASE_H
 
 #include "STKernel/include/STK_Misc.h"
-#include "Arrays/include/STK_ArrayBase.h"
-
 // MersenneTwister header.
 #include "MersenneTwister.h"
 
@@ -100,7 +98,7 @@ class RandBase : protected MTRand
      * @param gsize number of boxes
      **/
     template< class TContainer1D>
-    RandBase( const ArrayBase<TContainer1D> &bigSeed
+    RandBase( TContainer1D const& bigSeed
             , Real const& glimit = 3.442619855899
             , Real const& gvol   = 9.91256303526217e-3
             , int const& gsize  = 128

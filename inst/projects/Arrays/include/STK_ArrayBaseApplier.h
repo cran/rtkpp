@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -54,7 +54,7 @@ namespace STK
   */
 template<typename Derived>
 template<typename Visitor>
-void ArrayBase<Derived>::apply(Visitor& visitor)
+inline void ArrayBase<Derived>::apply(Visitor& visitor)
 {
   typedef typename hidden::VisitorSelector<Visitor, Derived>::Impl Impl;
   Impl::apply(this->asDerived(), visitor);
@@ -65,7 +65,7 @@ void ArrayBase<Derived>::apply(Visitor& visitor)
  */
 /* @brief Set the value to all the Allocator */
 template<typename Derived>
-Derived& ArrayBase<Derived>::setValue(Type const& value)
+inline Derived& ArrayBase<Derived>::setValue(Type const& value)
 {
   hidden::ValueApplier<Type> visitor(value);
   apply(visitor);
@@ -74,7 +74,7 @@ Derived& ArrayBase<Derived>::setValue(Type const& value)
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-Derived& ArrayBase<Derived>::setOnes()
+inline Derived& ArrayBase<Derived>::setOnes()
 {
   hidden::ValueApplier<Type> visitor(Type(1));
   apply(visitor);
@@ -83,7 +83,7 @@ Derived& ArrayBase<Derived>::setOnes()
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-Derived& ArrayBase<Derived>::setZeros()
+inline Derived& ArrayBase<Derived>::setZeros()
 {
   hidden::ValueApplier<Type> visitor(Type(0));
   apply(visitor);
@@ -92,16 +92,16 @@ Derived& ArrayBase<Derived>::setZeros()
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-Derived& ArrayBase<Derived>::ones()
+inline Derived& ArrayBase<Derived>::ones()
 { return setOnes();}
 
 /* @brief Set the value one to all the Array */
 template<typename Derived>
-Derived& ArrayBase<Derived>::zeros()
+inline Derived& ArrayBase<Derived>::zeros()
 { return setZeros();}
 
 template<typename Derived>
-Derived& ArrayBase<Derived>::randUnif()
+inline Derived& ArrayBase<Derived>::randUnif()
 {
   hidden::RandUnifApplier<Type> visitor;
   apply(visitor);
@@ -110,7 +110,7 @@ Derived& ArrayBase<Derived>::randUnif()
 
 /* set Gaussian random values to this */
 template<typename Derived>
-Derived& ArrayBase<Derived>::randGauss()
+inline Derived& ArrayBase<Derived>::randGauss()
 {
   hidden::RandGaussApplier<Type> visitor;
   apply(visitor);
@@ -119,7 +119,7 @@ Derived& ArrayBase<Derived>::randGauss()
 
 /* set random values to this using a law given by the user */
 template<typename Derived>
-Derived& ArrayBase<Derived>::rand( Law::IUnivLaw<Type> const& law)
+inline Derived& ArrayBase<Derived>::rand( Law::IUnivLaw<Type> const& law)
 {
   hidden::RandApplier<Type> visitor(law);
   apply(visitor);

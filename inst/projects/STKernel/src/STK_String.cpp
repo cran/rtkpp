@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,55 +23,38 @@
 */
 
 /*
- * Project:  STKernel::Base
- * Purpose:  Define miscenaleous utility functions for Strings.
- * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
- *
+ * Project:  stkpp::Base
+ * created on: 23 juin 2014
+ * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
 /** @file STK_String.cpp
- *  @brief In this file we implement miscellaneous utilities functions for Strings.
+ *  @brief In this file we instanciate the global variables of the STK++ library.
  **/
+
+#ifndef IS_RTKPP_LIB
 
 #include "../include/STK_String.h"
-
 namespace STK
 {
-
 /* @ingroup Base
-  * @brief Set a new value to the na String representation and modify
-  * stringNaSize accordingly.
+  * @brief Representation of a Not Available value.
+  *
+  * By default we represent a Not Available value of any type as a "." (like in
+  * (SAS(R))) for the end-user. This value can be overloaded at runtime.
+  * @note if the value is modified at runtime, the value of @c stringNaSize
+  * have to be modified accordingly. It is safer to use the @ref setStringNa
+  * function.
   **/
-void setStringNa(String const& na)
-{ stringNa = na; stringNaSize = na.size();}
-
+String stringNa  = String(_T("."));
 
 /* @ingroup Base
- *  @brief convert a character of the String to uppercase
- *
- *  @param s The String to convert
- **/
-String& toUpperString( String& s)
-{
-  // iterate along the String
-  for (String::iterator it = s.begin(); it != s.end(); ++it)
-  { *it = std::toupper(*it);}
-  // return upper cased string
- return s;
+  * @brief Size (in number of Char) of a Not Available value.
+  * We represent a Not Available value of any type as a "." (like in
+  * (SAS(R))) for the end-user.
+  **/
+int stringNaSize  = 1;
+
 }
 
-/* @ingroup Base
- *  @brief convert a character of the String to uppercase
- *
- *  @param s The String to convert
- **/
-String toUpperString( String const& s)
-{
-  String res(s);
-  toUpperString(res);
-  return res;
-}
-
-
-} // namespace STK
-
+#endif

@@ -228,13 +228,13 @@ struct SumOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline SumOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
+  SumOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
             : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
             , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
             , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
             , res_()
   {}
-  inline result_type operator()()
+  result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
     Range cols = Range::inf(cols_, lhs_.cols());
@@ -275,13 +275,13 @@ struct DifferenceOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline DifferenceOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
+  DifferenceOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                   : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                   , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
                   , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
                   , res_()
   {}
-  inline result_type operator()()
+  result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
     Range cols = Range::inf(cols_, lhs_.cols());
@@ -322,13 +322,13 @@ struct Product
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline Product( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
+  Product( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
                 : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
                 , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
                 , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
                 , res_()
   {}
-  inline result_type operator()()
+  result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
     for (int j= cols_.begin(); j< cols_.end(); ++j)
@@ -362,13 +362,13 @@ struct DivOp
   typedef typename hidden::Promote< typename hidden::Traits<Lhs>::Type, typename hidden::Traits<Rhs>::Type >::result_type Type;
   typedef BINARY_RETURN_TYPE(Lhs,Rhs) result_type;
 
-  inline DivOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
+  DivOp( ExprBase<Lhs> const& lhs, ExprBase<Rhs> const& rhs )
             : lhs_(lhs.asDerived()), rhs_(rhs.asDerived())
             , rows_(Range::inf(lhs_.rows(), rhs_.rows()))
             , cols_(Range::inf(lhs_.cols(), rhs_.cols()))
             , res_()
   {}
-  inline result_type operator()()
+  result_type operator()()
   {
     res_.resize(rows_, cols_); res_ = Type();
     for (int j= cols_.begin(); j< cols_.end(); ++j)
@@ -407,7 +407,7 @@ struct MultOp
        , res_()
    {}
 
-   inline result_type operator()()
+   result_type operator()()
    {
      res_.resize(rows_, cols_);
      // for all cols and for all rows
@@ -420,7 +420,7 @@ struct MultOp
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ExprBase<Weights> const& weights)
+   result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      // for all cols and for all rows
@@ -461,7 +461,7 @@ struct MultLeftTransposeOp
                        , res_()
    {}
 
-   inline result_type operator()()
+   result_type operator()()
    {
      res_.resize(rows_, cols_);
      for (int j=res_.beginCols(); j<res_.endCols(); j++)
@@ -473,7 +473,7 @@ struct MultLeftTransposeOp
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ExprBase<Weights> const& weights)
+   result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      for (int j=rhs_.beginCols(); j<rhs_.endCols(); j++)
@@ -513,7 +513,7 @@ struct MultRightTransposeOp
                         , res_()
    {}
 
-   inline result_type operator()()
+   result_type operator()()
    {
      res_.resize(rows_, cols_);
      for (int j=res_.beginCols(); j<res_.endCols(); j++)
@@ -525,7 +525,7 @@ struct MultRightTransposeOp
      return res_;
    }
    template<typename Weights>
-   inline result_type operator()(ExprBase<Weights> const& weights)
+   result_type operator()(ExprBase<Weights> const& weights)
    {
      res_.resize(rows_, cols_);
      for (int j=res_.beginCols(); j<res_.endCols(); j++)
@@ -550,70 +550,70 @@ struct MultRightTransposeOp
 /** @ingroup Arrays
  * convenience function for summing two arrays */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::SumOp<Lhs, Rhs>::result_type
+typename Arrays::SumOp<Lhs, Rhs>::result_type
   sum(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::SumOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for differencing two arrays */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::DifferenceOp<Lhs, Rhs>::result_type
+typename Arrays::DifferenceOp<Lhs, Rhs>::result_type
   difference(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::DifferenceOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the product element by element of two arrays */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::Product<Lhs, Rhs>::result_type
+typename Arrays::Product<Lhs, Rhs>::result_type
   product(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::Product<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the division element by element of two arrays */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::DivOp<Lhs, Rhs>::result_type
+typename Arrays::DivOp<Lhs, Rhs>::result_type
   div(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::DivOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::MultOp<Lhs, Rhs>::result_type
+typename Arrays::MultOp<Lhs, Rhs>::result_type
   mult(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::MultOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs, typename Weights>
-inline typename Arrays::MultOp<Lhs, Rhs>::result_type
+typename Arrays::MultOp<Lhs, Rhs>::result_type
   wmult(Lhs const& lhs, Rhs const& rhs, Weights const& weights)
 { return Arrays::MultOp<Lhs, Rhs>(lhs, rhs)(weights);}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::MultLeftTransposeOp<Lhs, Rhs>::result_type
+typename Arrays::MultLeftTransposeOp<Lhs, Rhs>::result_type
   multLeftTranspose(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::MultLeftTransposeOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs, typename Weights>
-inline typename Arrays::MultLeftTransposeOp<Lhs, Rhs>::result_type
+typename Arrays::MultLeftTransposeOp<Lhs, Rhs>::result_type
   wmultLeftTranspose(Lhs const& lhs, Rhs const& rhs, Weights const& weights)
 { return Arrays::MultLeftTransposeOp<Lhs, Rhs>(lhs, rhs)(weights);}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs>
-inline typename Arrays::MultRightTransposeOp<Lhs, Rhs>::result_type
+typename Arrays::MultRightTransposeOp<Lhs, Rhs>::result_type
   multRightTranspose(Lhs const& lhs, Rhs const& rhs)
 { return Arrays::MultRightTransposeOp<Lhs, Rhs>(lhs, rhs)();}
 
 /** @ingroup Arrays
  * convenience function for the multiplication of two matrices */
 template<typename Lhs, typename Rhs, typename Weights>
-inline typename Arrays::MultRightTransposeOp<Lhs, Rhs>::result_type
+typename Arrays::MultRightTransposeOp<Lhs, Rhs>::result_type
   wmultRightTranspose(Lhs const& lhs, Rhs const& rhs, Weights const& weights)
 { return Arrays::MultRightTransposeOp<Lhs, Rhs>(lhs, rhs)(weights);}
 

@@ -140,23 +140,39 @@ class range_error : public runtime_error
     virtual ~range_error() throw();
 };
 
-/** @ingroup Base
- *  Thrown to indicate arithmetic overflow.  */
-class overflow_error : public runtime_error
-{
-  public:
-    explicit overflow_error( String const& __arg);
-    virtual ~overflow_error() throw();
-};
+// base exception
+inline Exception::Exception() throw() {_M_msg =_T("Exception error."); }
+inline Exception::Exception( String const& __arg) throw() { _M_msg = __arg;}
+inline Exception::~Exception() throw() {}
+inline const String Exception::error() const throw() { return _M_msg;}
 
-/** @ingroup Base
- *  Thrown to indicate arithmetic underflow.  */
-class underflow_error : public runtime_error
-{
-  public:
-    explicit underflow_error( String const& __arg);
-    virtual ~underflow_error() throw();
-};
+// logic_error
+inline logic_error::logic_error( String const& __arg): Exception(__arg) {}
+inline logic_error::~logic_error() throw() {}
+
+// domain_error
+inline domain_error::domain_error( String const& __arg): logic_error(__arg) {}
+inline domain_error::~domain_error() throw() {}
+
+// invalid_argument
+inline invalid_argument::invalid_argument( String const& __arg): logic_error(__arg) {}
+inline invalid_argument::~invalid_argument() throw() {}
+
+// length_error
+inline length_error::length_error( String const& __arg): logic_error(__arg) {}
+inline length_error::~length_error() throw() {}
+
+// out_of_range
+inline out_of_range::out_of_range( String const& __arg): logic_error(__arg) {}
+inline out_of_range::~out_of_range() throw() {}
+
+// runtime error
+inline runtime_error::runtime_error( String const& __arg): Exception(__arg) {}
+inline runtime_error::~runtime_error() throw() {}
+
+// range_error
+inline range_error::range_error( String const& __arg): runtime_error(__arg) {}
+inline range_error::~range_error() throw() {}
 
 } // namespace STK
 

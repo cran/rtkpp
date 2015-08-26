@@ -29,7 +29,7 @@
  **/
 
 /** @file STK_IQr.h
- *  @brief In this file we define the IQr class (for a general matrix).
+ *  @brief In this file we define the Interface class IQr (QR decomposition).
  **/
  
 #ifndef STK_IQR_H
@@ -38,11 +38,10 @@
 #include "STKernel/include/STK_Real.h"
 #include "Sdk/include/STK_IRunner.h"
 
-//#include "Arrays/include/STK_CArray.h"
-#include "Arrays/include/STK_Array2D.h"
 #include "Arrays/include/STK_Array2DVector.h"
 #include "Arrays/include/STK_Array2DUpperTriangular.h"
 
+#include "STK_Algebra_Util.h"
 #include "STK_Householder.h"
 #include "STK_Givens.h"
 
@@ -51,6 +50,16 @@
 
 template< class Container2D >
 void print(Container2D const& A, STK::String const& name)
+{
+  stk_cout << "print: " << name << _T("\n";);
+  stk_cout << name << _T(".isRef() =")        << A.isRef()  << _T("\n");
+  stk_cout << name << _T(".cols() =")      << A.cols()  << _T("\n");
+  stk_cout << name << _T(".rows() =")      << A.rows()  << _T("\n\n");
+  stk_cout << name << _T(".rangeCols().isRef() =")  << A.rangeCols().isRef() << _T("\n");
+  stk_cout << name << _T(".rangeCols() =\n")  << A.rangeCols() << _T("\n");
+}
+
+void print(ArrayXX const& A, STK::String const& name)
 {
   stk_cout << "print: " << name << _T("\n";);
   stk_cout << name << _T(".isRef() =")        << A.isRef()  << _T("\n");
@@ -73,36 +82,40 @@ namespace STK
  *     -# Q Array of size M-by-N.
  *     -# R Upper Triangular matrix of dimension min(M,N)-by-N
  *     -# \f$ A = QR \f$
+ *  This interface class implement the virtual @c run method of @c IRunnerBase
+ *  by calling the derived method @c runImpl
  **/
 template <class Derived>
 class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
 {
   protected:
-    typedef IRunnerBase Base;
+    typedef typename hidden::AlgebraTraits<Derived>::Array Array;
     /** @brief Constructor
-     *  @param data reference on a matrix expression
-     *  @param ref do we use data as reference for Q_ ?
+     *  @param Q The matrix to decompose
+     *  @param ref is Q_ a reference ? (avoid data copy, but the original data
+     *  set is destroyed)
      */
-    inline IQr( Array2D<Real> const& data, bool ref = false)
-              : Base(), Q_(data, ref), compq_(false)
+    inline IQr( Array const& Q, bool ref = false)
+              : IRunnerBase(), Q_(Q, ref), compq_(false), rank_(0)
     {
-      if (data.beginRows() != data.beginCols())
-        STKRUNTIME_ERROR_NO_ARG(IQR::IQR,Wrong data set: beginRows row must be equal to beginCols);
+      if (Q.beginRows() != Q.beginCols())
+        STKRUNTIME_ERROR_NO_ARG(IQR::IQR,Wrong data set: Q.beginRows() must be equal to Q.beginCols());
     }
     /** @brief Constructor
-     *  @param data reference on a matrix expression
+     *  @param Q The matrix to decompose
      */
     template<class DerivedExpr>
-    IQr( ExprBase<DerivedExpr> const& data) : Base(), compq_(false)
+    IQr( ExprBase<DerivedExpr> const& Q): IRunnerBase(), compq_(false), rank_(0)
     {
-      if (data.beginRows() != data.beginCols())
-      { STKRUNTIME_ERROR_NO_ARG(IQR::IQR,Wrong data set: beginRows row must be equal to beginCols);}
-      Q_ = data.asDerived();
+      if (Q.beginRows() != Q.beginCols())
+      { STKRUNTIME_ERROR_NO_ARG(IQR::IQR,Wrong data set: Q.beginRows() must be equal to Q.beginCols());}
+      Q_ = Q.asDerived();
     }
     /** Copy constructor.
-     *  @param decomp the decomposition  to copy
+     *  @param decomp the decomposition to copy
      **/
-    inline IQr( IQr const& decomp): Q_(decomp.Q_), R_(decomp.R_), compq_(decomp.compq_)
+    inline IQr( IQr const& decomp)
+              : Q_(decomp.Q_), R_(decomp.R_), compq_(decomp.compq_), rank_(decomp.rank_)
     {}
 
   public :
@@ -114,27 +127,27 @@ class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
       Q_ = decomp.Q_;
       R_ = decomp.R_;
       compq_ = decomp.compq_;
+      rank_ = decomp.rank_;
       return *this;
     }
-
-    /** Is Q computed ?
-     *  @return @c true if Q_ is computed, @c false otherwise
-     */
+    /** @return @c true if Q_ is computed, @c false otherwise */
     inline bool isCompQ() const { return compq_;}
+    /** @return the rank of the matrix Q */
+    inline int rank() const { return rank_;}
     /** give the matrix Q of the QR decomposition.
-     * @return the matrix Q of the QR decomposition
+     *  @return the matrix Q of the QR decomposition
      **/
-    inline ArrayXX const& Q() const  { return Q_;}
-    /** Compute the QR decomposition. **/
-    virtual bool run()
-    {
-      if (Q_.empty()) { compq_ = true; return true;}
-      return this->asDerived().runImpl();
-    }
+    inline Array const& Q() const  { return Q_;}
     /** give the matrix R of the QR decomposition.
-     * @return the matrix R of the QR decomposition
+     *  @return the matrix R of the QR decomposition
      **/
     inline ArrayUpperTriangularXX const& R() const { return R_;}
+    /** Compute the QR decomposition.
+     *  Delegate to Derived classes the concrete computation of the
+     *  decomposition using @c runImpl method.
+     *  @return @c true if the computation succeed, @c false otherwise
+     **/
+    virtual bool run();
     /** Compute Q (to use after run). After the run process, Q_ store
      *  the householder vector in its column. Call compQ, if you want to
      *  obtain Q in its true form.
@@ -161,34 +174,45 @@ class IQr : public IRunnerBase, public IRecursiveTemplate<Derived>
      **/
     template<class ColVector>
     void insertCol(ColVector const& T, int pos);
-
-    /* TODO : Delete the ith row and update the QR decomposition :
-     *  default is the last row.
-     **/
-    //Qr& popBackRows();
-    //Qr& eraseRows(int i);
-
-    /* TODO : Add a row with value T and update th QR decomposition :
-     *  default is the last row.
-     **/
-    //Qr& pushBackRows(const Array2DPoint<double> &T);
-    //Qr& insertRows(const Array2DPoint<double> &T, int i);
-
     /** overloading of setData.
      * @param data the data set to set.
      **/
     template<class DerivedExpr>
     void setData( ExprBase<DerivedExpr> const& data)
-    { Q_ = data.asDerived(); R_.clear(); compq_ = false;}
+    { Q_ = data.asDerived(); R_.clear(); compq_ = false; rank_ = 0;}
+
+    /* TODO : Delete the ith row and update the QR decomposition
+     * TODO : Add a row with value T and update th QR decomposition
+     */
+    //void popBackRows();
+    //void eraseRows(int pos);
+    //void pushBackRows(RowVector const& T);
+    //void insertRows(RowVector const& T, int pos);
 
   protected :
     /** Q Array of the QR decomposition */
-    ArrayXX Q_;
+    Array Q_;
     /** R Array of th QR decomposition */
     ArrayUpperTriangularXX R_;
     /// is Q computed ?
     bool compq_;
+    /// estimated rank_ of the matrix A
+    int rank_;
 };
+
+template<class Derived>
+bool IQr<Derived>::run()
+{
+  if (Q_.empty()) { compq_ = true; return true;}
+  // compute QR decomposition
+  if (!this->asDerived().runImpl()) return false;
+  // compute rank_
+  int r = R_.beginRows(), n = std::min(R_.endRows(), R_.endCols()), rank;
+  Real tol =  Arithmetic<Real>::epsilon() * std::abs(R_(r,r));
+  for(r= R_.beginRows()+1, rank=1; r<n; ++r, ++rank) { if (std::abs(R_(r,r)) < tol) break;}
+  rank_ = rank;
+  return true;
+}
 
 template<class Derived>
 void IQr<Derived>::compQ()
@@ -282,7 +306,7 @@ template<class Derived>
 template<class ColVector>
 void IQr<Derived>::pushBackCol(ColVector const& T)
 {
-  STK_STATICASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
+  STK_STATIC_ASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
   // check conditions
   if (T.range() != Q_.rows())
   { STKRUNTIME_ERROR_NO_ARG(Qr::pushBackCol,T.range() != Q_.rows());}
@@ -317,7 +341,7 @@ template<class Derived>
 template<class ColVector>
 void IQr<Derived>::insertCol(ColVector const& T, int pos)
 {
-  STK_STATICASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
+  STK_STATIC_ASSERT(ColVector::structure_==(int)Arrays::vector_||ColVector::structure_==(int)Arrays::point_,YOU_HAVE_TO_USE_A_VECTOR_OR_POINT_IN_THIS_METHOD)
   if (pos < R_.beginCols())
   { STKOUT_OF_RANGE_1ARG(Qr::insertCol,pos,pos<R_.beginCols());}
   if (R_.lastIdxCols() < pos)

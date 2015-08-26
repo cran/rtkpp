@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,17 +36,17 @@
 #ifndef STK_BSPLINECOEFFICIENTS_H
 #define STK_BSPLINECOEFFICIENTS_H
 
-#include "Sdk/include/STK_IRunner.h"
-#include "Arrays/include/STK_Array2D.h"
-#include "Arrays/include/STK_Array2DVector.h"
 #include "STK_Regress_Util.h"
 
-#include "../include/STK_BSplineCoefficients.h"
-#include "DManager/include/STK_HeapSort.h"
-#include "STKernel/include/STK_String.h"
+#include <Sdk/include/STK_IRunner.h>
+
+#include <Arrays/include/STK_Array2D.h>
+#include <Arrays/include/STK_Array2DVector.h>
+
+#include <DManager/include/STK_HeapSort.h>
 
 #ifdef STK_REGRESS_VERBOSE
-#include "Arrays/include/STK_Display.h"
+#include <Arrays/include/STK_Display.h>
 #endif
 
 namespace STK
@@ -54,7 +54,7 @@ namespace STK
 /** @brief Compute the regression splines coefficients.
  * The BSplineCoefficients class compute the coefficients of a B-Spline curve
  * using the de Boor's algorithm. The knots can be uniform (the default) or
- * periodic. TODO: implment the density knots like in the R-script.
+ * periodic. TODO: terminate to implement the density knots.
  *
  * The input data set is a vector of size n and the output matrix of the
  * coefficients @c Coefficients() is a matrix of size (n, nbControlPoints).
@@ -75,7 +75,7 @@ class BSplineCoefficients : public IRunnerBase
     BSplineCoefficients( Vector const* p_data =0
                        , int nbControlPoints =1
                        , int degree = 3
-                       , Regress::KnotsPosition position = Regress::uniform_
+                       , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                        );
     /** Constructor : initialize the data members. The number of knots is given
      *  by the formula nbKnots = nbControlPoints + degree +1.
@@ -87,20 +87,18 @@ class BSplineCoefficients : public IRunnerBase
     BSplineCoefficients( Vector const& data
                        , int nbControlPoints
                        , int degree = 3
-                       , Regress::KnotsPosition position = Regress::uniform_
+                       , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                        );
     /** copy constructor.
      *  @param coefs the coefficients to copy
      **/
     BSplineCoefficients( BSplineCoefficients const& coefs);
     /** Destructor. */
-    virtual ~BSplineCoefficients();
+    virtual ~BSplineCoefficients() {}
     /** clone pattern implementation */
     BSplineCoefficients* clone() const { return new BSplineCoefficients(*this);}
-
     /** run the computations. */
     virtual bool run();
-
     /** Compute the coefficients of the B-Spline curve for the given values.
      *  @param data the input data values
      *  @param nbControlPoints number of control points
@@ -110,35 +108,23 @@ class BSplineCoefficients : public IRunnerBase
     void setData( Vector const& data
                 , int nbControlPoints
                 , int degree = 3
-                , Regress::KnotsPosition position = Regress::uniform_
+                , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                 );
-
-    /** give the degree of the B-Spline curves.
-     * @return the degree of the B-Splines
-     **/
+    /** @return the degree of the B-Splines */
     inline int degree() const { return degree_;}
-    /** give the number of knots of the B-Spline curves.
-     * @return the number of knots of the B-Spline curve
-     **/
+    /** @return the number of knots of the B-Spline curve */
     inline int nbKnots() const { return nbKnots_;}
-    /** give the number of control points of the B-Spline curves.
-     * @return the number of control points of the curve
-     **/
+    /** @return the number of control points of the curve */
     inline int nbControlPoints() const { return nbControlPoints_;}
-    /** give the knots of the B-Spline curves.
-     * @return the vector of knots of the B-Spline curve
-     **/
-    inline Array2DVector<Real> const& knots() const { return knots_;}
-    /** The computed coefficients of the B-Spline curves.
-     *  This is a matrix of size (p_data_->range(), 0:lastControlPoints).
-     *  @return the matrix with the coefficients of the B-Spline curve.
-     **/
-    inline Array2D<Real> const& coefficients() const { return coefficients_;}
+    /** @return the vector of knots of the B-Spline curve */
+    inline VectorX const& knots() const { return knots_;}
+    /** @return the matrix with the coefficients of the B-Spline curve. */
+    inline ArrayXX const& coefficients() const { return coefficients_;}
     /** @return the extrapolated matrix of coefficients for a given set of x-values.
      *  @param x the values to extrapolate
      **/
     template<class OtherVector>
-    Array2D<Real> extrapolate(OtherVector const& x) const;
+    ArrayXX extrapolate(OtherVector const& x) const;
 
   protected:
     /** the input data set */
@@ -158,9 +144,9 @@ class BSplineCoefficients : public IRunnerBase
      **/
     int lastControlPoint_;
     /** Vector of the knots */
-    Array2DVector<Real> knots_;
+    VectorX knots_;
     /** Array2D<Real> of the coefficients */
-    Array2D<Real> coefficients_;
+    ArrayXX coefficients_;
 
   private:
     /** Minimal value of the knots */
@@ -244,10 +230,6 @@ BSplineCoefficients<Vector>::BSplineCoefficients( BSplineCoefficients const& coe
                                         , maxValue_(coefs.maxValue_)
 {}
 
-// destructor
-template<class Vector>
-BSplineCoefficients<Vector>::~BSplineCoefficients() {}
-
 /* run the computations. */
 template<class Vector>
 bool BSplineCoefficients<Vector>::run()
@@ -308,13 +290,13 @@ void BSplineCoefficients<Vector>::setData( Vector const& data
  **/
 template<class Vector>
 template<class OtherVector>
-Array2D<Real> BSplineCoefficients<Vector>::extrapolate(OtherVector const& x) const
+ArrayXX BSplineCoefficients<Vector>::extrapolate(OtherVector const& x) const
 {
   // check if knots exists
   if (knots_.empty())
-  { STKRUNTIME_ERROR_NO_ARG(BSplineCoefficients::run(x),There is no knots);}
+  { STKRUNTIME_ERROR_NO_ARG(BSplineCoefficients::extrapolate,There is no knots);}
   // resize coeficients
-  Array2D<Real> coefs(x.range(), Range(0, lastControlPoint_, 0), 0.0);
+  ArrayXX coefs(x.range(), Range(0, lastControlPoint_, 0), 0.0);
   // check if the original data set was not reduced to a single point
   if (minValue_ == maxValue_) return coefs;
   // compute the coefficients
@@ -374,27 +356,27 @@ bool BSplineCoefficients<Vector>::computeKnots()
   if (minValue_ == maxValue_)
   {
     knots_ = minValue_;
-    msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots(),All values are equal);
+    msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots,All values are equal);
     return false;
   }
   // set knots values
   switch (position_)
   {
     // uniform position
-    case Regress::uniform_:
+    case Regress::uniformKnotsPositions_:
       computeUniformKnots();
       break;
     // periodic position
-    case Regress::periodic_:
+    case Regress::periodicKnotsPositions_:
       computePeriodicKnots();
       break;
     // density position
-    case Regress::density_:
+    case Regress::densityKnotsPositions_:
       computeDensityKnots();
       break;
       // periodic position
     case Regress::unknownKnotsPosition_:
-      msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots(),unknownKnotsPosition reached);
+      msg_error_ = STKERROR_NO_ARG(BSplineCoefficients::computeKnots,unknownKnotsPosition reached);
       return false;
       break;
   }
@@ -413,8 +395,7 @@ void BSplineCoefficients<Vector>::computeUniformKnots()
   Real step = 1.0/(nbControlPoints_ - degree_);
   // set internal knots
   const int first = degree_ + 1, last = lastControlPoint_;
-  for (int k = first, j = 1; k <= last; j++, k++)
-    knots_[k] = j * step;
+  for (int k = first, j = 1; k <= last; j++, k++)  knots_[k] = j * step;
   // set external knots
   for ( int k=0, j = last+1; k < first; j++, k++)
   {
@@ -438,9 +419,9 @@ template<class Vector>
 void BSplineCoefficients<Vector>::computeDensityKnots()
 {
   // sorted data
-  Array2DVector<Real> xtri;
+  Vector xtri;
   // sort the data
-  heapSort< Array2DVector<Real> >(*p_data_, xtri);
+  heapSort< Vector >(*p_data_, xtri);
 
   // compute step
   Real step = xtri.size()/(Real)lastKnot_;
@@ -462,13 +443,11 @@ void BSplineCoefficients<Vector>::computeCoefficients()
 #ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("BSplineCoefficients::computeCoefficients()\n");
 #endif
-  // get dimensions
-  int first = p_data_->begin(), last = p_data_->lastIdx();
+
   // compute the coefficients
-  for (int i=first; i<= last; i++)
-  {
-    computeCoefficientsRow(i, (*p_data_)[i]);
-  }
+  for (int i=p_data_->begin(); i< p_data_->end(); i++)
+  { computeCoefficientsRow(i, (*p_data_)[i]);}
+
 #ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("BSplineCoefficients::computeCoefficients() done\n");
 #endif

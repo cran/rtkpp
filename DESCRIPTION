@@ -1,9 +1,9 @@
 Package: rtkpp
 Type: Package
-Title: STK++ Integration to R Using Rcpp
-Version: 0.8.6
+Title: STK++ Integration to R using Rcpp
+Version: 0.9.2
 Encoding: UTF-8
-Date: 2014-12-19
+Date: 2015-08-26
 Authors@R: c(person("Serge", "Iovleff", role=c("aut","cre"),
     email="serge.iovleff@stkpp.org"),
     person("Vincent", "Kubicki", role="ctb",
@@ -20,7 +20,7 @@ Description: STK++ (http://www.stkpp.org) is a collection of
     the library to R is using Rcpp.
  .
        The rtkpp package includes the header files from the STK++
-    library (currently version 0.8.6). Thus users do not need to
+    library (currently version 0.8.99). Thus users do not need to
     install STK++ itself in order to use it.
  .
        STK++ is licensed under the GNU LGPL version 2 or later. rtkpp
@@ -35,10 +35,10 @@ URL: http://www.stkpp.org
 NeedsCompilation: yes
 SystemRequirements: GNU make
 Collate: 'rtkpp.R' 'rtkppFlags.R' 'inlineCxxPlugin.R'
-Packaged: 2015-03-11 09:01:04 UTC; iovleff
+Packaged: 2015-08-26 15:41:14 UTC; iovleff
 Author: Serge Iovleff [aut, cre],
   Vincent Kubicki [ctb],
   Quentin Grimonprez [ctb],
   Parmeet Bhatia [ctb]
 Repository: CRAN
-Date/Publication: 2015-03-11 13:11:21
+Date/Publication: 2015-08-26 23:07:55

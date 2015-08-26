@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Serge Iovleff
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -64,11 +64,18 @@ namespace hidden
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ajk_bjk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bjk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ajk_bjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ajk_bjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -77,11 +84,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bjk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ajk_bk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ajk_bk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ajk_bk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -90,11 +104,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ajk_bj_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bj_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bj_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ajk_bj<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ajk_bj_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -103,11 +124,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_bj_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ajk_b_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_b_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_b_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ajk_b<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ajk_b_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -116,11 +144,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ajk_b_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ak_bjk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bjk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ak_bjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ak_bjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -129,11 +164,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bjk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ak_bk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ak_bk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ak_bk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -142,11 +184,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ak_bj_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bj_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bj_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ak_bj<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ak_bj_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -155,11 +204,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_bj_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_ak_b_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_b_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_b_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_ak_b<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_ak_b_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -168,11 +224,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_ak_b_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_aj_bjk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bjk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_aj_bjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_aj_bjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -181,11 +244,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bjk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_aj_bk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_aj_bk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_aj_bk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -194,11 +264,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_aj_bk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_a_bjk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_a_bjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_a_bjk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_a_bjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_a_bjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -207,11 +284,18 @@ struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_a_bjk_, Data> >
 /** @ingroup hidden
  *  Partial  specialization of the MixtureBridgeTraits for the Gamma_a_bk_ model
  **/
-template<class Data>
-struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_a_bk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< GammaBridge< Clust::Gamma_a_bk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gamma_a_bk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gamma_a_bk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gamma_
@@ -242,6 +326,8 @@ class GammaBridge: public IMixtureBridge< GammaBridge<Id,Data> >
     typedef IMixtureBridge< GammaBridge<Id,Data> > Base;
     // type of Mixture
     typedef typename hidden::MixtureBridgeTraits< GammaBridge<Id,Data> >::Mixture Mixture;
+    typedef typename hidden::MixtureBridgeTraits< GammaBridge<Id,Data> >::ParamHandler ParamHandler;
+    typedef typename hidden::MixtureBridgeTraits< GammaBridge<Id,Data> >::Parameters Parameters;
     // type of data
     typedef typename Data::Type Type;
     // class of mixture
@@ -249,11 +335,10 @@ class GammaBridge: public IMixtureBridge< GammaBridge<Id,Data> >
     {
       idMixtureClass_ = Clust::Gamma_
     };
-    // parameters type to get
-    typedef typename Clust::MixtureTraits<Mixture>::Param Param;
-
     typedef std::vector<std::pair<int,int> >::const_iterator ConstIterator;
     using Base::mixture_;
+    using Base::p_data_;
+    using Base::p_tik;
 
     /** default constructor. Remove the missing values from the data set and
      *  initialize the mixture by setting the data set.
@@ -262,13 +347,10 @@ class GammaBridge: public IMixtureBridge< GammaBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     GammaBridge( MixtureData<Data>* p_data, std::string const& idData, int nbCluster)
-                  : Base( idData, nbCluster)
-                  , p_data_(p_data)
+               : Base( p_data, idData, nbCluster)
     { removeMissing(); initializeMixture();}
     /** copy constructor */
-    GammaBridge( GammaBridge const& bridge)
-                  : Base(bridge)
-                  , p_data_(bridge.p_data_)
+    GammaBridge( GammaBridge const& bridge): Base(bridge)
     { initializeMixture();}
     /** destructor */
     virtual ~GammaBridge() {}
@@ -292,11 +374,14 @@ class GammaBridge: public IMixtureBridge< GammaBridge<Id,Data> >
       p_bridge->mixture_.setData(p_bridge->p_data_->dataij());
       return p_bridge;
     }
-    /** This function is used in order to get the current values of the
-     *  parameters.
+    /** This function is used in order to get the current values of the parameters.
      *  @param params the array with the parameters of the mixture.
      */
-    virtual void getParameters(ArrayXX& params) const;
+    void getParameters(Parameters& params) const;
+    /** This function can be used to write summary of parameters to the output stream.
+     *  @param os Stream where you want to write the summary of parameters.
+     */
+    virtual void writeParameters(ostream& os) const;
 
   private:
     /** This function will be used for the imputation of the missing data
@@ -314,11 +399,8 @@ class GammaBridge: public IMixtureBridge< GammaBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     GammaBridge( Mixture const& mixture, std::string const& idData, int nbCluster)
-                 : Base(mixture, idData, nbCluster)
-                 , p_data_(0)
+               : Base(mixture, idData, nbCluster)
     {}
-    /** pointer on the data manager */
-    MixtureData<Data>* p_data_;
 };
 
 // implementation
@@ -340,7 +422,7 @@ void GammaBridge<Id, Data>::removeMissing()
 }
 
 template<int Id, class Data>
-void GammaBridge<Id, Data>::getParameters(ArrayXX& params) const
+void GammaBridge<Id, Data>::getParameters(Parameters& params) const
 {
   int nbClust = this->nbCluster();
   params.resize(2*nbClust, mixture_.p_data()->cols());
@@ -348,11 +430,30 @@ void GammaBridge<Id, Data>::getParameters(ArrayXX& params) const
   {
     for (int j=  mixture_.p_data()->beginCols();  j< mixture_.p_data()->endCols(); ++j)
     {
-      params(baseIdx+2*k  , j) = mixture_.param(baseIdx+k).shape(j);
-      params(baseIdx+2*k+1, j) = mixture_.param(baseIdx+k).scale(j);
+      params(baseIdx+2*k  , j) = mixture_.shape(baseIdx+k,j);
+      params(baseIdx+2*k+1, j) = mixture_.scale(baseIdx+k,j);
     }
   }
 }
+
+template<int Id, class Data>
+void GammaBridge<Id, Data>::writeParameters(ostream& os) const
+{
+    Array2DPoint<Real> a(mixture_.p_data()->cols()), b(mixture_.p_data()->cols());
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+    {
+      // store shape and scale values in an array for a nice output
+      for (int j=mixture_.p_data()->beginCols();  j < mixture_.p_data()->endCols(); ++j)
+      {
+        a[j] = mixture_.shape(k,j);
+        b[j] = mixture_.scale(k,j);
+      }
+      os << _T("---> Component ") << k << _T("\n");
+      os << _T("shape = ") << a;
+      os << _T("scale = ") << b;
+    }
+}
+
 
 } // namespace STK
 

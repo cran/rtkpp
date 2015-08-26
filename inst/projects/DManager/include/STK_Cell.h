@@ -67,9 +67,9 @@ class CellBase
     CellBase<Type>& operator=(Type const& v)
     { data_ = v; return *this;}
     /** @return a constant reference to the data */
-    Type const& data() const { return data_;}
+    inline Type const& data() const { return data_;}
     /** @return a reference to the data. */
-    Type& data() { return data_;}
+    inline Type& data() { return data_;}
     /** Set data.*/
     void setData(Type const& data) { data_ = data;}
 };

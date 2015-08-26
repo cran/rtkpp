@@ -278,41 +278,6 @@ void MixtureComposer::releaseMixture( String const& idData)
     }
   }
 }
-/* Utility method allowing to create a mixture with a given data set
- *  and register it. The Mixture Manager will find the associated model
- *  to use with this data set.
- *  @param manager the manager with the responsibility of the creation.
- *  @param idData the id name of the data to modelize.
- **/
-void MixtureComposer::createMixture(IMixtureManager& manager, String const& idData)
-{
-  IMixture* p_mixture = manager.createMixture( idData, nbCluster());
-#ifdef STK_MIXTURE_DEBUG
-  if (!p_mixture)
-  { stk_cout << _T("In MixtureComposer::createMixture(manager,")<< idData << _T(") failed.\n");}
-#endif
-  if (p_mixture) registerMixture(p_mixture);
-}
-
-/* Utility method allowing to release completely a mixture with its data set.
- *  The MixtureManager will find and release the associated data set.
- *  @param manager the manager with the responsibility of the release.
- *  @param idData the id name of the data to modelize.
- **/
-void MixtureComposer::releaseMixture(IMixtureManager& manager, String const& idData)
-{
-  IMixture* p_mixture = getMixture(idData);
-#ifdef STK_MIXTURE_DEBUG
-  if (!p_mixture)
-  { stk_cout << _T("In MixtureComposer::releaseMixture(manager,")<< idData << _T(") failed.\n");}
-#endif
-  if (p_mixture)
-  {
-    releaseMixture(idData);
-    manager.releaseMixtureData( idData);
-  }
-}
-
 /* Constructor.
  * @param nbCluster,nbSample number of clusters and samples
  */

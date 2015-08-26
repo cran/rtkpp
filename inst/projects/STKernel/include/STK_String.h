@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -93,11 +93,48 @@ struct IdTypeImpl<String>
   /** @return the IdType string_ */
   static Base::IdType returnType() { return(Base::string_);}
 };
+
+#ifndef IS_RTKPP_LIB
+/** @ingroup Base
+  * @brief Representation of a Not Available value.
+  *
+  * By default we represent a Not Available value of any type as a "." (like in
+  * (SAS(R))) for the end-user. This value can be overloaded at runtime.
+  * @note if the value is modified at runtime, the value of @c stringNaSize
+  * have to be modified accordingly. It is safer to use the @ref setStringNa
+  * function.
+  **/
+extern String stringNa;
+
+/** @ingroup Base
+  * @brief Size (in number of Char) of a Not Available value.
+  * We represent a Not Available value of any type as a "." (like in
+  * (SAS(R))) for the end-user.
+  **/
+extern int stringNaSize;
+
 /** @ingroup Base
   * @brief Set a new value to the na String representation and modify
   * stringNaSize accordingly.
   **/
-void setStringNa(String const& na);
+inline void setStringNa(String const& na)
+{ stringNa = na; stringNaSize = na.size();}
+
+#else /* is rtkpp lib */
+
+/** @ingroup Base
+  * @brief Representation of a Not Available value.
+  *
+  * We represent a Not Available value of any type as a "NA" (like in
+  * (R language) for the end-user. This value cannot be overloaded at runtime.
+  **/
+static const String stringNa = _T("NA");
+/** @ingroup Base
+  * @brief Size (in number of Char) of the Not Available value.
+  **/
+static const int stringNaSize = 2;
+
+#endif
 
 /** @ingroup Base
  *  @brief convert the characters of the String to upper case
@@ -105,15 +142,31 @@ void setStringNa(String const& na);
  *  @param s The String to convert
  *  @return the string converted to upper case
  **/
-String& toUpperString( String& s);
+inline String const& toUpperString( String& s)
+{
+  // iterate along the String
+  for (String::iterator it = s.begin(); it != s.end(); ++it)
+  { *it = std::toupper(*it);}
+  // return upper cased string
+ return s;
+}
 
 /** @ingroup Base
  *  @brief convert the characters of the String to upper case
  *
  *  @param s The String to convert
- *  @return a copy of @c s in upper case
+ *  @return the string converted to upper case
  **/
-String toUpperString( String const& s);
+inline String toUpperString( String const& s)
+{
+  // iterate along the String
+  String str = s;
+  for (String::iterator it = str.begin(); it != str.end(); ++it)
+  { *it = std::toupper(*it);}
+  // return upper cased string
+ return str;
+}
+
 }
 
 #include "STK_Proxy.h"

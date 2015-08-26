@@ -30,25 +30,23 @@
  **/
 
 /** @file STK_Display.h
- *  @brief This file define methods for displaying 2D Containers.
+ *  @brief This file define methods for displaying Arrays and Expressions.
  **/
 
 #ifndef STK_DISPLAY_H
 #define STK_DISPLAY_H
 
-#include "STKernel/include/STK_Real.h"
-
-#include "DManager/include/STK_ExportToCsv.h"
+#include <DManager/include/STK_ExportToCsv.h>
 
 namespace STK
 {
 
 /** @ingroup Arrays
- *  Method for displaying any two dimensional Array.
- *  The Container is exported in ReadWriteCsv and the the csv is written
+ *  Method for displaying any two dimensional Array or Expression.
+ *  The Array/Expression is exported in a ReadWriteCsv and the the csv is written
  *  in the output stream.
  *  @param os the output stream
- *  @param V the 2D container to write
+ *  @param V the Array or Expression to write
  **/
 template<class Array>
 ostream& out2D( ostream& os, ITContainer<Array> const& V)
@@ -66,11 +64,18 @@ ostream& out2D( ostream& os, ITContainer<Array> const& V)
   return os;
 }
 
+/** @ingroup Arrays
+ *  Method for displaying any one dimensional Array.
+ *  The Array is exported in ReadWriteCsv and the the csv is written
+ *  in the output stream.
+ *  @param os the output stream
+ *  @param V the Array or Expression to write
+ **/
 template<class Array>
 ostream& out1D( ostream& os, ITContainer1D<Array> const& V)
 {
-  // Export  to csv the Array
-  ExportToCsv exportcsv(V);
+  // Export by row to csv the Array
+  ExportToCsv exportcsv(V, false);
   // get the csv
   ReadWriteCsv* pData = exportcsv.p_readWriteCsv();
   // set delimiters to blank
@@ -84,13 +89,22 @@ ostream& out1D( ostream& os, ITContainer1D<Array> const& V)
 
 
 /** @ingroup Arrays
- *  ostream for all arrays and expressions.
+ *  overload of the << operator for all Arrays and Expressions.
  *  @param s the output stream
- *  @param V the Array2D to write
+ *  @param V the Array/Expression to write
  **/
 template<class Array>
-inline ostream& operator<<(ostream& s, ExprBase<Array> const& V)
+ostream& operator<<(ostream& s, ITContainer<Array> const& V)
 { return out2D<Array>(s,V);}
+
+/** @ingroup Arrays
+ *   overload of the << operator for all 1D containers.
+ *  @param s the output stream
+ *  @param V the Array1D to write
+ **/
+template<class Type>
+ostream& operator<<(ostream& s, const ITContainer1D<Type>& V)
+{ return out1D(s,V);}
 
 } // namespace STK
 

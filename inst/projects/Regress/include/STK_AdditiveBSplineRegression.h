@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,8 +36,14 @@
 #ifndef STK_ADDITIVEBSPLINEREGRESSION_H
 #define STK_ADDITIVEBSPLINEREGRESSION_H
 
-#include "STK_IRegression.h"
 #include "STK_AdditiveBSplineCoefficients.h"
+#include "STK_IRegression.h"
+
+#ifdef STKUSELAPACK
+#include <Algebra/include/STK_lapack_MultiLeastSquare.h>
+#else
+#include <Algebra/include/STK_MultiLeastSquare.h>
+#endif
 
 namespace STK
 {
@@ -46,12 +52,16 @@ namespace STK
  *  @brief Compute an additive BSpline, multivalued, regression function using
  *  BSpline basis.
  */
-class AdditiveBSplineRegression : public IRegression<ArrayXX, ArrayXX, Vector>
+template <class YArray, class XArray, class Weights = Vector>
+class AdditiveBSplineRegression : public IRegression<YArray, XArray, Weights>
 {
   public:
-    //
+    typedef IRegression<YArray, XArray, Weights> Base;
     typedef Regress::KnotsPosition KnotsPosition;
-
+    using Base::p_x_;
+    using Base::p_y_;
+    using Base::predicted_;
+    using Base::residuals_;
     /** Constructor.
      * @param p_y p-dimensional array of output to fit
      * @param p_x d-dimensional array of predictor
@@ -59,41 +69,44 @@ class AdditiveBSplineRegression : public IRegression<ArrayXX, ArrayXX, Vector>
      * @param degree degree of the BSpline basis
      * @param position position of the knots to used
      **/
-    AdditiveBSplineRegression( ArrayXX const* p_y
-                             , ArrayXX const* p_x
-                             , int const& nbControlPoints
-                             , int const& degree = 3
-                             , KnotsPosition const& position = Regress::uniform_
+    AdditiveBSplineRegression( YArray const* p_y
+                             , XArray const* p_x
+                             , int nbControlPoints
+                             , int degree = 3
+                             , KnotsPosition const& position = Regress::uniformKnotsPositions_
                              );
-
+    /** Constructor.
+     * @param y p-dimensional array of output to fit
+     * @param x d-dimensional array of predictor
+     * @param nbControlPoints number of control points of the spline
+     * @param degree degree of the BSpline basis
+     * @param position position of the knots to used
+     **/
+    AdditiveBSplineRegression( YArray const& y
+                             , XArray const& x
+                             , int nbControlPoints
+                             , int degree = 3
+                             , KnotsPosition const& position = Regress::uniformKnotsPositions_
+                             );
     /** virtual destructor. */
-    virtual ~AdditiveBSplineRegression();
-
-    /** give the degree of the B-Spline curves.
-     *  @return the degree of the B-Spline curves
-     * */
+    virtual ~AdditiveBSplineRegression() {}
+    /** @return the degree of the B-Spline curves */
     inline int degree() const { return degree_;}
-    /** give the number of control points of the B-Spline curves.
-     *  @return the number of control points of the B-Spline curves
-     **/
+    /** @return the number of control points of the B-Spline curves */
     inline int nbControlPoints() const { return nbControlPoints_;}
-    /** give the control points.
-     *  @return the control points of the B-Spline curves
-     **/
-    inline ArrayXX const& controlPoints() const { return controlPoints_; }
-    /** give the computed coefficients of the B-Spline curves.
-     *   This is a matrix of size (p_x_->range(), 0:lastControlPoints).
-     *  @return the coefficients of the B-Spline curve
+    /** @return the control points of the B-Spline curves */
+    inline YArray const& controlPoints() const { return controlPoints_; }
+    /** This is a matrix of size (p_x_->range(), 0:lastControlPoints).
+     *  @return the coefficients of the B-Spline curves
      **/
     inline ArrayXX const& coefficients() const { return coefs_.coefficients();}
-
     /** @return The extrapolated values of y from the value @c x.
      *  Given the data set @c x will compute the values \f$ y = \psi(x) \hat{\beta} \f$
      *  where \f$ \psi \f$ represents the B-spline basis functions and \f$ \hat{beta} \f$
      *  the estimated coefficients.
      *  @param x the input data set
      **/
-    virtual ArrayXX extrapolate( ArrayXX const& x) const;
+    virtual YArray extrapolate( XArray const& x) const;
 
   protected:
     /** number of control points of the B-Spline curve. */
@@ -103,29 +116,138 @@ class AdditiveBSplineRegression : public IRegression<ArrayXX, ArrayXX, Vector>
     /** method of position of the knots of the B-Spline curve */
     KnotsPosition position_;
     /** Coefficients of the regression matrix */
-    AdditiveBSplineCoefficients<ArrayXX> coefs_;
+    AdditiveBSplineCoefficients<XArray> coefs_;
     /** Estimated control points of the B-Spline curve */
-    ArrayXX controlPoints_;
-
+    YArray controlPoints_;
     /** compute the coefficients of the BSpline basis. This method will be
      * called in the base class @c IRegression::run()
      **/
     virtual void initializeStep();
-
-    /** compute the regression function. */
+    /** Compute the regression function. */
     virtual void regressionStep();
-    /** compute the regression function.
-     * @param weights weights of the samples
+    /** Compute the weighted regression.
+     *  @param weights weights of the samples
      **/
-    virtual void regression(VectorX const& weights);
-    /** Compute the predicted outputs by the regression function. */
+    virtual void regressionStep(Weights const& weights);
+    /** Compute the predicted outputs. */
     virtual void predictionStep();
-    /** Compute the number of parameter of the regression function.
-     * @return the number of parameter of the regression function
-     **/
+    /** @return the number of parameter of the regression function */
     inline virtual int computeNbFreeParameter() const
     { return controlPoints_.sizeCols() * controlPoints_.sizeRows(); }
 };
+
+/* Constructor.
+ * @param p_y p-dimensional array of output to fit
+ * @param p_x d-dimensional array of predictor
+ * @param nbControlPoints number of control points of the spline
+ * @param degree degree of the BSpline basis
+ * @param position position of the knots to used
+ **/
+template <class YArray, class XArray, class Weights>
+AdditiveBSplineRegression< YArray, XArray, Weights>::AdditiveBSplineRegression(
+                                                      YArray const* p_y
+                                                    , XArray const* p_x
+                                                    , int nbControlPoints
+                                                    , int degree
+                                                    , KnotsPosition const& position
+                                                    )
+                                                    : Base(p_y, p_x)
+                                                    , nbControlPoints_(nbControlPoints)
+                                                    , degree_(degree)
+                                                    , position_(position)
+                                                    , coefs_(p_x, nbControlPoints_, degree_, position_)
+                                                    , controlPoints_()
+{}
+/* Constructor.
+ * @param y p-dimensional array of output to fit
+ * @param x d-dimensional array of predictor
+ * @param nbControlPoints number of control points of the spline
+ * @param degree degree of the BSpline basis
+ * @param position position of the knots to used
+ **/
+template <class YArray, class XArray, class Weights>
+AdditiveBSplineRegression< YArray, XArray, Weights>::AdditiveBSplineRegression( YArray const& y
+                                                    , XArray const& x
+                                                    , int nbControlPoints
+                                                    , int degree
+                                                    , KnotsPosition const& position
+                                                    )
+                                                    : Base(&y, &x)
+                                                    , nbControlPoints_(nbControlPoints)
+                                                    , degree_(degree)
+                                                    , position_(position)
+                                                    , coefs_(&x, nbControlPoints_, degree_, position_)
+                                                    , controlPoints_()
+{}
+
+/* compute the coefficients of the BSpline basis. This method will be
+ * called in the base class @c IRegression::run()
+ **/
+template <class YArray, class XArray, class Weights>
+void AdditiveBSplineRegression< YArray, XArray, Weights>::initializeStep()
+{
+  coefs_.setData(p_x_, nbControlPoints_, degree_, position_);
+  if (!coefs_.run())
+  {
+    String msg = coefs_.error();
+    STKRUNTIME_ERROR_NO_ARG(AdditiveBSplineRegression::initializeStep,msg);
+  }
+}
+
+/* compute the regression function. */
+template <class YArray, class XArray, class Weights>
+void AdditiveBSplineRegression< YArray, XArray, Weights>::regressionStep()
+{
+  // coefs_.coefficients() is Array2D
+#ifdef STKUSELAPACK
+  lapack::MultiLeastSquare<YArray, ArrayXX> reg(*p_y_, coefs_.coefficients(), false, false);
+#else
+  MultiLeastSquare<YArray, ArrayXX> reg(*p_y_, coefs_.coefficients(), false, false);
+#endif
+  if (!reg.run())
+  {
+    String msg = reg.error();
+    STKRUNTIME_ERROR_NO_ARG(AdditiveBSplineRegression::regressionStep,msg);
+  }
+  controlPoints_.move(reg.x());
+}
+
+/* compute the regression function. */
+template <class YArray, class XArray, class Weights>
+void AdditiveBSplineRegression< YArray, XArray, Weights>::regressionStep(Weights const& weights)
+{
+#ifdef STKUSELAPACK
+  lapack::MultiLeastSquare<YArray, ArrayXX> reg(*p_y_, coefs_.coefficients(), false, false);
+#else
+  MultiLeastSquare<YArray, ArrayXX> reg(*p_y_, coefs_.coefficients(), false, false);
+#endif
+  if (!reg.run(weights))
+  {
+    String msg = reg.error();
+    STKRUNTIME_ERROR_NO_ARG(AdditiveBSplineRegression::regressionStep,msg);
+  }
+  controlPoints_ = reg.x();
+}
+
+/* Compute the predicted outputs by the regression function. */
+template <class YArray, class XArray, class Weights>
+void AdditiveBSplineRegression< YArray, XArray, Weights>::predictionStep()
+{
+  predicted_ = coefs_.coefficients() * controlPoints_;
+}
+
+
+/* @brief Extrapolate the values @c y from the value @c x.
+ *  Given the data set @c x will compute the values \f$ y = \psi(x) \hat{\beta} \f$
+ *  where \f$ \psi \f$ represents the B-spline basis functions and \f$ \hat{beta} \f$
+ *  the estimated coefficients.
+ */
+template <class YArray, class XArray, class Weights>
+YArray AdditiveBSplineRegression< YArray, XArray, Weights>::extrapolate( XArray const& x) const
+{
+  YArray res = coefs_.extrapolate(x) * controlPoints_;
+  return res;
+}
 
 } // namespace STK
 

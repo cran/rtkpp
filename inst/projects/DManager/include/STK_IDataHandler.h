@@ -104,6 +104,49 @@ class IDataHandler
     InfoMap info_;
 };
 
-} // idDataspace STK
+inline void IDataHandler::writeInfo(ostream& os) const
+{
+  // show content
+  for (InfoMap::const_iterator it=info_.begin(); it!=info_.end(); ++it)
+  os << _T("IdData: ") << it->first << _T(", IdModel: ") << it->second << _T('\n');
+}
+
+inline bool IDataHandler::addInfo(std::string const& idData, std::string const& idModel)
+{
+  // parse descriptor file
+  std::pair<InfoMap::iterator,bool> ret;
+  // check if identifer is already present
+  ret = info_.insert(std::pair<std::string,std::string>(idData, idModel));
+  // if name already exists, check if there is incoherence
+  if (ret.second==false)
+  {
+     if (ret.first->second != idModel)
+     {
+#ifdef STK_MIXTURE_DEBUG
+       stk_cerr << _T("In IDataHandler::addInfo, There exists an idData with a different idModel.\n");
+#endif
+       return false;
+     }
+  }
+  return true;
+}
+
+/* @brief Giving a the Id of a dataset, find the Id of the model.
+ *  @param idData can be any string given by the user.
+ *  @param idModel The Id of the model associated with the data
+ *  (not modified if idData is not present in the map).
+ *  @return @c false if there exists already an idData matched with an other
+ *  idModel, @c true otherwise.
+ **/
+inline bool IDataHandler::getIdModelName(std::string const& idData, std::string& idModel) const
+{
+  bool res = false;
+  // show content
+  for (InfoMap::const_iterator it=info_.begin(); it!=info_.end(); ++it)
+  { if (it->first == idData) { idModel = it->second; res = true; break;}}
+ return res;
+}
+
+} // namespace STK
 
 #endif /* STK_IDATAHANDLER_H */

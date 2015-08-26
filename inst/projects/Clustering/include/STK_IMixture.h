@@ -38,9 +38,9 @@
  * composer.
  */
 #include <string>
-#include "Arrays/include/STK_CArrayPoint.h"
-#include "Arrays/include/STK_CArrayVector.h"
-#include "Arrays/include/STK_CArray.h"
+#include <Arrays/include/STK_CArrayPoint.h>
+#include <Arrays/include/STK_CArrayVector.h>
+#include <Arrays/include/STK_CArray.h>
 
 namespace STK
 {
@@ -62,8 +62,10 @@ class IMixture
     /** Virtual destructor. */
     virtual ~IMixture();
 
-    /** @return the Idname of the mixture */
+    /** @return the Idname of the mixture [DEPRECATED] */
     inline std::string const& idName() const { return idData_;}
+    /** @return the Id data of the mixture */
+    inline std::string const& idData() const { return idData_;}
     /** @return Number of cluster. */
     inline int nbCluster() const  { return nbCluster_;}
     /** @return A constant pointer on the composer. */
@@ -109,7 +111,7 @@ class IMixture
      * @param Cluster_num Cluster number
      * @return the value of component probability in log scale
      */
-    virtual double lnComponentProbability(int sample_num, int Cluster_num) = 0;
+    virtual Real lnComponentProbability(int sample_num, int Cluster_num) = 0;
     /** This function must return the number of free parameters.
      *  @return Number of free parameters
      */

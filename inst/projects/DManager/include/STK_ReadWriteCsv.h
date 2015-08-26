@@ -90,7 +90,7 @@ namespace Csv
  *  @brief the TReadWriteCsv class : allow to write and/or to read a csv
  *  file.
  *
- *  It is possible to merge two csv files and to extract subregion of
+ *  It is possible to merge two csv files and to extract sub-region of
  *  the file too. All data are stored in a Type format. if there exists mixed
  *  types in the file you want to read/write, used the String format and use
  *  the import/export utilities classes @sa ExportToCsv, ImportFromCsv.
@@ -168,7 +168,7 @@ class TReadWriteCsv
     /** @return the ending index of the variables */
     inline int endCols() const { return str_data_.end(); }
     /**@return The current number of variables of the TReadWriteCsv */
-    inline int sizeCol() const { return str_data_.size(); }
+    inline int sizeCols() const { return str_data_.size(); }
 
     /** @param icol index of the variable
      *  @return the first index in the column @c icol
@@ -187,7 +187,7 @@ class TReadWriteCsv
      **/
     inline int sizeRow( int icol) const { return str_data_.at(icol).size();}
     /** @return the first index of the samples. */
-    int beginRows() const
+    inline int beginRows() const
     {
       if (size()<= 0) return baseIdx;
       int retVal = firstRow(begin());
@@ -196,7 +196,7 @@ class TReadWriteCsv
       return retVal;
     }
     /** @return the ending index of the samples. */
-    int endRows() const
+    inline int endRows() const
     {
       if (size()<= 0) return baseIdx;
       int retVal = lastRow(begin());
@@ -205,7 +205,7 @@ class TReadWriteCsv
       return retVal;
     }
     /** @return the size of the samples. */
-    int sizeRows() const
+    inline int sizeRows() const
     {
       if (size()<= 0) return 0;
       int retVal = sizeRow(begin());
@@ -214,7 +214,7 @@ class TReadWriteCsv
       return retVal;
     }
     /** @return the last index of the samples. */
-    int lastIdxRows() const
+    inline int lastIdxRows() const
     {
       if (size()<= 0) return baseIdx-1;
       int retVal = lastRow(begin());
@@ -426,6 +426,20 @@ class TReadWriteCsv
      **/
     TReadWriteCsv operator+( TReadWriteCsv const& rw) const
     { return TReadWriteCsv((*this)) += rw;}
+    /** export to an array of the same Type */
+    template<class Array>
+    void exporter(ArrayBase<Array>& array) const
+    {
+      array.asDerived().resize(sizeRows(), sizeCols());
+      for (int j= beginCols(); j < endCols(); ++j)
+      {
+        for (int i= beginRows(); i < endRows(); ++i)
+        {
+          array.elt(i,j) = var(j)[i];
+        }
+
+      }
+    }
     /** Reads the default file with the specified read flags.
      *  @return  @c true if successful, @c false if an error is encountered.
      **/
@@ -745,7 +759,7 @@ void TReadWriteCsv<Type>::writeSelection( ostream& os, int top, int bottom, int 
     }
     os << std::setw(int(format[right])) << std::right
        << Proxy<String>(str_data_[right].name())
-       << STRING_NL;
+       << _T("\n");
   }
   // write data
   for(int irow = top; irow<=bottom; irow++)
@@ -768,7 +782,7 @@ void TReadWriteCsv<Type>::writeSelection( ostream& os, int top, int bottom, int 
     }
     catch(...) // if an error occur, we put NA value
     { os << std::setw(format[right]) << std::right << stringNa;}
-    os << STRING_NL;
+    os << _T("\n");
   }
 }
 

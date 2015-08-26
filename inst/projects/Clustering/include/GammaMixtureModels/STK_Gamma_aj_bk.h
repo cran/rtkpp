@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -36,7 +36,7 @@
 #define STK_GAMMA_AJ_BK_H
 
 #include "STK_GammaBase.h"
-#include "../../../STatistiK/include/STK_Law_Exponential.h"
+#include <STatistiK/include/STK_Law_Exponential.h>
 
 #define MAXITER 400
 #define TOL 1e-8
@@ -50,16 +50,99 @@ namespace Clust
 /** @ingroup Clustering
  * Traits class for the Gamma_aj_bk traits policy
  **/
-template<class _Array>
-struct MixtureTraits< Gamma_aj_bk<_Array> >
+template<class Array_>
+struct MixtureTraits< Gamma_aj_bk<Array_> >
 {
-  typedef _Array Array;
-  typedef typename Array::Type Type;
-  typedef Gamma_aj_bk_Parameters        Parameters;
-  typedef Array2D<Real>        Param;
+  typedef Array_ Array;
+  typedef ParametersHandler<Clust::Gamma_aj_bk_> ParamHandler;
 };
 
 } // namespace Clust
+
+/** Specialization of the ParametersHandler struct for Gamma_aj_bk model */
+template <>
+struct ParametersHandler<Clust::Gamma_aj_bk_>: public ParametersHandlerGammaBase<  ParametersHandler<Clust::Gamma_aj_bk_> >
+{
+  typedef ParametersHandlerGammaBase Base;
+  /** shape parameters and statistics */
+  MixtureParameters<PointX> shape_;
+  /** scale parameters and statistics */
+  MixtureParametersSet<Real> scale_;
+  /** @return the shape of the kth cluster and jth variable */
+  inline Real const& shapeImpl(int k, int j) const { return shape_()[j];}
+  /** @return the scale of the kth cluster and jth variable */
+  inline Real const& scaleImpl(int k, int j) const { return scale_[k];}
+  /** copy operator */
+  inline ParametersHandler& operator=( ParametersHandler const& other)
+  { Base::operator =(other);
+    shape_ = other.shape_; scale_ = other.scale_;
+    return *this;
+  }
+  /** copy operator using an array/expression storing the values */
+  template<class Array>
+  inline ParametersHandler& operator=( ExprBase<Array> const& param)
+  {
+    int nbCluster = mean_().size();
+    for (int j= param.beginCols();  j< param.endCols(); ++j)
+    {
+      shape_()[j] = 0.;
+      for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+      { shape_()[j] += param(k2, j);}
+      shape_()[j] /= nbCluster;
+    }
+    for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    { scale_[k] = param.row(k2+1).mean();}
+    return *this;
+  }
+
+  /** default constructor */
+  ParametersHandler( int nbCluster)
+                   : Base(nbCluster), shape_(), scale_(nbCluster) {}
+  /** copy constructor */
+  ParametersHandler( ParametersHandler const& model)
+                   : Base(model), shape_(model.shape_), scale_(model.scale_) {}
+  /** Initialize the parameters with an array/expression of value */
+  template<class Array>
+  inline ParametersHandler( int nbCluster, ExprBase<Array> const& param)
+                          : Base(nbCluster), shape_(), scale_(nbCluster)
+  {
+    Base::resize(param.cols());
+    shape_.resize(param.cols());
+    for (int j= param.beginCols();  j< param.endCols(); ++j)
+    {
+      shape_()[j] = 0.;
+      for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+      { shape_()[j] += param(k2, j);}
+      shape_()[j] /= nbCluster;
+    }
+    for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    { scale_[k] = param.row(k2+1).mean();}
+  }
+  /** destructor */
+  inline ~ParametersHandler() {}
+  /** Initialize the parameters of the model.
+   *  This function initialize the parameters and the statistics.
+   **/
+  void resize(Range const& range)
+  {
+    Base::resize(range);
+    shape_.resize(range);
+    shape_.initialize(1.);
+    scale_.initialize(1.);
+  }
+  /** Store the intermediate results of the Mixture.
+   *  @param iteration Provides the iteration number beginning after the burn-in period.
+   **/
+  inline void storeIntermediateResults(int iteration)
+  { shape_.storeIntermediateResults(iteration); scale_.storeIntermediateResults(iteration);}
+  /** Release the stored results. This is usually used if the estimation
+   *  process failed.
+   **/
+  inline void releaseIntermediateResults()
+  { shape_.releaseIntermediateResults(); scale_.releaseIntermediateResults();}
+  /** set the parameters stored in stat_proba_ and release stat_proba_. */
+  inline void setParameters() { shape_.setParameters(); scale_.setParameters();}
+};
 
 /** @ingroup Clustering
  *  Gamma_aj_bk is a mixture model of the following form
@@ -74,55 +157,32 @@ template<class Array>
 class Gamma_aj_bk : public GammaBase< Gamma_aj_bk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_aj_bk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_aj_bk<Array> > Base;
-
-    using Base::p_tik;
-    using Base::components;
+    using Base::p_tik; using Base::param_;
+    using Base::p_nk;
     using Base::p_data;
-    using Base::param;
-
     using Base::meanjk;
     using Base::variancejk;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline Gamma_aj_bk( int nbCluster) : Base(nbCluster), shape_(), stat_shape_() {}
+    inline Gamma_aj_bk( int nbCluster): Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gamma_aj_bk( Gamma_aj_bk const& model)
-                      : Base(model), shape_(model.shape_), stat_shape_(model.stat_shape_) {}
+    inline Gamma_aj_bk( Gamma_aj_bk const& model): Base(model) {}
     /** destructor */
     inline ~Gamma_aj_bk() {}
-    /** Initialize the component of the model.
-     *  In this interface, the shape_ parameter is shared between all the
-     *  components.
+    /** @return the value of the probability of the i-th sample in the k-th component.
+     *  @param i,k indexes of the sample and of the component
      **/
-    void initializeModelImpl()
+    inline Real lnComponentProbability(int i, int k) const
     {
-      shape_.resize(p_data()->cols());
-      shape_ = 1.;
-      for (int k= baseIdx; k < components().end(); ++k)
-      { param(k).p_shape_ = &shape_;}
-      stat_shape_.initialize(p_data()->cols());
-    }
-    /** Store the intermediate results of the Mixture.
-     *  @param iteration Provides the iteration number beginning after the burn-in period.
-     **/
-    void storeIntermediateResultsImpl(int iteration)
-    { stat_shape_.update(shape_);}
-    /** Release the stored results. This is usually used if the estimation
-     *  process failed.
-     **/
-    void releaseIntermediateResultsImpl()
-    { stat_shape_.release();}
-    /** set the parameters stored in stat_proba_ and release stat_proba_. */
-    void setParametersImpl()
-    {
-      shape_ = stat_shape_.param_;
-      stat_shape_.release();
+      Real sum =0.;
+      for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
+      { sum += Law::Gamma::lpdf(p_data()->elt(i,j), param_.shape_()[j], param_.scale_[k]);}
+      return sum;
     }
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
@@ -135,12 +195,6 @@ class Gamma_aj_bk : public GammaBase< Gamma_aj_bk<Array> >
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
     { return(this->nbCluster()+this->nbVariable());}
-
-  protected:
-    /** common shapes */
-    Array2DPoint<Real> shape_;
-    /** Statistics of the common shape */
-    MixtureStatVector stat_shape_;
 };
 
 /* Initialize randomly the parameters of the gamma mixture. The centers
@@ -156,19 +210,18 @@ void Gamma_aj_bk<Array>::randomInit()
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
   {
     Real value= 0.;
-    for (int k= baseIdx; k < components().end(); ++k)
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      value += param(k).tk_ * mean*mean/variance;
+      value += p_nk()->elt(k) * mean*mean/variance;
     }
-    shape_[j] = Law::Exponential::rand(value/(this->nbSample()));
+    param_.shape_()[j] = Law::Exponential::rand(value/(this->nbSample()));
   }
   // simulates bk
-  for (int k= baseIdx; k < components().end(); ++k)
-  { param(k).scale_ = Law::Exponential::rand((this->variancek(k)/this->meank(k)));}
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+  { param_.scale_[k] = Law::Exponential::rand((this->variancek(k)/this->meank(k)));}
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_aj_bk<Array>::randomInit done\n");
-  this->writeParameters(stk_cout);
 #endif
 }
 
@@ -188,15 +241,15 @@ bool Gamma_aj_bk<Array>::mStep()
     {
       // moment estimate and oldest value
       Real y = 0, x0 = 0;
-      for (int k= baseIdx; k < components().end(); ++k)
+      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
       {
         Real mean = meanjk(j,k), variance = variancejk(j,k);
-        y  += param(k).tk_ * (param(k).meanLog_[j] - std::log(param(k).scale_));
-        x0 += param(k).tk_ * mean*mean/variance;
+        y  += p_nk()->elt(k) * (param_.meanLog_[k][j] - std::log(param_.scale_[k]));
+        x0 += p_nk()->elt(k) * mean*mean/variance;
       }
       y /= this->nbSample();
       x0/= this->nbSample();
-      Real x1 = shape_[j];
+      Real x1 = param_.shape_()[j];
       if ((x0 <=0.) || !Arithmetic<Real>::isFinite(x0)) return false;
       // compute shape
       hidden::invPsi f(y);
@@ -204,7 +257,7 @@ bool Gamma_aj_bk<Array>::mStep()
 
       if (!Arithmetic<Real>::isFinite(a))
       {
-        shape_[j] = x0; // use moment estimate
+        param_.shape_()[j] = x0; // use moment estimate
 #ifdef STK_MIXTURE_DEBUG
         stk_cout << _T("ML estimation failed in Gamma_ajk_bj::mStep()\n");
         stk_cout << "x0 =" << x0 << _T("\n";);
@@ -213,12 +266,12 @@ bool Gamma_aj_bk<Array>::mStep()
         stk_cout << "f(x1) =" << f(x1) << _T("\n";);
 #endif
       }
-      else { shape_[j] = a;}
+      else { param_.shape_()[j] = a;}
       // compute bk
-      Real sum = shape_.sum();
-      for (int k= baseIdx; k < components().end(); ++k)
+      Real sum = param_.shape_().sum();
+      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
       { // update bk
-        param(k).scale_ = param(k).mean_.sum()/sum;
+        param_.scale_[k] = param_.mean_[k].sum()/sum;
       }
     }
   // check convergence

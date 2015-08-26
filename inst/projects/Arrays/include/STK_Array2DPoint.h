@@ -138,7 +138,7 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type_> >
     {}
     /** constructor by reference, ref_=1.
      *  @param T the container to wrap
-     *  @param J the range of the columns to wrap
+     *  @param J the columns range to wrap
      **/
     Array2DPoint( Array2DPoint const& T, Range const& J)
                 : Base(T, T.rows(), J) {}
@@ -169,7 +169,7 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type_> >
     /** @return a constant reference on the jth element
      *  @param j index of the element (const)
      **/
-    inline Type const & elt1Impl(int const& j) const { return this->data(j)[this->beginRows()];}
+    Type const & elt1Impl(int const& j) const { return this->data(j)[this->beginRows()];}
     /** @return a reference on the jth element
      *  @param j index of the element
      **/
@@ -181,7 +181,7 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type_> >
     /**  Resize the container.
      *  @param J the range to set to the container
      **/
-    inline Array2DPoint<Type>& resize1D(Range const& J)
+    Array2DPoint<Type>& resize1D(Range const& J)
     { Base::resize(this->rows(), J); return *this;}
     /** Add n elements to the container.
      *  @param n number of elements to add
@@ -205,15 +205,15 @@ class Array2DPoint : public IArray2D< Array2DPoint<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DPoint& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
+    Array2DPoint& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
      **/
-    inline Array2DPoint& operator=(const Array2DPoint &T) { return LowBase::assign(T);}
+    Array2DPoint& operator=(const Array2DPoint &T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2DPoint& operator=(Type const& v) { return LowBase::setValue(v);}
+    Array2DPoint& operator=(Type const& v) { return LowBase::setValue(v);}
 };
 
 } // namespace STK

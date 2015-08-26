@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Serge Iovleff
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -30,8 +30,8 @@
  **/
 
 /** @file STK_PoissonBridge.h
- *  @brief In this file we define the bridge classes between the diagonal
- *  Gaussian mixtures and the composer.
+ *  @brief In this file we define the bridge class between the Poisson mixture
+ *  models and the composer.
  **/
 
 #ifndef STK_POISSONBRIDGE_H
@@ -55,24 +55,39 @@ namespace hidden
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Poisson_ljk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< PoissonBridge<Clust::Poisson_ljk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< PoissonBridge<Clust::Poisson_ljk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the Mixture model */
   typedef Poisson_ljk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Poisson_ljk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Poisson_
   };
 };
+
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Poisson_lk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< PoissonBridge<Clust::Poisson_lk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< PoissonBridge<Clust::Poisson_lk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the Mixture model */
   typedef Poisson_lk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Poisson_lk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Poisson_
@@ -81,11 +96,16 @@ struct MixtureBridgeTraits< PoissonBridge<Clust::Poisson_lk_, Data> >
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Poisson_ljlk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< PoissonBridge< Clust::Poisson_ljlk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< PoissonBridge< Clust::Poisson_ljlk_, Data_> >
 {
+  typedef Data_ Data;
   /** Type of the mixture model */
   typedef Poisson_ljlk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Poisson_ljlk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Poisson_
@@ -111,20 +131,18 @@ class PoissonBridge: public IMixtureBridge< PoissonBridge<Id,Data> >
   public:
     // Base class
     typedef IMixtureBridge< PoissonBridge<Id,Data> > Base;
-    // type of Mixture
     typedef typename hidden::MixtureBridgeTraits< PoissonBridge<Id,Data> >::Mixture Mixture;
-    // type of data
+    typedef typename hidden::MixtureBridgeTraits< PoissonBridge<Id,Data> >::ParamHandler ParamHandler;
+    typedef typename hidden::MixtureBridgeTraits< PoissonBridge<Id,Data> >::Parameters Parameters;
     typedef typename Data::Type Type;
     // class of mixture
     enum
     {
       idMixtureClass_ = Clust::Poisson_
     };
-    // parameters type to get
-    typedef typename Clust::MixtureTraits<Mixture>::Param Param;
-
     typedef std::vector<std::pair<int,int> >::const_iterator ConstIterator;
     using Base::mixture_;
+    using Base::p_data_;
 
     /** default constructor. Remove the missing values from the data set and
      *  initialize the mixture by setting the data set.
@@ -133,13 +151,10 @@ class PoissonBridge: public IMixtureBridge< PoissonBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     PoissonBridge( MixtureData<Data>* p_data, std::string const& idData, int nbCluster)
-                  : Base( idData, nbCluster)
-                  , p_data_(p_data)
+                 : Base(p_data, idData, nbCluster)
     { removeMissing(); initializeMixture();}
     /** copy constructor */
-    PoissonBridge( PoissonBridge const& bridge)
-                  : Base(bridge)
-                  , p_data_(bridge.p_data_)
+    PoissonBridge( PoissonBridge const& bridge): Base(bridge)
     { initializeMixture();}
     /** destructor */
     virtual ~PoissonBridge() {}
@@ -167,7 +182,11 @@ class PoissonBridge: public IMixtureBridge< PoissonBridge<Id,Data> >
      *  parameters.
      *  @param params the array with the parameters of the mixture.
      */
-    virtual void getParameters(ArrayXX& params) const;
+    void getParameters(Parameters& params) const;
+    /** This function can be used to write summary of parameters to the output stream.
+     *  @param out Stream where you want to write the summary of parameters.
+     */
+    virtual void writeParameters(std::ostream& out) const;
 
   private:
     /** This function will be used for the imputation of the missing data
@@ -186,10 +205,7 @@ class PoissonBridge: public IMixtureBridge< PoissonBridge<Id,Data> >
      **/
     PoissonBridge( Mixture const& mixture, std::string const& idData, int nbCluster)
                  : Base(mixture, idData, nbCluster)
-                 , p_data_(0)
     {}
-    /** pointer on the data manager */
-    MixtureData<Data>* p_data_;
     /** @return a safe value for the jth variable
      *  @param  dataij the matrix of the data set
      *  @param j index of the column with the safe value needed */
@@ -230,13 +246,25 @@ void PoissonBridge<Id, Data>::removeMissing()
 }
 
 template<int Id, class Data>
-void PoissonBridge<Id, Data>::getParameters(ArrayXX& params) const
+void PoissonBridge<Id, Data>::getParameters(Parameters& params) const
 {
   params.resize(this->nbCluster(), mixture_.p_data()->cols());
   for (int k= params.beginRows(); k < params.endRows(); ++k)
   {
     for (int j= mixture_.p_data()->beginCols();  j < mixture_.p_data()->endCols(); ++j)
-    { params(k, j) = mixture_.param(k).lambda(j);}
+    { params(k, j) = mixture_.lambda(k,j);}
+  }
+}
+
+template<int Id, class Data>
+void PoissonBridge<Id, Data>::writeParameters(ostream& os) const
+{
+  ArrayXX params;
+  getParameters(params);
+  for (int k= params.beginRows(); k < params.endRows(); ++k)
+  {
+    os << _T("---> Component ") << k << _T("\n");
+    os << _T("lambda = ") << params.row(k);
   }
 }
 

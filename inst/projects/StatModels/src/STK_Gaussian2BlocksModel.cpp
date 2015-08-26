@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -30,22 +30,22 @@
  *
  **/
 
-/** @file STK_GaussianModel.cpp
+/** @file STK_Gaussian2BlocksModel.cpp
  *  @brief In this file we implement the GaussianModel class.
  **/
 
 #include "../include/STK_Gaussian2BlocksModel.h"
 
-#include "STatistiK/include/STK_Stat_BivariateRealReal.h"
-#include "STatistiK/include/STK_Law_MultiNormal.h"
+#include <STatistiK/include/STK_MultiLaw_Normal.h>
+#include <STatistiK/include/STK_Stat_BivariateRealReal.h>
 
 namespace STK
 {
 
 Gaussian2BlocksModel::Gaussian2BlocksModel( const ArrayXX *p_data)
-                                                  : GaussianModel(p_data)
-                                                  , dim_(p_data_->sizeCols())
-                                                  , variance2_(0)
+                                          : GaussianModel(p_data)
+                                          , dim_(p_data_->sizeCols())
+                                          , variance2_(0)
 {}
 
 /* destructor */
@@ -103,10 +103,10 @@ void Gaussian2BlocksModel::compWeightedCovariance(Vector const& weights)
   if (size2)
   {
     // compute variance of each column
-    for (int i= first2; i <= last2; ++i)
+    for (int i= first2; i < p_data_->endCols(); ++i)
     { cov_(i, i) = Stat::varianceWithFixedMean(p_data_->col(i), weights, mean_[i], false);}
     variance2_ = (ArraySquareX(cov_, Range(first2, last2, 0)).trace())/(Real)size2;
-    for (int i= first2; i <= last2; ++i)
+    for (int i= first2; i < p_data_->endCols(); ++i)
     { cov_(i, i) = variance2_;}
   }
 }

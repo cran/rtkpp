@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Serge Iovleff
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -35,7 +35,7 @@
 #ifndef STK_GAUSSIAN_S_H
 #define STK_GAUSSIAN_S_H
 
-#include <Clustering/include/DiagGaussianMixtureModels/STK_DiagGaussianBase.h>
+#include "STK_DiagGaussianBase.h"
 
 namespace STK
 {
@@ -51,12 +51,89 @@ template<class _Array>
 struct MixtureTraits< Gaussian_s<_Array> >
 {
   typedef _Array Array;
-  typedef typename Array::Type Type;
-  typedef Gaussian_s_Parameters Parameters;
-  typedef Array2D<Real>        Param;
+
+  typedef ParametersHandler<Clust::Gaussian_s_> ParamHandler;
 };
 
 } // namespace Clust
+
+/** Specialization of the ParametersHandler struct for Gaussian_s model */
+template <>
+struct ParametersHandler<Clust::Gaussian_s_>: public DiagGaussianHandlerBase<  ParametersHandler<Clust::Gaussian_s_> >
+{
+  /** RowVector and statistics of the means */
+  MixtureParametersSet<PointX> mean_;
+  /** standard deviation and statistics */
+  MixtureParameters<Real> sigma_;
+  /** @return the mean of the kth cluster and jth variable */
+  inline Real const& meanImpl(int k, int j) const { return mean_[k][j];}
+  /** @return the standard deviation of the kth cluster and jth variable */
+  inline Real const& sigmaImpl(int k, int j) const { return sigma_();}
+  /** copy operator */
+  inline ParametersHandler& operator=( ParametersHandler const& other)
+  { mean_ = other.mean_; sigma_ = other.sigma_; return *this;}
+  /** copy operator using an array/expression storing the values */
+  template<class Array>
+  inline ParametersHandler& operator=( ExprBase<Array> const& param)
+  {
+    int nbCluster = mean_().size();
+    sigma_() = 0.;
+    for (int k= param.beginRows(), k2= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    {
+      for (int j= param.beginCols();  j< param.endCols(); ++j)
+      {
+        mean_[k][j]  = param(k2  , j);
+        sigma_()     += param(k2+1, j);
+      }
+    }
+    sigma_() /= (nbCluster*param.sizeCols());
+    return *this;
+  }
+
+  /** default constructor */
+  ParametersHandler(int nbCluster): mean_(nbCluster), sigma_() {}
+  /** copy constructor */
+  ParametersHandler(ParametersHandler const& model): mean_(model.mean_), sigma_(model.sigma_) {}
+  /** Initialize the parameters with an array/expression of value */
+  template<class Array>
+  inline ParametersHandler( int nbCluster, ExprBase<Array> const& param)
+                          : mean_(nbCluster), sigma_()
+  {
+    mean_.resize(param.cols());
+    sigma_() = 0.;
+    for (int k= param.beginRows(), k2= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    {
+      for (int j= param.beginCols();  j< param.endCols(); ++j)
+      {
+        mean_[k][j]  = param(k2  , j);
+        sigma_()     += param(k2+1, j);
+      }
+    }
+    sigma_() /= (nbCluster*param.sizeCols());
+  }
+
+  /** Initialize the parameters of the model.
+   *  This function initialize the parameter lambda and the statistics.
+   **/
+  void resize(Range const& range)
+  {
+    mean_.resize(range);
+    mean_.initialize(0.);
+    sigma_.initialize(1.);
+  }
+  /** Store the intermediate results of the Mixture.
+   *  @param iteration Provides the iteration number beginning after the burn-in period.
+   **/
+  inline void storeIntermediateResults(int iteration)
+  { mean_.storeIntermediateResults(iteration); sigma_.storeIntermediateResults(iteration);}
+  /** Release the stored results. This is usually used if the estimation
+   *  process failed.
+   **/
+  inline void releaseIntermediateResults()
+  { mean_.releaseIntermediateResults(); sigma_.releaseIntermediateResults();}
+  /** set the parameters stored in stat_proba_ and release stat_proba_. */
+  inline void setParameters() { mean_.setParameters(); sigma_.setParameters();}
+};
 
 /** @ingroup Clustering
  *  The diagonal Gaussian_s mixture model have a density function of the form
@@ -70,52 +147,35 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
 {
   public:
     typedef DiagGaussianBase<Gaussian_s<Array> > Base;
-    typedef typename Clust::MixtureTraits< Gaussian_s<Array> >::Parameters Parameters;
-
     using Base::p_tik;
-    using Base::components;
+    using Base::param_;
     using Base::p_data;
-    using Base::param;
-
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline Gaussian_s( int nbCluster) : Base(nbCluster), sigma_(1) {}
+    inline Gaussian_s( int nbCluster): Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
     inline Gaussian_s( Gaussian_s const& model)
-                     : Base(model), sigma_(model.sigma_)
-                     , stat_sigma_(model.stat_sigma_)
+                     : Base(model)
     {}
     /** destructor */
     inline ~Gaussian_s() {}
-    /** Initialize the component of the model.
-     *  In this interface, the @c initializeModelImpl()
-     *  initialize the shared parameter @c sigma_ for all the components .
+    /** @return the value of the probability of the i-th sample in the k-th component.
+     *  @param i,k indexes of the sample and of the component
      **/
-    void initializeModelImpl()
+    inline Real lnComponentProbability(int i, int k) const
     {
-      sigma_ = 1.0;
-      for (int k= baseIdx; k < components().end(); ++k)
-      { param(k).p_sigma_ = &sigma_;}
-    }
-    /** Store the intermediate results of the Mixture.
-     *  @param iteration Provides the iteration number beginning after the burn-in period.
-     **/
-    void storeIntermediateResultsImpl(int iteration)
-    { stat_sigma_.update(sigma_);}
-    /** Release the stored results. This is usually used if the estimation
-     *  process failed.
-     **/
-    void releaseIntermediateResultsImpl()
-    { stat_sigma_.release();}
-    /** set the parameters stored in stat_proba_ and release stat_proba_. */
-    void setParametersImpl()
-    {
-      sigma_ = stat_sigma_.param_;
-      stat_sigma_.release();
+      Real sum =0.;
+      for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
+      {
+        Real mean  = param_.mean_[k][j];
+        Real sigma = param_.sigma_();
+        sum += Law::Normal::lpdf(p_data()->elt(i,j), mean, sigma);
+      }
+      return sum;
     }
     /** Initialize randomly the parameters of the Gaussian mixture. The centers
      *  will be selected randomly among the data set and the standard-deviation
@@ -127,12 +187,6 @@ class Gaussian_s : public DiagGaussianBase<Gaussian_s<Array> >
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
     { return this->nbCluster()*this->nbVariable()+1;}
-
-  protected:
-    /** Common standard deviation */
-    Real sigma_;
-    /** statistics */
-    MixtureStatReal stat_sigma_;
 };
 
 /* Initialize randomly the parameters of the Gaussian mixture. The centers
@@ -145,16 +199,14 @@ void Gaussian_s<Array>::randomInit()
   this->randomMean();
   // compute the standard deviation
   Real variance = 0.0;
-  for (int k= baseIdx; k < components().end(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
-    variance += ( p_tik()->col(k).transpose()
-                 * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * param(k).mean_)
+    variance += (  p_tik()->col(k).transpose()
+                 * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * param_.mean_[k])
                    ).square()
                 ).sum();
   }
-  sigma_ = ((variance<=0) || !Arithmetic<Real>::isFinite(variance))
-           ? 1.
-           : std::sqrt(variance/(this->nbSample()*this->nbVariable()));
+  param_.sigma_() = std::sqrt(variance/(this->nbSample()*this->nbVariable()));
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gaussian_s<Array>::randomInit() done\n");
 #endif
@@ -168,18 +220,18 @@ bool Gaussian_s<Array>::mStep()
   if (!this->updateMean()) return false;
   // compute the standard deviation
   Real variance = 0.0;
-  for (int k= baseIdx; k < components().end(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
     variance += ( p_tik()->col(k).transpose()
-                 * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * param(k).mean_)
+                 * (*p_data() - (Const::Vector<Real>(p_data()->rows()) * param_.mean_[k])
                    ).square()
                 ).sum();
   }
-  if ((variance<=0) || !Arithmetic<Real>::isFinite(variance)) return false;
-  sigma_ = std::sqrt(variance/(this->nbSample()*this->nbVariable()));
+  //if ((variance<=0) || !Arithmetic<Real>::isFinite(variance)) return false;
+  param_.sigma_() = std::sqrt(variance/(this->nbSample()*this->nbVariable()));
   return true;
 }
 
 } // namespace STK
 
-#endif /* STK_GAUSSIAN_SJK_H */
+#endif /* STK_GAUSSIAN_S_H */

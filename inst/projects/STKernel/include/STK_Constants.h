@@ -36,7 +36,8 @@
 #ifndef STK_CONSTANTS_H
 #define STK_CONSTANTS_H
 
-#include "STK_String.h"
+#include <cmath>
+#include <climits>
 
 #ifndef STKBASEARRAYS
 /** This value means that the default range for a vector or the rows/columns of
@@ -58,6 +59,11 @@ const int baseIdx = STKBASEARRAYS;
  *  that the value used for representing NA Integers when Integer is int.
  **/
 const int UnknownSize = INT_MAX;
+/** @ingroup STKernel
+ *  Same as floor(sqrt(INT_MAX+1))
+ **/
+const int SqrtUnknownSize = (1 << (sizeof(int) * (CHAR_BIT/2)));
+
 //const int UnknownSize = STK::Arithmetic<int>::NA();
 
 /** @ingroup STKernel
@@ -67,13 +73,6 @@ const int MaxUnroll = 20;
 /** @ingroup STKernel
  * This value means that when we unroll loops we go until MaxUnrollSquareRoot */
 const int MaxUnrollSquareRoot = 10;
-
-/** @ingroup STKernel
- * @brief Representation of a New Line String. */
-static const String STRING_NL      = _T("\n");
-/** @ingroup STKernel
- * @brief  Representation of a blank value. */
-static const String STRING_BLANK  = _T(" ");
 
 } // namespace STK
 

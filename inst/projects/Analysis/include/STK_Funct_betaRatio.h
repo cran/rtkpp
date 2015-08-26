@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*  Copyright (C) 2004-2007  Serge Iovleff
+/*  Copyright (C) 2004-2015  Serge Iovleff
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -29,14 +29,12 @@
  **/
 
 /** @file STK_Funct_betaRatio.h
- *  @brief In this file we declare functions around the beta
- *  function ratio.
+ *  @brief In this file we declare functions around the beta function ratio.
  **/
 
 #ifndef STK_FUNCT_BETARATIO_H
 #define STK_FUNCT_BETARATIO_H
 
-#include "STKernel/include/STK_Integer.h"
 #include "STKernel/include/STK_Real.h"
 
 namespace STK
@@ -44,6 +42,20 @@ namespace STK
 
 namespace Funct
 {
+/** @ingroup Analysis
+ *  @brief Compute the incomplete beta function ratio I_x(a,b)
+ *  using its series representation.
+ **/
+Real betaRatio_sr( Real const& a, Real const& b, Real x
+                 , bool xm1, bool lower_tail
+                 );
+/** @ingroup Analysis
+ *  @brief Compute the incomplete beta function ratio I_x(a,b)
+ *  using its recurrence formula and its asymptotic expansion.
+ **/
+Real betaRatio_up( Real const& a, Real const& b, Real const& x
+                 , bool xm1, bool lower_tail
+                 );
 /** @ingroup Analysis
  *  @brief Compute the incomplete beta function ratio using the continued
  *  fraction method.

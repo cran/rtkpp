@@ -36,7 +36,7 @@
 #ifndef STK_HOUSEHOLDER_H
 #define STK_HOUSEHOLDER_H
 
-#include "../../STKernel/include/STK_Misc.h"
+#include <STKernel/include/STK_Misc.h>
 
 namespace STK
 {

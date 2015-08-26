@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013 Serge Iovleff
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -56,11 +56,16 @@ namespace hidden
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Gaussian_sjk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sjk_, Data_> >
 {
+  typedef Data_ Data;
   /** Type of the mixture model */
   typedef Gaussian_sjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gaussian_sjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gaussian_
@@ -69,11 +74,18 @@ struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sjk_, Data> >
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Gaussian_sk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sk_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gaussian_sk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gaussian_sk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gaussian_
@@ -82,11 +94,18 @@ struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sk_, Data> >
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Gaussian_sj model
  **/
-template<class Data>
-struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sj_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sj_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gaussian_sj<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gaussian_sj_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gaussian_
@@ -95,11 +114,18 @@ struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_sj_, Data> >
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Gaussian_s model
  **/
-template<class Data>
-struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_s_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< DiagGaussianBridge< Clust::Gaussian_s_, Data_> >
 {
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Gaussian_s<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Gaussian_s_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Gaussian_
@@ -130,6 +156,8 @@ class DiagGaussianBridge: public IMixtureBridge< DiagGaussianBridge<Id,Data> >
     typedef IMixtureBridge< DiagGaussianBridge<Id,Data> > Base;
     // type of Mixture
     typedef typename hidden::MixtureBridgeTraits< DiagGaussianBridge<Id,Data> >::Mixture Mixture;
+    typedef typename hidden::MixtureBridgeTraits< DiagGaussianBridge<Id,Data> >::ParamHandler ParamHandler;
+    typedef typename hidden::MixtureBridgeTraits< DiagGaussianBridge<Id,Data> >::Parameters Parameters;
     // type of data
     typedef typename Data::Type Type;
     // class of mixture
@@ -137,11 +165,10 @@ class DiagGaussianBridge: public IMixtureBridge< DiagGaussianBridge<Id,Data> >
     {
       idMixtureClass_ = Clust::Gaussian_
     };
-    // parameters type to get
-    typedef typename Clust::MixtureTraits<Mixture>::Param Param;
-
     typedef std::vector<std::pair<int,int> >::const_iterator ConstIterator;
     using Base::mixture_;
+    using Base::p_data_;
+    using Base::p_tik;
 
     /** default constructor. Remove the missing values from the data set and
      *  initialize the mixture by setting the data set.
@@ -150,13 +177,10 @@ class DiagGaussianBridge: public IMixtureBridge< DiagGaussianBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     DiagGaussianBridge( MixtureData<Data>* p_data, std::string const& idData, int nbCluster)
-                  : Base( idData, nbCluster)
-                  , p_data_(p_data)
+                      : Base( p_data, idData, nbCluster)
     { removeMissing(); initializeMixture();}
     /** copy constructor */
-    DiagGaussianBridge( DiagGaussianBridge const& bridge)
-                  : Base(bridge)
-                  , p_data_(bridge.p_data_)
+    DiagGaussianBridge( DiagGaussianBridge const& bridge): Base(bridge)
     { initializeMixture();}
     /** destructor */
     virtual ~DiagGaussianBridge() {}
@@ -181,10 +205,12 @@ class DiagGaussianBridge: public IMixtureBridge< DiagGaussianBridge<Id,Data> >
       return p_bridge;
     }
     /** This function is used in order to get the current values of the
-     *  parameters.
-     *  @param params the array with the parameters of the mixture.
+     *  parameters in an array.
+     *  @param[out] params the array with the parameters of the mixture.
      */
-    virtual void getParameters(ArrayXX& params) const;
+    void getParameters(Parameters& params) const;
+    /** Write the parameters on the output stream os */
+    void writeParameters(ostream& os) const;
 
   private:
     /** This function will be used for the imputation of the missing data
@@ -202,11 +228,8 @@ class DiagGaussianBridge: public IMixtureBridge< DiagGaussianBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     DiagGaussianBridge( Mixture const& mixture, std::string const& idData, int nbCluster)
-                 : Base(mixture, idData, nbCluster)
-                 , p_data_(0)
+                      : Base(mixture, idData, nbCluster)
     {}
-    /** pointer on the data manager */
-    MixtureData<Data>* p_data_;
 };
 
 // implementation
@@ -228,19 +251,37 @@ void DiagGaussianBridge<Id, Data>::removeMissing()
 }
 
 template<int Id, class Data>
-void DiagGaussianBridge<Id, Data>::getParameters(ArrayXX& params) const
+void DiagGaussianBridge<Id, Data>::getParameters(Parameters& params) const
 {
   int nbClust = this->nbCluster();
   params.resize(2*nbClust, mixture_.p_data()->cols());
   for (int k= 0; k < nbClust; ++k)
   {
-    for (int j= mixture_.p_data()->beginCols();  j< mixture_.p_data()->endCols(); ++j)
+    for (int j= params.beginCols();  j< params.endCols(); ++j)
     {
-      params(baseIdx+2*k  , j) = mixture_.param(baseIdx+k).mean(j);
-      params(baseIdx+2*k+1, j) = mixture_.param(baseIdx+k).sigma(j);
+      params(baseIdx+2*k  , j) = mixture_.mean(baseIdx + k, j);
+      params(baseIdx+2*k+1, j) = mixture_.sigma(baseIdx + k, j);
     }
   }
 }
+
+/** Write the parameters on the output stream os */
+template<int Id, class Data>
+void DiagGaussianBridge<Id, Data>::writeParameters(ostream& os) const
+{
+  PointX m(mixture_.p_data()->cols());
+  PointX s(mixture_.p_data()->cols());
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+  {
+    // store sigma values in an array for a nice output
+    for (int j= s.begin();  j < s.end(); ++j)
+    { m[j] = mixture_.mean(k,j); s[j] = mixture_.sigma(k,j);}
+    os << _T("---> Component ") << k << _T("\n");
+    os << _T("mean = ") << m;
+    os << _T("sigma = ")<< s;
+  }
+}
+
 
 } // namespace STK
 

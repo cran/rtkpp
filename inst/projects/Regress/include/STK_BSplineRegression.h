@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,23 +36,27 @@
 #ifndef STK_BSPLINEREGRESSION_H
 #define STK_BSPLINEREGRESSION_H
 
-#include "Arrays/include/STK_Array2D.h"
-
 #include "STK_BSplineCoefficients.h"
 #include "STK_IRegression.h"
+
+#include <Algebra/include/STK_GinvSymmetric.h>
 
 namespace STK
 {
 
-/** @brief Compute a BSpline, multivalued, regression function using BSpline
+/** @brief Compute a BSpline, multi-valued, regression function using BSpline
  *  basis.
  */
-class BSplineRegression : public IRegression<ArrayXX, Vector, Vector>
+template <class YArray, class XVector, class Weights = Vector>
+class BSplineRegression : public IRegression<YArray, XVector, Weights>
 {
-  private:
-    typedef Regress::KnotsPosition _Kposition;
-
   public:
+    typedef IRegression<YArray, XVector, Weights> Base;
+    typedef Regress::KnotsPosition KnotsPosition;
+    using Base::p_x_;
+    using Base::p_y_;
+    using Base::predicted_;
+    using Base::residuals_;
     /** Constructor.
      * @param p_y d-dimensional array of output to fit
      * @param p_x uni-dimensional array of predictor
@@ -60,45 +64,31 @@ class BSplineRegression : public IRegression<ArrayXX, Vector, Vector>
      * @param degree degree of the BSpline basis
      * @param position position of the knots to used
      **/
-    BSplineRegression( ArrayXX const* p_y
-                     , VectorX const* p_x
+    BSplineRegression( YArray const* p_y
+                     , XVector const* p_x
                      , int const& nbControlPoints
                      , int const& degree = 3
-                     , const _Kposition& position = Regress::uniform_
+                     , KnotsPosition const& position = Regress::uniformKnotsPositions_
                      );
-
     /** virtual destructor. */
-    virtual ~BSplineRegression();
-
-    /** give the degree of the B-Spline curve.
-     *  @return the degree of the B-Spline curve
-     * */
+    inline virtual ~BSplineRegression();
+    /** @return the degree of the B-Spline curve */
     inline int degree() const { return degree_;}
-    /** give the number of control points of the B-Spline curves.
-     *  @return the number of control points of the B-Spline curve
-     **/
+    /** @return the number of control points of the B-Spline curve */
     inline int nbControlPoints() const { return nbControlPoints_;}
-    /** give the control points.
-     *  @return the control points of the B-Spline curve
-     **/
-    inline ArrayXX const& controlPoints() const { return controlPoints_; }
-    /** give the knots.
-     *  @return the knots of the B-Spline curve
-     **/
-    inline Vector const& knots() const { return coefs_.knots(); }
-    /** give the computed coefficients of the B-Spline curves.
-     *  This is a matrix of size (p_x_->range(), 0:lastControlPoints).
-     *  @return the coefficients of the B-Spline curve
-     **/
-    inline ArrayXX const& coefficients() const { return coefs_.coefficients();}
-
+    /** @return the control points of the B-Spline curve */
+    inline YArray const& controlPoints() const { return controlPoints_; }
+    /**  @return the knots of the B-Spline curve */
+    inline VectorX const& knots() const { return coefs_.knots(); }
+    /** @return the coefficients of the B-Spline curve */
+    inline YArray const& coefficients() const { return coefs_.coefficients();}
     /** @return the Extrapolates values of y from the value @c x.
      *  Given the data set @c x will compute the values \f$ y = \psi(x) \hat{\beta} \f$
      *  where \f$ \psi \f$ represents the B-spline basis functions and \f$ \hat{beta} \f$
      *  the estimated coefficients.
      *  @param x the input data set
      */
-    virtual ArrayXX extrapolate( Vector const& x) const;
+    virtual YArray extrapolate( XVector const& x) const;
 
   protected:
     /** number of control points of the B-Spline curve. */
@@ -106,28 +96,26 @@ class BSplineRegression : public IRegression<ArrayXX, Vector, Vector>
     /** degree of the B_Spline curve */
     int degree_;
     /** method of position of the knots of the B-Spline curve */
-    _Kposition position_;
+    KnotsPosition position_;
     /** Coefficients of the regression matrix */
-    BSplineCoefficients<Vector> coefs_;
+    BSplineCoefficients<XVector> coefs_;
     /** Estimated control points of the B-Spline curve */
-    ArrayXX controlPoints_;
-
-    /** compute the coefficients of the BSpline basis. This method will be
-     *  called in the base class @c IRegression::run()
+    YArray controlPoints_;
+    /** Compute the coefficients of the BSpline basis. This method is triggered
+     *  by the base class @c IRegression::run()
      **/
-    inline virtual void initializeStep() {coefs_.run();}
-
-    /** compute the regression function. This method will be
-     *  called in the base class @c IRegression::run() after initializeStep()
+    inline virtual void initializeStep() { coefs_.run();}
+    /** Compute the regression function. This method is triggered by
+     *  the base class @c IRegression::run() after initializeStep()
      **/
     virtual void regressionStep();
-    /** compute the regression function. This method will be
-     *  called in the base class @c IRegression::run(weights) after initializeStep()
+    /** Compute the regression function. This method is triggered
+     *  by the base class @c IRegression::run(weights) after initializeStep()
      *  @param weights the weights of the samples
      **/
-    virtual void regression(VectorX const& weights);
+    virtual void regressionStep(Weights const& weights);
     /** Compute the predicted outputs by the regression function. This method
-     *  will be called in the base class @c IRegression::run() after initializeStep()
+     *  is triggered by the base class @c IRegression::run() after initializeStep()
      **/
     virtual void predictionStep();
     /** Compute the number of parameter of the regression function.
@@ -135,8 +123,71 @@ class BSplineRegression : public IRegression<ArrayXX, Vector, Vector>
      **/
     inline virtual int computeNbFreeParameter() const
     { return controlPoints_.sizeCols() * controlPoints_.sizeRows(); }
-
 };
+
+template <class YArray, class XVector, class Weights>
+BSplineRegression<YArray, XVector, Weights>::BSplineRegression( YArray const* p_y
+                                    , XVector const* p_x
+                                    , int const& nbControlPoints
+                                    , int const& degree
+                                    , const KnotsPosition& position
+                                    )
+                                    : Base(p_y, p_x)
+                                    , nbControlPoints_(nbControlPoints)
+                                    , degree_(degree)
+                                    , position_(position)
+                                    , coefs_(*p_x, nbControlPoints_, degree_, position_)
+                                    , controlPoints_()
+{ }
+
+template <class YArray, class XVector, class Weights>
+BSplineRegression<YArray, XVector, Weights>::~BSplineRegression()
+{}
+
+/* compute the regression function. */
+template <class YArray, class XVector, class Weights>
+void BSplineRegression<YArray, XVector, Weights>::regressionStep()
+{
+  // compute X'X
+  ArraySquareX prod = coefs_.coefficients().transpose() * coefs_.coefficients();
+  // compute (X'X)^{-1}
+  GinvSymmetric inv;
+  inv(prod);
+
+  // compute (X'X)^{-1}X'Y
+  controlPoints_ = prod * (coefs_.coefficients().transpose() * p_y_->asDerived());
+}
+
+/* compute the regression function. */
+template <class YArray, class XVector, class Weights>
+void BSplineRegression<YArray, XVector, Weights>::regressionStep(Weights const& weights)
+{
+  // compute X'X
+  ArraySquareX prod = coefs_.coefficients().transpose() * weights.diagonalize() * coefs_.coefficients();
+  // compute (X'X)^{-1}
+  GinvSymmetric inv;
+  inv(prod);
+  // compute (X'X)^{-1}X'Y
+  controlPoints_ = prod * coefs_.coefficients().transpose() * weights.diagonalize() * p_y_->asDerived();
+}
+
+/* Compute the predicted outputs by the regression function. */
+template <class YArray, class XVector, class Weights>
+void BSplineRegression<YArray, XVector, Weights>::predictionStep()
+{ predicted_ = coefs_.coefficients() * controlPoints_;}
+
+/* @brief Extrapolate the values @c y from the value @c x.
+ *  Given the data set @c x will compute the values \f$ y = x.\hat{\beta} \f$.
+ *  The coefficients @c coefs_ have to be estimated previously.
+ *  @param x the input data set
+ *  @param y the output (extrapolated) data set
+ */
+template <class YArray, class XVector, class Weights>
+YArray BSplineRegression<YArray, XVector, Weights>::extrapolate( XVector const& x) const
+{
+  YArray res = coefs_.extrapolate(x) * controlPoints_;
+  return res;
+}
 
 } // namespace STK
 

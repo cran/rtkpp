@@ -37,6 +37,7 @@
 #define RTKPPFORWARD_H
 
 #include <RcppCommon.h>
+#include <Rmath.h>
 #include "STKpp.h"
 
 /* forward declarations */

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*  Copyright (C) 2004-20014  Serge Iovleff
+/*  Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -29,8 +29,7 @@
  **/
 
 /** @file STK_Funct_betaRatio.cpp
- *  @brief In this file we implement functions around the Beta ratio
- *  function.
+ *  @brief In this file we implement functions around the Beta ratio function.
  **/
 
 #include "../include/STK_Funct_betaRatio.h"
@@ -39,11 +38,10 @@
 #include "../include/STK_Algo.h"
 #include "../include/STK_Funct_gamma.h"
 #include "../include/STK_Funct_Util.h"
-#include "../include/STK_Funct_poisson_raw.h"
 #include "../include/STK_Funct_raw.h"
+#include "Sdk/include/STK_Macros.h"
 
-#include "Arrays/include/STK_Array2DVector.h"
-#include "STKernel/include/STK_Real.h"
+//#include "Arrays/include/STK_Array2DVector.h"
 
 #define d1(z) (0.5)
 #define d2(z) (z/8. - 0.05)
@@ -67,27 +65,12 @@ namespace Funct
 {
 
 /** @ingroup Analysis
- *  @brief Compute the function:
- *  \f[ B(a,b,x,y) = \frac{ x^{a} (1-x)^{b}}{B(a,b)} \f]
- *  using  \f$ (a+b) * (p*log(x/p)+q*log(y/q)) \f$
- */
-static Real dbinom(Real const& a, Real const& b, Real const& x, bool xm1)
-{
-  Real s  = a+b, sx = s*x, sy = s-sx;
-  return ( Const::_1_SQRT2PI_*std::sqrt((a*b)/s)
-         * std::exp( ( gammaLnStirlingError(s)-gammaLnStirlingError(a)-gammaLnStirlingError(b))
-                    -(xm1 ? dev0(a, sy)+dev0(b, sx) : dev0(a, sx)+dev0(b, sy))
-                   )
-        );
-}
-/** @ingroup Analysis
  *  @brief Compute the incomplete beta function ratio I_x(a,b)
  *  using its asymptotic expansion.
  *
  * Compute the incomplete beta function ratio I_x(a,b)
  * using it' asymptotic expansion.
- *  @param a first parameter, must be >0
- *  @param b second parameter, must be >0
+ *  @param a, b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param xm1 @c true if we want to evaluate the function at 1-x, @c false otherwise
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
@@ -184,9 +167,6 @@ Real betaRatio_ae( Real const& a, Real const& b, Real const& x
 }
 
 /** @ingroup Analysis
- *  @brief Compute the incomplete beta function ratio I_x(a,b)
- *  using its series representation.
- *
  * Compute the incomplete beta function ratio I_x(a,b)
  * using it's series representation.
  * \f[
@@ -195,14 +175,13 @@ Real betaRatio_ae( Real const& a, Real const& b, Real const& x
  *       + \sum_{n=1}^{\infty} \frac{(1-b)(2-b)\ldots(n-b)}{n! (a+n)} x^n
  * \right)
  * \f]
- *  @param a first parameter, must be >0
- *  @param b second parameter, must be >0
+ *  @param a, b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param xm1 @c true if we want to compute the function at 1-x
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
  *  @return the value of the beta ratio function using its series representation
  **/
-static Real betaRatio_sr( Real const& a, Real const& b, Real x
+Real betaRatio_sr( Real const& a, Real const& b, Real x
                         , bool xm1, bool lower_tail
                         )
 {
@@ -210,7 +189,7 @@ static Real betaRatio_sr( Real const& a, Real const& b, Real x
   stk_cout << _T("BetaRatio_sr(") << a << _T(", ") << b << _T(", ") << x << _T(")\n");
 #endif
   // constants
-  Real s = a+b, sx = s*x, sy = s-sx;
+  Real s = a+b, sx = s*x, sy = s*(1-x);
   // compute B(a,b,x,y) = \frac{\Gamma(a+b)}{\Gamma(a) \Gamma(b)} x^{a}
   Real bt = ( Const::_1_SQRT2PI_*sqrt((a*b)/s)
             * exp( ( gammaLnStirlingError(s)
@@ -245,7 +224,7 @@ static Real betaRatio_sr( Real const& a, Real const& b, Real x
  *  \[
  *  x^a (1-x)^b \sum_{j=1}^n \frac{\Gamma(a+b+j-1)}{\Gamma(b) \Gamma(a+j)} x^n
  *  \]
- *
+ *  @param a, b first and second parameters, must be >0
  *  @param a,b parameters
  *  @param x value to evaluate the function
  *  @param xm1 @c true if we want 1-x rather than x, @c false otherwise
@@ -254,7 +233,7 @@ static Real betaRatio_sr( Real const& a, Real const& b, Real x
 static Real serie_up( Real const& a, Real const& b, Real x, bool xm1, int n)
 {
   // trivial case
-  if (n==1) return dbinom(a, b, x, xm1)/a;
+  if (n==1) return b1(a, b, x, xm1)/a;
 
   // constants
   Real s = a+b, sx=s*x, sy = s- sx;
@@ -271,7 +250,7 @@ static Real serie_up( Real const& a, Real const& b, Real x, bool xm1, int n)
     sum1 /= ((s0-1)*x0);
   }
   // return result
-  return dbinom(a+l, b, x, xm1) *(sum2/a0 + sum1);
+  return b1(a+l, b, x, xm1) *(sum2/a0 + sum1);
 }
 
 /** @ingroup Analysis
@@ -281,13 +260,12 @@ static Real serie_up( Real const& a, Real const& b, Real x, bool xm1, int n)
  * Compute the incomplete beta function ratio I_x(a,b)
  * using its recurrence formula and its asymptotic expansion.
  *
- *  @param a first parameter, must be >0
- *  @param b second parameter, must be >0
+ *  @param a,b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param xm1 true if we want to evaluate the function at 1-x
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
  **/
-static Real betaRatio_up( Real const& a, Real const& b, Real const& x
+Real betaRatio_up( Real const& a, Real const& b, Real const& x
                         , bool xm1, bool lower_tail
                         )
 {
@@ -318,8 +296,7 @@ static Real betaRatio_up( Real const& a, Real const& b, Real const& x
  *   d_n = \frac{(a+n-1)(a+b+n-1)x}{a+2n-1}.
  * \f]
  * We are using a new formulation of the
- *  @param a first parameter, must be >0
- *  @param b second parameter, must be >0
+ *  @param a, b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param xm1 @c true if we are looking for 1-x rather than x, @c false otherwise
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
@@ -339,7 +316,7 @@ Real betaRatio_cf( Real const& a, Real const& b, Real x
    *  B(a,b,x,y) = \frac{ x^{a} (1-x)^{b}}{B(a,b)}
    *  using  (a+b) * (p*log(x/p)+q*log(y/q))
    */
-  Real bt = dbinom(a, b, x, xm1);
+  Real bt = b1(a, b, x, xm1);
   if (bt*Arithmetic<Real>::epsilon() == 0.) return lower_tail ? 0. : 1.;
 
   // initialize numerator
@@ -505,7 +482,7 @@ static Real coefs_even_se( std::vector<Real> &A)
  *
  * Compute the incomplete beta function ratio I_x(a,b)
  * using it's series expansion.
- *  @param a, b parameters, must be >0
+ *  @param a, b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param xm1 @c true if we want 1-x value, @c false otherwise
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
@@ -563,12 +540,11 @@ Real betaRatio_se( Real const& a, Real const& b, Real const& x
 /** @ingroup Analysis
  *  Compute the beta ratio function.
  *  \f[
- *     I_x(a,b) = \int_0^x u^{a-1} (1-u)^{b-1} du
+ *     I_x(a,b) = \frac{\int_0^x u^{a-1} (1-u)^{b-1}}{\int_0^\infty u^{a-1} (1-u)^{b-1}} du
  *  \f]
  *  for \f$ 0\leq x \leq 1\f$.
  *
- *  @param a first parameter, must be >0
- *  @param b second parameter, must be >0
+ *  @param a, b first and second parameters, must be >0
  *  @param x value to evaluate the function
  *  @param lower_tail @c true if we want the lower tail, @c false otherwise
  **/
@@ -634,3 +610,13 @@ Real betaRatio( Real const& a, Real const& b, Real const& x, bool lower_tail)
 } // namespace Funct
 
 } // namespace STK
+
+#undef d1
+#undef d2
+#undef d3
+#undef d4
+#undef d5
+#undef d6
+#undef d7
+#undef d8
+

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -31,11 +31,10 @@
  **/
 
 /** @file STK_Regress_Util.cpp
- *  @brief In this file we implement the utilities method of the project regress.
+ *  @brief In this file we implement the utilities method of the Regress project.
  **/
 
 #include "../include/STK_Regress_Util.h"
-#include "STKernel/include/STK_String.h"
 
 namespace STK
 {
@@ -49,9 +48,9 @@ namespace Regress
  **/
 KnotsPosition stringToKnotsPosition( String const& type)
 {
-  if (toUpperString(type) == toUpperString(_T("uniform")))  return uniform_;
-  if (toUpperString(type) == toUpperString(_T("periodic"))) return periodic_;
-  if (toUpperString(type) == toUpperString(_T("density"))) return density_;
+  if (toUpperString(type) == toUpperString(_T("uniform")))  return uniformKnotsPositions_;
+  if (toUpperString(type) == toUpperString(_T("periodic"))) return periodicKnotsPositions_;
+  if (toUpperString(type) == toUpperString(_T("density"))) return densityKnotsPositions_;
   return unknownKnotsPosition_;
 }
 
@@ -61,9 +60,9 @@ KnotsPosition stringToKnotsPosition( String const& type)
  **/
 String knotsPositionToString( KnotsPosition const& type)
 {
-  if (type == uniform_)  return String(_T("uniform"));
-  if (type == periodic_) return String(_T("periodic"));
-  if (type == density_) return String(_T("density"));
+  if (type == uniformKnotsPositions_)  return String(_T("uniform"));
+  if (type == periodicKnotsPositions_) return String(_T("periodic"));
+  if (type == densityKnotsPositions_) return String(_T("density"));
   return String(_T("unknown"));
 }
 

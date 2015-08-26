@@ -221,55 +221,109 @@ bool XemStrategy::run()
 /* run the full strategy */
 bool FullStrategy::run()
 {
-#ifdef STK_MIXTURE_VERY_VERBOSE
-  stk_cout << _T("Entering FullStrategy::run() with:\n")
-           << _T("nbTry_ = ") << nbTry_ << _T("\n")
-           << _T("nbShortRun_ = ") << p_param_->nbShortRun_ << _T("\n");
-#endif
-  IMixtureComposer* p_currentModel     = 0;
-  IMixtureComposer* p_currentBestModel = 0;
-  IMixtureComposer* p_bestShortModel   = 0;
   // add some perturbation to the tik and compute the ln-likelihood
-  if (p_model_->state() < 1) { p_model_->randomFuzzyInit();}
-  Real value = p_model_->lnLikelihood();
+  p_model_->setState(Clust::modelInitialized_);
+#ifdef STK_MIXTURE_DEBUG
+  p_model_->writeParameters(stk_cout);
+#endif
+  p_model_->randomFuzzyInit();
+#ifdef STK_MIXTURE_DEBUG
+  p_model_->writeParameters(stk_cout);
+#endif
+  Real initialValue = p_model_->lnLikelihood();
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("<+++\n");
+  stk_cout << _T("Entering FullStrategy::run() with nbTry_ = ") << nbTry_
+           << _T(", nbShortRun_ = ") << p_param_->nbShortRun_
+           << _T(", p_model_->lnLikelihood() = ") << initialValue
+           << _T("\n");
+#endif
+  IMixtureComposer* p_bestModel = 0;
+  IMixtureComposer* p_bestShortModel   = 0;
   // start estimation
   try
   {
-    // the current best model store the best result throughout the strategy
-    p_currentModel     = p_model_->create();
-    p_currentBestModel = p_model_->create();
-    p_bestShortModel   = p_model_->create();
-
     // Main loop. If the Full strategy success in estimating a model, the
     // iterations are stopped and the best model find is stored in p_model_
     for (int iTry = 0; iTry < nbTry_; ++iTry)
     {
       // in case nbShortRun_==0: initialize directly p_bestShortModel
-      if (p_param_->nbShortRun_ == 0) { initStep(p_currentModel, p_bestShortModel);}
+      if (p_param_->nbShortRun_ <= 0)
+      {
+        if (!initStep(p_bestShortModel))
+        {
+          msg_error_ += STKERROR_NO_ARG(FullStrategy::run,init step failed\n);
+          msg_error_ += p_param_->p_shortAlgo_->error();
+#ifdef STK_MIXTURE_VERBOSE
+          stk_cout << _T("In FullStrategy::run()") << _T(", iTyry =") << iTry
+                   << _T(", init step failed\n");
+          stk_cout << msg_error_ << _T("\n");
+#endif
+        }
+      }
       else
       {
+#ifdef STK_MIXTURE_VERY_VERBOSE
+        stk_cout << _T("In FullStrategy::run(), entering short run steps\n")
+                 << _T("iTyry =") << iTry << _T("\n");
+#endif
+        Real valueBest = -Arithmetic<Real>::infinity();
         for (int iShort=0; iShort < p_param_->nbShortRun_; ++iShort)
         {
-          // perform nbInitRun_ initialization step and get the best result
-          // in p_currentBestModel
-          initStep(p_currentModel, p_currentBestModel);
-          // perform short run on the current best model
-          p_param_->p_shortAlgo_->setModel(p_currentBestModel);
+          // perform nbInitRun_ initialization step and get the best result in p_bestModel
+          if (!initStep(p_bestModel))
+          {
+            msg_error_ += STKERROR_NO_ARG(FullStrategy::run,init step failed\n);
+            msg_error_ += p_param_->p_shortAlgo_->error();
+#ifdef STK_MIXTURE_VERBOSE
+            stk_cout << _T("In FullStrategy::run()") << _T(", iTyry =") << iTry << _T(", iShort =") << iShort
+                     << _T(", init step failed\n");
+            stk_cout << msg_error_ << _T("\n");
+#endif
+          }
+          // In case an error occur in initStep
+          if (!p_bestModel)
+          {
+            p_bestModel = p_model_->clone();
+          }
+          // perform short run with the current best model
+          p_param_->p_shortAlgo_->setModel(p_bestModel);
           if (!p_param_->p_shortAlgo_->run())
           {
             msg_error_ += STKERROR_NO_ARG(FullStrategy::run,short algo failed\n);
             msg_error_ += p_param_->p_shortAlgo_->error();
 #ifdef STK_MIXTURE_VERBOSE
-            stk_cout << _T("In FullStrategy::run()\n")
-                     << _T("iShort = ") << iShort << _T("\n")
-                     << _T("Short Algo fail\n");
+            stk_cout << _T("In FullStrategy::run()") << _T(", iTyry =") << iTry << _T(", iShort =") << iShort
+                     << _T(", short Algo fail\n");
+            stk_cout << msg_error_ << _T("\n");
 #endif
           }
           // if we get a better result, store it in p_bestShortModel
-          if( p_bestShortModel->lnLikelihood()<p_currentBestModel->lnLikelihood())
-          { std::swap(p_bestShortModel, p_currentBestModel);}
+          Real value = p_bestModel->lnLikelihood();
+          if( valueBest<value)
+          {
+            std::swap(p_bestShortModel, p_bestModel);
+            valueBest  = value;
+#ifdef STK_MIXTURE_VERY_VERBOSE
+            stk_cout << _T("In FullStrategy::run()")
+                     << _T(", iTyry =") << iTry << _T(", iShort =") << iShort
+                     << _T(", get better value in short run. valueBest =") << valueBest << _T("\n");
+#endif
+          }
         } // ishort
+        // release memory
+        if (p_bestModel)
+        {
+          delete p_bestModel; p_bestModel = 0;
+        }
       }
+      // in case all initialization failed
+      if (!p_bestShortModel){ p_bestShortModel = p_model_->clone();}
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("In FullStrategy::run() all short run") << _T(", iTyry =") << iTry  << _T(" terminated.\n")
+           << _T("p_bestShortModel->lnLikelihood() = ") << p_bestShortModel->lnLikelihood()
+           << _T("\n");
+#endif
       // start a long run with p_bestShortModel. If success, save model
       // and exit the iTry loop
       p_param_->p_longAlgo_->setModel(p_bestShortModel);
@@ -281,28 +335,40 @@ bool FullStrategy::run()
         stk_cout << _T("In FullStrategy::run(): Long Algo failed\n");
 #endif
       }
-      // if we get a better result, store it in p_model_
+#ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("In FullStrategy::run() long run") << _T(", iTyry =") << iTry  << _T(" terminated.\n")
+           << _T("p_bestShortModel->lnLikelihood() = ") << p_bestShortModel->lnLikelihood()
+           << _T("\n");
+#endif
+      // if we get a better result, store it in p_model_ and stop to try
       if( p_model_->lnLikelihood()<p_bestShortModel->lnLikelihood())
-      { std::swap(p_model_, p_bestShortModel); break;}
+      {
+        std::swap(p_model_, p_bestShortModel);
+        break;
+      }
+#ifdef STK_MIXTURE_VERBOSE
+      stk_cout << _T("In FullStrategy::run(), iTry =") << iTry << _T(" failed\n");
+#endif
+      // release memory before next try
+      if (p_bestModel)      delete p_bestModel; p_bestModel = 0;
+      if (p_bestShortModel) delete p_bestShortModel; p_bestShortModel = 0;
     } // end iTry
-    // release memory
-    delete p_currentBestModel; p_currentBestModel=0;
-    delete p_bestShortModel; p_bestShortModel =0;
-    delete p_currentModel; p_currentModel =0;
   }
   catch (Exception const& e)
   {
-    if (p_currentBestModel) delete p_currentBestModel;
-    if (p_bestShortModel)   delete p_bestShortModel;
-    if (p_currentModel)     delete p_currentModel;
+    if (p_bestModel)      delete p_bestModel;
+    if (p_bestShortModel) delete p_bestShortModel;
     msg_error_ += e.error();
     return false;
   }
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << "FullStrategy::run() terminated.              \n";
-  stk_cout << "---------------------------------------------\n";
+  stk_cout << "FullStrategy::run() terminated. \n";
+  stk_cout << _T("+++>\n");
 #endif
-  if (p_model_->lnLikelihood() <= value)
+  // normally not needed
+  if (p_bestModel) delete p_bestModel;
+  if (p_bestShortModel)   delete p_bestShortModel;
+  if (p_model_->lnLikelihood() <= initialValue)
   {
     msg_error_ += STKERROR_NO_ARG(FullStrategy::run,No gain\n);
     return false;
@@ -311,31 +377,70 @@ bool FullStrategy::run()
 }
 
 /* Perform the Initialization step*/
-void FullStrategy::initStep(IMixtureComposer*& p_currentModel, IMixtureComposer*& p_currentBestModel)
+bool FullStrategy::initStep(IMixtureComposer*& p_bestModel)
 {
 #ifdef STK_MIXTURE_VERY_VERBOSE
+  stk_cout << _T("<+\n");
   stk_cout << _T("Entering FullStrategy::initStep\n");
+  stk_cout << _T("nbInitRun = ") <<  p_param_->nbInitRun_ << _T("\n");
 #endif
-  // perform nbInitRun_ initialization (should be > 0)
-  // and select the best model
-  for (int iInitRun=0; iInitRun < p_param_->nbInitRun_; iInitRun++)
+  IMixtureComposer* p_initModel = p_model_->create();
+  try
   {
-    // set current model
-    p_init_->setModel(p_currentModel);
-    if (!p_init_->run())
+    Real valueBest = -Arithmetic<Real>::infinity();
+    for (int iInitRun=0; iInitRun < p_param_->nbInitRun_; iInitRun++)
     {
+      // set current model
+      p_init_->setModel(p_initModel);
+      if (!p_init_->run())
+      {
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout<< _T("FullStrategy::initStep, initialization failed\n");
-  stk_cout<< p_init_->error() << _T("\n");
+        stk_cout<< _T("FullStrategy::initStep, run failed:\n");
+        stk_cout<< p_init_->error() << _T("\n");
 #endif
+      }
+      Real value = p_initModel->lnLikelihood();
+      // if we get a better result, swap it with currentBestModel
+      if( valueBest<value)
+      {
+        std::swap(p_initModel, p_bestModel);
+        valueBest = value;
+#ifdef STK_MIXTURE_VERY_VERBOSE
+      stk_cout << _T("FullStrategy::initStep, iInitRun ") << iInitRun
+               << _T(", currentBest =") << valueBest << _T("\n");
+#endif
+        // in case p_bestModel was 0 pointer and there is more iterations
+        if (!p_initModel && iInitRun <= p_param_->nbInitRun_)
+        {
+          p_initModel = p_model_->create();
+        }
+      }
     }
-    // if we get a better result, swap it with currentBestModel
-    if( p_currentBestModel->lnLikelihood()<p_currentModel->lnLikelihood())
-    { std::swap(p_currentModel, p_currentBestModel);}
+  }
+  catch (Exception const& e)
+  {
+    // in case all initialization failed
+    if (!p_bestModel)
+    {
+      p_bestModel = p_model_->clone();
+    }
+    if (p_initModel)
+    {
+      delete p_initModel; p_initModel = 0;
+    }
+    msg_error_ += e.error();
+    return false;
   }
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("FullStrategy::initStep done\n");
+  stk_cout << _T("p_bestModel->lnLikelihood() = ") <<  p_bestModel->lnLikelihood() << _T("\n");
+  stk_cout << _T("+>\n");
 #endif
+  // in case all initialization failed or nbInitRun_ <= 0
+  delete p_initModel; p_initModel = 0;
+
+  if (!p_bestModel) p_bestModel = p_model_->clone();
+  return true;
 }
 
 } // namespace STK

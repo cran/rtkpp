@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -31,14 +31,15 @@
  **/
 
 /** @file STK_Regress_Util.h
- *  @brief In this file we declare the utilities methods for the Regress project.
+ *  @brief In this file we declare the utilities enumerations and methods for
+ *  the Regress project.
  **/
 
 
-#ifndef STK_REGRESS_UTIL_H_
-#define STK_REGRESS_UTIL_H_
+#ifndef STK_REGRESS_UTIL_H
+#define STK_REGRESS_UTIL_H
 
-#include "STKernel/include/STK_String.h"
+#include <STKernel/include/STK_String.h>
 
 namespace STK
 {
@@ -78,9 +79,9 @@ String TypeRegressionToString( TypeRegression const& type);
 /** Method to use for positioning the knots. */
 enum KnotsPosition
 {
-  uniform_  ///< uniform knots
-, periodic_ ///< periodic knots
-, density_  ///< knots using density of the data
+  uniformKnotsPositions_  ///< uniform knots
+, periodicKnotsPositions_ ///< periodic knots
+, densityKnotsPositions_  ///< knots using density of the data
 , unknownKnotsPosition_  ///< unknown method
 };
 
@@ -101,4 +102,4 @@ String knotsPositionToString( KnotsPosition const& type);
 
 } //namespace STK
 
-#endif /* STK_REGRESS_UTIL_H_ */
+#endif /* STK_REGRESS_UTIL_H */

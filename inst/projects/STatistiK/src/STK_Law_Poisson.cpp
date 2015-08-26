@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -32,15 +32,17 @@
  *  @brief In this file we implement the Poisson distribution.
  **/
 
-#include <cmath>
-#include "Analysis/include/STK_Funct_gammaRatio.h"
-#include "Analysis/include/STK_Funct_gamma.h"
-#include "Analysis/include/STK_Funct_raw.h"
-#include "Analysis/include/STK_Funct_Util.h"
-#include "Analysis/include/STK_Const_Math.h"
 
-#include "../include/STK_Law_Util.h"
+
+#ifndef IS_RTKPP_LIB
 #include "../include/STK_Law_Poisson.h"
+#include "../include/STK_Law_Util.h"
+#include <Analysis/include/STK_Funct_gammaRatio.h>
+#include <Analysis/include/STK_Funct_gamma.h>
+#include <Analysis/include/STK_Funct_raw.h>
+#include <Analysis/include/STK_Funct_Util.h>
+#include <Analysis/include/STK_Const_Math.h>
+#endif
 
 
 namespace STK
@@ -49,8 +51,10 @@ namespace STK
 namespace Law
 {
 
+#ifndef IS_RTKPP_LIB
+
 /* The inverse cumulative distribution function at p.*/
-static Real icdf_gauss_raw(Real const& p)
+static Real gauss_icdf_fast(Real const& p)
 {
  // trivial cases
  if (p == 0.5) return  0.;
@@ -121,9 +125,9 @@ static int icdf_poisson_raw(Real const& p, Real const& lambda)
   q += lambda;
   if (s<q) return 1;
   q += lambda*lambda/2;
-  if (s<q) return 1;
+  if (s<q) return 2;
   // otherwise search
-  q = icdf_gauss_raw(p);
+  q = gauss_icdf_fast(p);
   Real sqlambda = std::sqrt(lambda);
   int k = round(lambda + q * sqlambda + (q-1.)*(q+1.)*(1.-q/(12.*sqlambda))/6);
   if (Funct::gammaRatioQ(k, lambda) >= p)
@@ -146,13 +150,11 @@ static int icdf_poisson_raw(Real const& p, Real const& lambda)
 }
 
 
-/* constructor
- * @param lambda mean of a Poisson variate
- **/
-Poisson::Poisson(Real const& lambda): Base(_T("Poisson")), lambda_(lambda) {}
 /* @return a Poisson random variate . */
 int Poisson::rand() const
-{ return icdf_poisson_raw(Law::generator.randUnif(), lambda_);}
+{
+ return icdf_poisson_raw(Law::generator.randUnif(), lambda_);
+}
 /* @brief compute the probability distribution function.
  *  Give the value of the pdf at the point x.
  *  @param x a binary value
@@ -213,14 +215,14 @@ int Poisson::icdf(Real const& p) const
 {
   // check trivial values
   if (p == 0.) return 0;
-  if (p == 1.) return Arithmetic<int>::max();
+  if (p == 1.) return Arithmetic<int>::max(); // infty does not exists for int
   // check values 0 and 1
   Real el = std::exp(-lambda_);
   if (p<el) return 0;
   if (p<(1+lambda_)*el) return 1;
   // othewise search
-  Real q = icdf_gauss_raw(p), sqlambda = std::sqrt(lambda_);
-  int k = round(lambda_ + q * sqlambda + (q-1.)*(q+1.)*(1.-q/(12.*sqlambda))/6);
+  Real q = gauss_icdf_fast(p), sqlambda = std::sqrt(lambda_);
+  int k = std::max(0., round(lambda_ + q * sqlambda + (q-1.)*(q+1.)*(1.-q/(12.*sqlambda))/6));
   if (cdf(k) >= p)
   { /* decreasing search */
     while(1)
@@ -314,7 +316,7 @@ int Poisson::icdf(Real const& p, Real const& lambda)
   if (p<el) return 0;
   if (p< (1+lambda)*el) return 1;
   // othewise search
-  Real q = icdf_gauss_raw(p), sqlambda = std::sqrt(lambda);
+  Real q = gauss_icdf_fast(p), sqlambda = std::sqrt(lambda);
   int k = round(lambda + q * sqlambda + (q-1.)*(q+1.)*(1.-q/(12.*sqlambda))/6);
   if (cdf(k, lambda) >= p)
   { /* decreasing search */
@@ -335,7 +337,10 @@ int Poisson::icdf(Real const& p, Real const& lambda)
   return k; // avoid warning at compilation
 }
 
+#endif
 
 } // namespace Law
 
 } // namespace STK
+
+

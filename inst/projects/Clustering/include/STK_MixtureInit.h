@@ -56,7 +56,7 @@ class IMixtureInit : public IRunnerBase
 {
   protected:
     /** default constructor */
-    inline IMixtureInit() : IRunnerBase(), nbTry_(Clust::defaultNbTrialInInit), p_model_(0), p_initAlgo_(0) {}
+    inline IMixtureInit() : IRunnerBase(), nbTry_(Clust::defaultNbInit), p_model_(0), p_initAlgo_(0) {}
     /** copy constructor.
      * @param init the initializing method to copy
      **/

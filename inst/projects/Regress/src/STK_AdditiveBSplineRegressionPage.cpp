@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
  */
 
 /*
- * Project:  stkpp::aam
+ * Project:  stkpp::Regress
  * created on: 27 sept. 2010
  * Purpose:  .
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -52,7 +52,7 @@ AdditiveBSplineRegressionPage::AdditiveBSplineRegressionPage(int const& level)
                             : IPage(_T("AdditiveBSplineRegression"), level, true)
                             , nbControlPoints_(3)
                             , degree_(3)
-                            , position_(Regress::periodic_)
+                            , position_(Regress::periodicKnotsPositions_)
 
 
 {

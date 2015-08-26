@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
  */
 
 /*
- * Project:  stkpp::regress
+ * Project:  stkpp::Regress
  * created on: 27 oct. 2010
  * Purpose:  .
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -34,11 +34,11 @@
  *  @brief In this file we define the MultidimRegression class.
  **/
 
-#ifndef MULTIDIMREGRESSION_H
-#define MULTIDIMREGRESSION_H
+#ifndef STK_MULTIDIMREGRESSION_H
+#define STK_MULTIDIMREGRESSION_H
 
-#include "Arrays/include/STK_Array2D.h"
-
+#include <Arrays/include/STK_Array2D.h> // for coefs
+#include <Algebra/include/STK_GinvSymmetric.h>
 #include "STK_IRegression.h"
 
 namespace STK
@@ -47,24 +47,27 @@ namespace STK
 /** @brief The @c MultidimRegression class allows to regress a multidimensional
  *  output variable among a multivariate explanation variable.
  */
-class MultidimRegression : public IRegression<ArrayXX, ArrayXX, Vector>
+template<class Array, class Weight>
+class MultidimRegression : public IRegression<Array, Array, Weight>
 {
   public:
+    typedef IRegression<Array, Array, Weight> Base;
+    using Base::p_x_;
+    using Base::p_y_;
     /** Constructor.
-     * @param y Variates to predict
-     * @param x co-variates
+     * @param y,x Variates to predict and co-variates
      */
-    MultidimRegression( ArrayXX const* y =0, ArrayXX const* x =0);
-
+    MultidimRegression( Array const* y =0, Array const* x =0);
     /** Destructor. */
-    virtual ~MultidimRegression();
-
+    virtual ~MultidimRegression() {}
+    /** @return the coefficients */
+    inline Array const& coefs() const { return coefs_;}
     /** @return the extrapolated values y from the value @c x.
      *  Given the data set @c x will compute the values \f$ y = x.\hat{\beta} \f$.
      *  The coefficients @c coefs_ have to be estimated previously.
      *  @param x the input data set
      */
-    virtual ArrayXX extrapolate(ArrayXX const& x) const;
+    virtual Array extrapolate(Array const& x) const;
 
   protected:
     ArrayXX coefs_;
@@ -75,7 +78,7 @@ class MultidimRegression : public IRegression<ArrayXX, ArrayXX, Vector>
     /** compute the weighted regression function.
      * @param weights the weights of the samples
      **/
-    virtual void regression(VectorX const& weights);
+    virtual void regressionStep(Weight const& weights);
     /** Compute the predicted outputs by the regression function. */
     virtual void predictionStep();
     /** Compute the number of parameter of the regression function.
@@ -85,6 +88,51 @@ class MultidimRegression : public IRegression<ArrayXX, ArrayXX, Vector>
     { return coefs_.sizeCols() * coefs_.sizeRows(); }
 };
 
+template<class Array, class Weight>
+MultidimRegression<Array,Weight>::MultidimRegression( Array const* y, Array const* x)
+                                                    : Base(y, x)
+                                                    , coefs_()
+{}
+
+/* compute the regression function. */
+template<class Array, class Weight>
+void MultidimRegression<Array,Weight>::regressionStep()
+{
+  // compute X'X
+  ArraySquareX prod;
+  prod.move(multLeftTranspose(p_x_->asDerived()));
+  // compute (X'X)^{-1}
+  GinvSymmetric()(prod);
+  // compute (X'X)^{-1}X'Y
+  coefs_.move(mult(prod, multLeftTranspose(p_x_->asDerived(), p_y_->asDerived())));
+}
+
+/* compute the regression function. */
+template<class Array, class Weight>
+void MultidimRegression<Array,Weight>::regressionStep(Weight const& weights)
+{
+  // compute X'WX
+  ArraySquareX prod;
+  prod.move(weightedMultLeftTranspose(p_x_->asDerived(), weights));
+  // compute (X'WX)^{-1}
+  GinvSymmetric()(prod);
+  // compute (X'WX)^{-1}X'WY
+  coefs_.move(mult(prod, wmultLeftTranspose(p_x_->asDerived(), p_y_->asDerived(), weights)));
+}
+
+/* Compute the predicted outputs by the regression function. */
+template<class Array, class Weight>
+void MultidimRegression<Array,Weight>::predictionStep()
+{ this->predicted_.move(mult(*p_x_, coefs_));}
+
+/* @brief Extrapolate the the values @c y from the value @c x.
+ *  Given the data set @c x will compute the values \f$ y = \hat{f}(x) \f$.
+ *  The regression function @e f have to be estimated previously.
+ */
+template<class Array, class Weight>
+Array MultidimRegression<Array,Weight>::extrapolate( Array const& x) const
+{ return(mult(x, coefs_));}
+
 } // namespace STK
 
-#endif /* MULTIDIMREGRESSION_H */
+#endif /* STK_MULTIDIMREGRESSION_H */

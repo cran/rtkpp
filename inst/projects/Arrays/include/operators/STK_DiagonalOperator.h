@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -57,8 +57,12 @@ struct Traits< DiagonalizeOperator <Lhs> >
   {
     structure_ = Arrays::diagonal_,
     orient_    = Lhs::orient_,
-    sizeRows_  = ((Lhs::sizeRows_ != UnknownSize)&&(Lhs::sizeRows_!= 1)) ?  Lhs::sizeRows_  : UnknownSize,
-    sizeCols_  = ((Lhs::sizeCols_ != UnknownSize)&&(Lhs::sizeCols_!= 1)) ?  Lhs::sizeCols_  : UnknownSize,
+    sizeRows_  = ( (Lhs::sizeRows_ != UnknownSize) && (Lhs::structure_!= (int)Arrays::point_) )
+                 ?  Lhs::sizeRows_  : UnknownSize,
+    sizeCols_  = ( (Lhs::sizeCols_ != UnknownSize) && (Lhs::structure_!= (int)Arrays::vector_) )
+                 ?  Lhs::sizeCols_  : UnknownSize,
+    // this is safe as we can use diagonalize operator only on 1D container
+    size_      = (sizeRows_ != UnknownSize) ? sizeRows_ : sizeCols_,
     storage_   = Lhs::storage_
   };
   typedef RowOperator<DiagonalizeOperator < Lhs> > Row;
@@ -67,10 +71,6 @@ struct Traits< DiagonalizeOperator <Lhs> >
   typedef typename Lhs::ReturnType ReturnType;
 };
 } // end namespace hidden
-
-// forward declaration
-template<typename Lhs> class DiagonalizeOperatorBase;
-template<typename Lhs> class DiagonalOperatorBase;
 
 /** @ingroup Arrays
  *  @class DiagonalizeOperator
@@ -87,11 +87,13 @@ template<typename Lhs> class DiagonalOperatorBase;
   * don't have to name DiagonalizeOperator type explicitly.
   */
 template< typename Lhs>
-class DiagonalizeOperator  : public DiagonalizeOperatorBase< Lhs >, public TRef<1>
+class DiagonalizeOperator: public ExprBase< DiagonalizeOperator< Lhs> >, public TRef<1>
 {
   public:
-    typedef DiagonalizeOperatorBase< Lhs > Base;
+    typedef ExprBase< DiagonalizeOperator< Lhs> > Base;
     typedef typename hidden::Traits< DiagonalizeOperator<Lhs> >::Type Type;
+    typedef typename hidden::Traits< DiagonalizeOperator<Lhs> >::ReturnType ReturnType;
+
     typedef typename hidden::Traits< DiagonalizeOperator<Lhs> >::Row Row;
     typedef typename hidden::Traits< DiagonalizeOperator<Lhs> >::Col Col;
     enum
@@ -101,8 +103,7 @@ class DiagonalizeOperator  : public DiagonalizeOperatorBase< Lhs >, public TRef<
         sizeRows_  = hidden::Traits< DiagonalizeOperator<Lhs> >::sizeRows_,
         sizeCols_  = hidden::Traits< DiagonalizeOperator<Lhs> >::sizeCols_,
         storage_   = hidden::Traits< DiagonalizeOperator<Lhs> >::storage_,
-        // this is safe as we can use diagonalize operator only on 1D container
-        size_      = (sizeRows_ != UnknownSize) ? sizeRows_ : sizeCols_
+        size_      = hidden::Traits< DiagonalizeOperator<Lhs> >::size_
     };
     /** Type of the Range for the rows */
     typedef TRange<size_> RowRange;
@@ -111,38 +112,29 @@ class DiagonalizeOperator  : public DiagonalizeOperatorBase< Lhs >, public TRef<
     /** Constructor */
     inline DiagonalizeOperator( Lhs const& lhs)
                        : Base(), lhs_(lhs)
-                       , rows_(lhs_.beginRows(), (size_ != UnknownSize) ? size_ : lhs_.size())
-                       , cols_(lhs_.beginCols(), (size_ != UnknownSize) ? size_ : lhs_.size())
+                       , rows_(lhs_.range())
+                       , cols_(lhs_.range())
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Lhs);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Lhs);
     }
-    /** @return the first index */
-    inline int beginImpl() const { return lhs_.begin();}
-    /** @return the ending index */
-    inline int endImpl() const { return lhs_.end();}
-    /** @return the number of elements */
-    inline int sizeImpl() const { return lhs_.size();}
-
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return rows_;}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return rows_.begin();}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return rows_.end();}
-    /** @return the number of rows */
-    inline int sizeRowsImpl() const { return rows_.size();}
-
     /** @return the range of the Columns */
-    inline ColRange const& colsImpl() const { return cols_;}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return cols_.begin();}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return cols_.end();}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return cols_.size();}
+    inline ColRange const&colsImpl() const { return cols_;}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
+
+    /** @return the element (i,j) of the expression.
+     *  @param i, j index of the row and of the column
+     **/
+    inline ReturnType elt2Impl(int i, int j) const { return (lhs_.elt(i, j));}
+    /** @return the element ith element of the expression
+     *  @param i index of the ith element
+     **/
+    inline ReturnType elt1Impl(int i) const { return (lhs_.elt(i));}
+    /** accesses to the element of the expression */
+    inline ReturnType elt0Impl() const { return (lhs_.elt());}
 
   protected:
     Lhs const& lhs_;
@@ -150,32 +142,6 @@ class DiagonalizeOperator  : public DiagonalizeOperatorBase< Lhs >, public TRef<
     ColRange cols_;
 };
 
-/** @ingroup Arrays
-  * @brief implement the access to the elements in the (2D) general case.
-  **/
-template< typename Lhs>
-class DiagonalizeOperatorBase : public ExprBase< DiagonalizeOperator< Lhs> >
-{
-  public:
-    typedef DiagonalizeOperator<Lhs> Derived;
-    typedef ExprBase< Derived > Base;
-    typedef typename hidden::Traits< Derived >::ReturnType ReturnType;
-    /** constructor. */
-    inline DiagonalizeOperatorBase() : Base() {}
-    /** @return the element (i,j) of the expression.
-     *  @param i, j index of the row and of the column
-     **/
-    inline ReturnType elt2Impl(int i, int j) const
-    { return (this->asDerived().lhs().elt(i, j));}
-    /** @return the element ith element of the expression
-     *  @param i index of the ith element
-     **/
-    inline ReturnType elt1Impl(int i) const
-    { return (this->asDerived().lhs().elt(i));}
-    /** accesses to the element of the expression */
-    inline ReturnType elt0Impl() const
-    { return (this->asDerived().lhs().elt());}
-};
 
 // forward declaration
 template< typename Array> class DiagonalOperator;
@@ -219,11 +185,13 @@ struct Traits< DiagonalOperator <Lhs> >
   * don't have to name DiagonalOperator type explicitly.
   */
 template< typename Lhs>
-class DiagonalOperator  : public DiagonalOperatorBase< Lhs >, public TRef<1>
+class DiagonalOperator: public ExprBase< DiagonalOperator< Lhs> >, public TRef<1>
 {
   public:
-    typedef DiagonalOperatorBase< Lhs > Base;
+    typedef ExprBase< DiagonalOperator< Lhs> > Base;
     typedef typename hidden::Traits< DiagonalOperator<Lhs> >::Type Type;
+    typedef typename hidden::Traits< DiagonalOperator<Lhs> >::ReturnType ReturnType;
+
     typedef typename hidden::Traits< DiagonalOperator<Lhs> >::Row Row;
     typedef typename hidden::Traits< DiagonalOperator<Lhs> >::Col Col;
     enum
@@ -241,72 +209,34 @@ class DiagonalOperator  : public DiagonalOperatorBase< Lhs >, public TRef<1>
 
     /** Constructor */
     inline DiagonalOperator( Lhs const& lhs)
-                       : Base(), lhs_(lhs)
-                       , range_( lhs_.beginRows(), (size_ != UnknownSize) ? size_ : lhs_.sizeRows())
+                           : Base(), lhs_(lhs)
+                           , range_( lhs_.beginRows(), (size_ != UnknownSize) ? size_ : lhs_.sizeRows())
     {
       if (lhs.rows()!=lhs.cols())
         STKRUNTIME_ERROR_NO_ARG(DiagonalOperatorBase,lhs.rows()!=lhs.cols());
     }
-    /** @return the first index of the rows */
-    inline int beginImpl() const { return range_.beginRows();}
-    /** @return the ending index of the rows */
-    inline int endImpl() const { return range_.end();}
-    /** @return the number of rows */
-    inline int sizeImpl() const { return range_.size();}
-
     /**  @return the range of the rows */
     inline DiagRange const& rowsImpl() const { return range_;}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return range_.begin();}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return range_.end();}
-    /** @return the number of rows */
-    inline int sizeRowsImpl() const { return range_.size();}
-
     /** @return the range of the Columns */
     inline DiagRange const& colsImpl() const { return range_;}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return range_.begin();}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return range_.end();}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return range_.size();}
-
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }
+
+    /** @return the element (i,j) of the expression.
+     *  @param i, j index of the row and of the column
+     **/
+    inline ReturnType elt2Impl(int i, int j) const { return (this->asDerived().lhs().elt(i, j));}
+    /** @return the element ith element of the transposed expression
+     *  @param i index of the ith element
+     **/
+    inline ReturnType elt1Impl(int i) const { return (this->asDerived().lhs().elt(i,i));}
+    /** accesses to the element of the transposed expression */
+    inline ReturnType elt0Impl() const { return (this->asDerived().lhs().elt());}
 
   protected:
     Lhs const& lhs_;
     DiagRange range_;
 };
-
-/** @ingroup Arrays
-  * @brief implement the access to the elements in the (2D) general case.
-  **/
-template< typename Lhs>
-class DiagonalOperatorBase : public ExprBase< DiagonalOperator< Lhs> >
-{
-  public:
-    typedef DiagonalOperator<Lhs> Derived;
-    typedef ExprBase< Derived > Base;
-    typedef typename hidden::Traits< Derived >::ReturnType ReturnType;
-    /** constructor. */
-    inline DiagonalOperatorBase() : Base() {}
-    /** @return the element (i,j) of the expression.
-     *  @param i, j index of the row and of the column
-     **/
-    inline ReturnType elt2Impl(int i, int j) const
-    { return (this->asDerived().lhs().elt(i, j));}
-    /** @return the element ith element of the transposed expression
-     *  @param i index of the ith element
-     **/
-    inline ReturnType elt1Impl(int i) const
-    { return (this->asDerived().lhs().elt(i,i));}
-    /** accesses to the element of the transposed expression */
-    inline ReturnType elt0Impl() const
-    { return (this->asDerived().lhs().elt());}
-};
-
 
 } // namespace STK
 

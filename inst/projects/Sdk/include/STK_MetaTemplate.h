@@ -37,6 +37,8 @@
 #ifndef STK_METATEMPLATE_H
 #define STK_METATEMPLATE_H
 
+#include <STKernel/include/STK_Constants.h>
+
 namespace STK
 {
 namespace hidden
@@ -118,6 +120,33 @@ template<typename Type>
 struct Promote<Type, Type>
 { typedef Type result_type;};
 
+/** @ingroup hidden
+  * Convenient structure for computing the product of two template integer parameters
+  * without overflow.
+  */
+template<int Size1, int Size2> struct ProductSizeRowsBySizeCols;
+/** @ingroup hidden
+ *  trick as some compiler (g++) complain about overflow */
+template<bool isGT1, bool isGT22, int Size1, int Size2> struct ProductHelper;
+
+template<int Size1> struct ProductSizeRowsBySizeCols<Size1, 1> { enum { prod_ = Size1};};
+template<int Size1> struct ProductSizeRowsBySizeCols<Size1, UnknownSize> { enum { prod_ = UnknownSize};};
+
+template<int Size2> struct ProductSizeRowsBySizeCols<1, Size2> { enum { prod_ = Size2};};
+template<int Size2> struct ProductSizeRowsBySizeCols<UnknownSize, Size2> { enum { prod_ = UnknownSize};};
+
+template<> struct ProductSizeRowsBySizeCols<1, 1> { enum { prod_ = 1};};
+template<> struct ProductSizeRowsBySizeCols<UnknownSize, 1> { enum { prod_ = UnknownSize};};
+template<> struct ProductSizeRowsBySizeCols<1, UnknownSize> { enum { prod_ = UnknownSize};};
+template<> struct ProductSizeRowsBySizeCols<UnknownSize, UnknownSize> { enum { prod_ = UnknownSize};};
+
+template<int Size1, int Size2>
+struct ProductSizeRowsBySizeCols { enum { prod_ = ProductHelper<Size1 >= SqrtUnknownSize, Size2 >= SqrtUnknownSize, Size1, Size2>::prod_};};
+
+template<bool isGT1, bool isGT22, int Size1, int Size2>
+struct ProductHelper { enum { prod_ =  UnknownSize};};
+template<int Size1, int Size2>
+struct ProductHelper<false, false, Size1, Size2> { enum { prod_ =  Size1 * Size2};};
 
 }// namespace hidden
 

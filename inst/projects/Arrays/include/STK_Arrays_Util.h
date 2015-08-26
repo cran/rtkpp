@@ -44,17 +44,6 @@ namespace STK
 namespace Arrays
 {
 
-/** Return n+m, where n is the first number such that m < 2^n.
-  *  @param m the size of the container
- **/
-int evalSizeCapacity(int m);
-
-/** Return n+m, where n is the first number such that m < 2^n.
-  *  @param I the range of the container
- **/
-Range evalRangeCapacity(Range const& I);
-
-
 /** Intrinsic dimension of the container : 1D, 2D, 3D or 4D. Higher
  *  dimensions are not allowed. */
 enum Dimension
@@ -92,6 +81,27 @@ enum Structure
   number_,            ///< number_  1x1 array (like a number)
   expression_         ///< An expression that will be evaluated further
 };
+
+/** Return n+m, where n is the first number such that m < 2^n.
+ *  @param m the size of the container
+ **/
+inline int evalSizeCapacity(int m)
+{
+  int n = 0;
+  for (int k=1; k <= m; k <<= 1) {n++;}
+  return(m+n);
+}
+
+
+/** Return range of size n+m, where n is the first number such that m < 2^n.
+ *  @param I the range of the container
+ **/
+inline Range evalRangeCapacity(STK::Range const& I)
+{
+  int n = 0;
+  for (int k=1; k <= I.size(); k <<= 1){ n++;}
+  return Range(I.begin(),I.size() + n);
+}
 
 } // namespace Arrays
 

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -37,55 +37,55 @@
 #ifndef STK_ILINEAREDUCT_H
 #define STK_ILINEAREDUCT_H
 
-#include "../../../include/Arrays.h"
-
-#include "STK_IReduct.h"
+#include "STK_IReducer.h"
+#include <Arrays/include/STK_Array2DVector.h>
 
 namespace STK
 {
 /** @ingroup Reduct
  *  @brief A ILinearReduct is an interface base class for reduction method
- *  using a linear reduction. In order to find the linear reduction,
- *  the derived classes have to  furnish an index to maximize.
+ *  using linear reduction. In order to find the linear reduction,
+ *  the derived classes maximize an index.
  *
- * The class receive a matrix in input of size (n,p).
- * - n is the number of samples,
- * - p is the number of variables.
- * The n samples can be weighted.
- *
- * The class compute the optimal axis (stored in the @c axis_ )
- * attribute and the @c projected data set (stored in the @c p_reduct_ atribute
- * of the base class IReduct) when the user use the virtual method @c run()
+ * The class computes the optimal axis (stored in the @c axis_ )
+ * attribute and the @c projected data set (stored in the @c p_reduct_ attribute
+ * of the base class IReducer) when user uses the virtual method @c run()
  * (for not weighted observations) or @c run(weights) (for weighted observations).
  *
  * The Array axis_ is computed by maximizing some criteria defined in
  * derived classes. It is constructed using the pure virtual functions:
  * @code
- *  virtual void maximizeCriteria() =0;
- *  virtual void maximizeCriteria(weights) =0;
+ *  virtual void maximizeStep() =0;
+ *  virtual void maximizeStep(weights) =0;
  * @endcode
  */
-class ILinearReduct : public IReduct
+template<class Array, class Weights>
+class ILinearReduct : public IReducer<Array, Weights>
 {
-  protected:
+  public:
+    typedef IReducer<Array, Weights> Base;
+    using Base::p_data_;
+    using Base::p_reduced_;
     /** Default Constructor. */
     ILinearReduct();
     /** Constructor.
      *  @param p_data a pointer on the constant data set to reduce.
      **/
-    ILinearReduct( ArrayXX const* p_data);
+    ILinearReduct( Array const* p_data);
     /** Constructor.
      *  @param data a constant reference on the data set to reduce.
      **/
-    ILinearReduct( ArrayXX const& data);
+    ILinearReduct( Array const& data);
     /** copy Constructor.
-     *  @param reductor the reductor to copy.
+     *  @param reducer the reducer to copy.
      **/
-    ILinearReduct( ILinearReduct const& reductor);
-
-  public:
+    ILinearReduct( ILinearReduct const& reducer);
     /** virtual destructor  */
     virtual ~ILinearReduct();
+    /** @return a constant reference Vector of the value of the Index */
+    inline VectorX const& criteriaValues() const { return idx_values_; }
+    /** @return a constant reference Array of the axis */
+    inline Array const& axis() const { return axis_; }
     /** Compute the projection matrix @c axis_ by maximizing the criteria and
      *  project the data set in order to obtain @c p_projected_.
      **/
@@ -94,32 +94,119 @@ class ILinearReduct : public IReduct
      *  and project the data set in order to obtain @c p_projected_.
      *  @param weights the weights to used in the index.
      */
-    virtual bool run(Vector const& weights);
-    /** get the values of the index of each axis
-     * @return a constant reference Vector of the value of the Index
-     **/
-    inline Vector const& criteriaValues() const { return idx_values_; }
-    /** Get the axis
-     *  @return a constant reference Array of the axis
-     **/
-    inline ArrayXX const& axis() const { return axis_; }
+    virtual bool run(Weights const& weights);
 
   protected:
     /** The values of the index for each axis. */
-    Vector idx_values_;
+    VectorX idx_values_;
     /** The computed axis. */
-    ArrayXX axis_;
+    Array axis_;
 
   private:
     /** Find the axis by maximizing the Index. */
-    virtual void maximizeCriteria() =0;
+    virtual void maximizeStep() =0;
     /** Find the axis by maximizing the weighted Index.
      *  @param weights the weights to used
-     * */
-    virtual void maximizeCriteria( Vector const& weights) =0;
+     **/
+    virtual void maximizeStep( Weights const& weights) =0;
     /** Compute the projection of the data set on the Axis. */
-    void projection();
+    void projectionStep();
 };
+
+/*
+ * Constructor.
+ * @param data the input data set
+ */
+template<class Array, class Weights>
+ILinearReduct<Array, Weights>::ILinearReduct(): Base() {}
+
+/*
+ * Constructor.
+ * @param data the input data set
+ */
+template<class Array, class Weights>
+ILinearReduct<Array, Weights>::ILinearReduct( Array const* p_data): Base(p_data) {}
+/*
+ * Constructor.
+ * @param data the input data set
+ */
+template<class Array, class Weights>
+ILinearReduct<Array, Weights>::ILinearReduct( Array const& data): Base(data) {}
+/* copy Constructor.
+ *  @param reducer the reducer to copy.
+ **/
+template<class Array, class Weights>
+ILinearReduct<Array, Weights>::ILinearReduct( ILinearReduct const& reducer)
+                                            : Base(reducer)
+                                            , idx_values_(reducer.idx_values_)
+                                            , axis_(reducer.axis_)
+{}
+/* Destructor */
+template<class Array, class Weights>
+ILinearReduct<Array, Weights>::~ILinearReduct() {}
+
+/* Compute the Index.
+ *  @param nbAxis number of Axis to compute
+ */
+template<class Array, class Weights>
+bool ILinearReduct<Array, Weights>::run()
+{
+  if (!this->p_data_)
+  { this->msg_error_ = STKERROR_NO_ARG(MultivariateArray::run(),data is not set);
+    return false;
+  }
+  try
+  {
+    // maximize the Index and compute the axis
+    maximizeStep();
+    // project data
+    projectionStep();
+
+  } catch (Exception const& e)
+  {
+    this->msg_error_ = e.error();
+    return false;
+  }
+  return true;
+}
+
+/*
+ * Compute the weighted index.
+ * @param weights the weights to used
+ * @param nbAxis number of Axis to compute
+ */
+template<class Array, class Weights>
+bool ILinearReduct<Array, Weights>::run( Weights const& weights)
+{
+  if (!this->p_data_)
+  { this->msg_error_ = STKERROR_NO_ARG(MultivariateArray::run(),data is not set);
+    return false;
+  }
+  try
+  {
+    // maximize the Index and compute the axis
+    maximizeStep(weights);
+    // project data
+    projectionStep();
+
+  } catch (Exception const& e)
+  {
+    this->msg_error_ = e.error();
+    return false;
+  }
+  return true;
+}
+
+/* Compute the reduction of the data set on the Axis. */
+template<class Array, class Weights>
+void ILinearReduct<Array, Weights>::projectionStep()
+{
+  // check if p_reduced exists
+  if (!p_reduced_) p_reduced_ = new Array;
+  // compute matrix multiplication
+  *p_reduced_ =   (*p_data_) * axis_;
+}
+
 
 } // namespace STK
 

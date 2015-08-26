@@ -82,7 +82,7 @@ namespace STK
  *  where d is a given dimension.
  **/
 
-class Gaussian2BlocksModel : public GaussianModel
+class Gaussian2BlocksModel : public GaussianModel<ArrayXX>
 {
   public:
     /** constructor. The dimension of the model will be initialized to
@@ -125,13 +125,13 @@ class Gaussian2BlocksModel : public GaussianModel
     /** implementation of the Gaussian statistical model
      * @return @c true if no error occur and @c false otherwise.
      */
-    inline virtual bool run() { return GaussianModel::run();}
+  inline virtual bool run() { return GaussianModel<ArrayXX>::run();}
     /** implementation of the weighted Gaussian statistical model
      * @param weights the weights of the samples
      * @return @c true if no error occur and @c false otherwise.
      */
     inline virtual bool run(Vector const& weights)
-    { return GaussianModel::run(weights);}
+    { return GaussianModel<ArrayXX>::run(weights);}
 
     /** compute the empirical covariance matrix. */
     virtual void compCovariance();

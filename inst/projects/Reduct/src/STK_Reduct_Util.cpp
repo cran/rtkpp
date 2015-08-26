@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  stkpp::reduct
+ * Project:  stkpp::Reduct
  * created on: 11 juil. 2011
  * Purpose:  implement the utilities for the project reduct.
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -53,7 +53,7 @@ TypeReduction stringToTypeReduction( String const& type)
   if (toUpperString(type) == toUpperString(_T("totalVariance")))  return totalVariance_;
   if (toUpperString(type) == toUpperString(_T("localVariance"))) return localVariance_;
   if (toUpperString(type) == toUpperString(_T("mds"))) return mds_;
-  return unknown_;
+  return unknown_reduction_;
 }
 
 /* convert a TypeReduction to a String.
@@ -68,6 +68,30 @@ String typeReductionToString( TypeReduction const& type)
   return String(_T("unknown"));
 }
 
-} // namespace Regress
+/* convert a String to a TypeReduction.
+ *  @param type the type of reduction we want to define
+ *  @return the TypeReduction represented by the String @c type. if the string
+ *  does not match any known name, the @c unknown_ type is returned.
+ **/
+TypeGraph stringToTypeGraph( String const& type)
+{
+  if (toUpperString(type) == toUpperString(_T("prim")))  return prim_;
+  if (toUpperString(type) == toUpperString(_T("minimalDistance"))) return distance_;
+  return unknown_graph_;
+}
+
+/* convert a TypeReduction to a String.
+ *  @param type the type of reduction we want to convert
+ *  @return the string associated to this type.
+ **/
+String typeGraphToString( TypeGraph const& type)
+{
+  if (type == prim_)  return String(_T("prim"));
+  if (type == distance_) return String(_T("minimalDistance"));
+  return String(_T("unknown"));
+}
+
+
+} // namespace Reduct
 
 } // namespace STK

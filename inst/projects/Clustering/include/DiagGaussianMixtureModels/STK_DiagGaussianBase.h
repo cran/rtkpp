@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014 Serge IOVLEFF
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@
 /*
  * Project:  stkpp::Clustering
  * created on: Dec 4, 2013
- * Authors: Serge Iovleff, Vincent KUBICKI
+ * Authors: Serge Iovleff
  **/
 
 /** @file STK_DiagGaussianBase.h
@@ -35,14 +35,25 @@
 #ifndef STK_DIAGGAUSSIANBASE_H
 #define STK_DIAGGAUSSIANBASE_H
 
-#include <Clustering/include/DiagGaussianMixtureModels/STK_DiagGaussianParameters.h>
 #include "../STK_IMixtureModel.h"
-#include "STatistiK/include/STK_Law_Normal.h"
-#include "STatistiK/include/STK_Law_Uniform.h"
+#include "../STK_MixtureParameters.h"
+#include <STatistiK/include/STK_Law_Normal.h>
+#include <STatistiK/include/STK_Law_Uniform.h>
 
 namespace STK
 {
 
+/** @ingroup Clustering
+ *  Base class for the Diagonal Gaussian model Parameter Handler
+ **/
+template<class Derived>
+struct DiagGaussianHandlerBase: public IRecursiveTemplate<Derived>
+{
+  /** @return the value of the mean of the kth cluster and jth variable */
+  inline Real const& mean(int k, int j) const { return this->asDerived().meanImpl(k,j);}
+  /** @return the value of the mean of the kth cluster and jth variable */
+  inline Real const& sigma(int k, int j) const { return this->asDerived().sigmaImpl(k,j);}
+};
 
 /** @ingroup Clustering
  *  Base class for the diagonal Gaussian models
@@ -52,12 +63,11 @@ class DiagGaussianBase : public IMixtureModel<Derived >
 {
   public:
     typedef IMixtureModel<Derived > Base;
-
-    using Base::p_tik;
-    using Base::components;
+    typedef typename Clust::MixtureTraits<Derived>::ParamHandler ParamHandler;
+    using Base::p_tik; using Base::param_;
     using Base::p_data;
-    using Base::param;
 
+  protected:
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
@@ -68,44 +78,31 @@ class DiagGaussianBase : public IMixtureModel<Derived >
     inline DiagGaussianBase( DiagGaussianBase const& model) : Base(model) {}
     /** destructor */
     inline ~DiagGaussianBase() {}
+
+  public:
+    /** @return mean of the kth cluster and jth variable */
+    inline Real const& mean(int k, int j) const { return param_.meanImpl(k,j);}
+    /** @return sigma of the kth cluster and jth variable */
+    inline Real const& sigma(int k, int j) const { return param_.sigmaImpl(k,j);}
+    /** Initialize the parameters of the model. */
+    inline void initializeModelImpl() { param_.resize(p_data()->cols());}
     /** @return an imputation value for the jth variable of the ith sample
      *  @param i,j indexes of the data to impute */
     Real impute(int i, int j) const
     {
       Real sum = 0.;
-      for (int k= baseIdx; k < components().end(); ++k)
-      { sum += p_tik()->elt(i,k) * param(k).mean(j);}
+      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+      { sum += p_tik()->elt(i,k) * mean(k,j);}
       return sum;
     }
     /** @return a simulated value for the jth variable of the ith sample
-     * @param i,j indexes of the data to simulate*/
-    Real sample(int i, int j) const
-    {
-      int k = Law::Categorical::rand(p_tik()->row(i));
-      return Law::Normal::rand(param(k).mean(j), param(k).sigma(j));
-    }
-    /** get the parameters of the model
-     *  @param params the parameters of the model
-     **/
-    void getParameters(ArrayXX& params) const;
-    /** @return the parameters of the model in an array of size (K * 2d). */
-    ArrayXX getParametersImpl() const;
-    /** Write the parameters on the output stream os */
-    void writeParameters(ostream& os) const
-    {
-      Array2DPoint<Real> sigma(p_data()->cols());
-      for (int k= baseIdx; k < components().end(); ++k)
-      {
-        // store sigma values in an array for a nice output
-        for (int j= sigma.begin();  j <= sigma.lastIdx(); ++j)
-        { sigma[j] = param(k).sigma(j);}
-        os << _T("---> Component ") << k << _T("\n");
-        os << _T("mean = ") << param(k).mean_;
-        os << _T("sigma = ")<< sigma;
-      }
-    }
+     * in the kth cluster
+     * @param i,j,k indexes of the data to simulate */
+    inline Real rand(int i, int j, int k) const
+    { return Law::Normal::rand(mean(k, j), sigma(k,j));}
 
   protected:
+    PointX& mean(int k) { return param_.mean_[k];}
     /** sample randomly the mean of each component by sampling randomly a row
      *  of the data set.
      **/
@@ -118,16 +115,16 @@ template<class Derived>
 void DiagGaussianBase<Derived>::randomMean()
 {
   // indexes array
-  Array2DVector<int> indexes(p_data()->rows());
+  VectorXi indexes(p_data()->rows());
   for(int i=p_data()->beginRows(); i< p_data()->endRows(); ++i) { indexes[i] = i;}
   Range rind = p_data()->rows();
   // sample without repetition
-  for (int  k= baseIdx; k < p_tik()->endCols(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
     // random number in [0, end-k[
     int i = (int)Law::Uniform::rand(rind.begin(), rind.end());
     // get ith individuals
-    param(k).mean_.copy(p_data()->row(indexes[i]));
+    mean(k).copy(p_data()->row(indexes[i]));
     // exchange it with nth
     indexes.swap(i, rind.lastIdx());
     // decrease
@@ -138,48 +135,14 @@ void DiagGaussianBase<Derived>::randomMean()
 template<class Derived>
 bool DiagGaussianBase<Derived>::updateMean()
 {
-  for (int k= baseIdx; k < components().end(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
     for (int j=p_data()->beginCols(); j< p_data()->endCols(); ++j)
-    { param(k).mean_[j] = p_data()->col(j).wmean(p_tik()->col(k));}
+    { mean(k)[j] = p_data()->col(j).wmean(p_tik()->col(k));}
   }
   return true;
 }
 
-/* get the parameters of the model
- *  @param params the parameters of the model
- **/
-template<class Derived>
-void DiagGaussianBase<Derived>::getParameters(Array2D<Real>& params) const
-{
-  int nbClust = this->nbCluster();
-  params.resize(2*nbClust, p_data()->cols());
-  for (int k= 0; k < nbClust; ++k)
-  {
-    for (int j=  p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    {
-      params(baseIdx+2*k  , j) = param(baseIdx+k).mean(j);
-      params(baseIdx+2*k+1, j) = param(baseIdx+k).sigma(j);
-    }
-  }
-}
-/* @return the parameters of the model in an array of size (K * 2d). */
-template<class Derived>
-ArrayXX DiagGaussianBase<Derived>::getParametersImpl() const
-{
-  ArrayXX params;
-  int nbClust = this->nbCluster();
-  params.resize(2*nbClust, p_data()->cols());
-  for (int k= 0; k < nbClust; ++k)
-  {
-    for (int j=  p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    {
-      params(baseIdx+2*k  , j) = param(baseIdx+k).mean(j);
-      params(baseIdx+2*k+1, j) = param(baseIdx+k).sigma(j);
-    }
-  }
-  return params;
-}
 } // namespace STK
 
 #endif /* STK_DIAGGAUSSIANBASE_H */

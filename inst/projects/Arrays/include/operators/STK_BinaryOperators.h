@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -296,13 +296,13 @@ class BinaryOperator : public BinaryOperatorBase< BinaryOp, Lhs, Rhs >
                          , rows_(lhs_.beginRows(), (sizeRows_ != UnknownSize) ? sizeRows_ : lhs_.sizeRows())
                          , cols_(lhs_.beginCols(), (sizeCols_ != UnknownSize) ? sizeCols_ : lhs_.sizeCols())
     { // FIXME : not safe. Add more test in the 1D case at compile time (and runtime ?)
-      STK_STATICASSERT_BINARY_OPERATOR_MISMATCH( isValid_ );
-      STK_STATICASSERT_COLS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeCols_) != UnknownSize)
+      STK_STATIC_ASSERT_BINARY_OPERATOR_MISMATCH( isValid_ );
+      STK_STATIC_ASSERT_COLS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeCols_) != UnknownSize)
                                                &&  (int(Rhs::sizeCols_) != UnknownSize)
                                                &&  (int(Lhs::sizeCols_) != int(Rhs::sizeCols_))
                                                &&  (isRes2D_)
                                                  ));
-      STK_STATICASSERT_ROWS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeRows_) != UnknownSize)
+      STK_STATIC_ASSERT_ROWS_DIMENSIONS_MISMATCH(!( (int(Lhs::sizeRows_) != UnknownSize)
                                                &&  (int(Rhs::sizeRows_) != UnknownSize)
                                                &&  (int(Lhs::sizeRows_) != int(Rhs::sizeRows_))
                                                &&  (isRes2D_)
@@ -314,25 +314,10 @@ class BinaryOperator : public BinaryOperatorBase< BinaryOp, Lhs, Rhs >
     }
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return rows_;}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return(rows_.begin());}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return(rows_.end());}
-    /** @return the fixed size type if available to enable compile time optimizations */
-    inline int sizeRowsImpl() const { return(rows_.size());}
-
-    /**  @return the range of the rows */
+    /**  @return the range of the columns */
     inline ColRange const& colsImpl() const { return cols_;}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return(cols_.begin());}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return(cols_.end());}
-    /** @return the fixed size type if available to enable compile time optimizations */
-    inline int sizeColsImpl() const { return(cols_.size());}
-
     /**  @return the range */
-    inline Range const range() const
-    { return this->asDerived().lhs().range();}
+    inline Range range() const { return this->asDerived().lhs().range();}
 
     /** @return the left hand side expression */
     inline Lhs const& lhs() const { return lhs_; }

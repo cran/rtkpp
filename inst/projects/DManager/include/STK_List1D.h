@@ -36,8 +36,8 @@
 #ifndef STK_LIST_H
 #define STK_LIST_H
 
-#include "Arrays/include/STK_IContainerRef.h"
-#include "Arrays/include/STK_ITContainer1D.h"
+#include <Arrays/include/STK_IContainerRef.h>
+#include <Arrays/include/STK_ITContainer1D.h>
 
 #include "STK_Cell.h"
 
@@ -65,6 +65,7 @@ struct Traits< List1D<Type_> >
   {
     structure_ = Arrays::point_,
     orient_    = Arrays::by_row_,
+    size_      = UnknownSize,
     sizeCols_  = UnknownSize,
     sizeRows_  = 1,
     storage_ = Arrays::dense_ // always dense
@@ -97,8 +98,7 @@ class List1D : public ITContainer1D< List1D<Type_> >, public IContainerRef
     typedef ITContainer1D< List1D<Type> > Base;
 
     /** Default constructor : empty List. */
-    List1D() : Base(Range()), IContainerRef(false)
-    { initialize(Range()); }
+    List1D() : Base(), IContainerRef(false) { initialize(Range()); }
     /** constructor with specified Range.
      *  @param I range of the container
      **/
@@ -120,7 +120,7 @@ class List1D : public ITContainer1D< List1D<Type_> >, public IContainerRef
     /** Copy constructor
      *  @param T the list to copy
      **/
-    List1D( const List1D<Type> &T) : Base(T), IContainerRef(false)
+    List1D( List1D<Type> const& T) : Base(T), IContainerRef(false)
     {
       // initialize container
       initialize(T.range());
@@ -132,6 +132,26 @@ class List1D : public ITContainer1D< List1D<Type_> >, public IContainerRef
         p1    = p1->getRight();   // Goto Right
         pt1   = pt1->getRight();  // Goto Right
       }
+    }
+    /** access to many elements.
+     *  @param T the list to reference
+     *  @param J the range of the elements
+     *  @return a list with a reference to the elements in the given range
+     **/
+    List1D( List1D<Type> const& T, Range const& J): Base(J), IContainerRef(true)
+    {
+#ifdef STK_BOUNDS_CHECK
+      if ((J.begin()<T.begin()))
+      { STKOUT_OF_RANGE_1ARG(List1D::List1D,J,J.begin()<T.begin());}
+      if ((J.lastIdx()>T.lastIdx()))
+      { STKOUT_OF_RANGE_1ARG(List1D::List1D,J,J.lastIdx()>T.lastIdx());}
+#endif
+      T.moveCurrentPosition(J.begin());
+      p_begin_ = T.p_current_;
+      moveCurrentPosition(J.lastIdx());
+      p_last_ = T.p_current_;
+      currentPosition_  = this->begin();
+      p_current_ = p_begin_;
     }
   protected:
     /** constructor by reference, ref_=1.
@@ -608,14 +628,6 @@ class List1D : public ITContainer1D< List1D<Type_> >, public IContainerRef
       }
     }
  };
-
-/** ostream for List1D.
- *  @param s the output stream
- *  @param V the List1D to write
- **/
-template<class Type>
-ostream& operator<<(ostream& s, const List1D<Type>& V)
-{ return out1D(s,V);}
 
 } // namespace STK
 

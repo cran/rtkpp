@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -38,7 +38,7 @@
 
 #include <vector>
 
-#include "STK_IDataHandler.h"
+#include "STK_DataHandlerBase.h"
 #include "STK_ReadWriteCsv.h"
 #include "Arrays/include/STK_Array2D.h"
 
@@ -61,30 +61,28 @@ struct DataHandlerTraits<DataHandler, Type>
 } // namespace hidden
 
 /** @ingroup DManager
- * @c implementation of the IDataHandler class using ReadWriteCsv and Array2D.
+ *  @c implementation of the DataHandlerBase class using ReadWriteCsv and Array2D.
  *  The DataHandler class allow to read various csv files with their description
  *  files and to get the columns identified by an idData in an @c Array2D.
  *  All data are stored in memory in a ReadWriteCsv structure.
  */
-class DataHandler : public IDataHandler
+class DataHandler : public DataHandlerBase<DataHandler>
 {
   public:
-    typedef IDataHandler::InfoMap InfoMap;
+    typedef DataHandlerBase<DataHandler>::InfoMap InfoMap;
     /** default constructor */
-    inline DataHandler() : IDataHandler(), withNames_(false)
+    inline DataHandler() : DataHandlerBase(), withNames_(false)
     { data_.setWithNames(false); descriptor_.setWithNames(false);}
     /** destructor */
-    inline virtual ~DataHandler() {}
-
+    inline ~DataHandler() {}
     /** @return the number of sample (the number of rows of the data) */
-    inline virtual int nbSample() const { return data_.sizeRows();}
+    inline int nbSampleImpl() const { return data_.sizeRows();}
     /** @return the number of sample (the number of columns of the data) */
-    inline virtual int nbVariable() const { return data_.size();}
+    inline int nbVariableImpl() const { return data_.size();}
     /** get the whole data set */
     inline ReadWriteCsv const& data() const { return data_;}
     /** get the whole descriptor set */
     inline ReadWriteCsv const& descriptor() const { return descriptor_;}
-
     /** set withNames flag */
     inline void setWithNames(bool withNames) { withNames_ = withNames;}
     /** read a data file and its companion description file. */
@@ -96,7 +94,6 @@ class DataHandler : public IDataHandler
      * @param idModel an id identifying the model to use with the data set
      **/
     bool readDataFromCsvFile(std::string const& datafile, std::string const& idData, std::string const& idModel);
-
     /** @brief read a data set from an Array2D.
      * This method should be essentially used:
      * - for testing some statistical method as the data  will be converted in a
@@ -108,11 +105,20 @@ class DataHandler : public IDataHandler
      **/
     template<typename Type>
     bool readDataFromArray2D(Array2D<Type> const& data, std::string const& idData, std::string const& idModel);
-
+    /** @brief read a data set from an Array or Expression.
+     * This method should be essentially used:
+     * - for testing some statistical method as the data  will be converted in a
+     * String format (whcih is not an efficient way to store the data..).
+     * - if the data are already stored in a String format.
+     * @param data the data set
+     * @param idData the id of the data
+     * @param idModel an id identifying the model to use with the data set
+     **/
+    template<typename Array>
+    bool readDataFromArray(ExprBase<Array> const& data, std::string const& idData, std::string const& idModel);
     /** return in an Array2D<int> the data with the given idData */
     template<typename Type>
     void getData(std::string const& idData, Array2D<Type>& data, int& nbVariable) const;
-
     /** remove the data with the given idData */
     void removeData(std::string const& idData);
 
@@ -157,7 +163,9 @@ void DataHandler::getData(std::string const& idData, Array2D<Type>& data, int& n
 }
 
 template<typename Type>
-bool DataHandler::readDataFromArray2D(Array2D<Type> const& data, std::string const& idData, std::string const& idModel)
+bool DataHandler::readDataFromArray2D( Array2D<Type> const& data
+                                     , std::string const& idData
+                                     , std::string const& idModel)
 {
   // add descriptor
   Variable<std::string> desc(2);
@@ -168,13 +176,36 @@ bool DataHandler::readDataFromArray2D(Array2D<Type> const& data, std::string con
   {
     data_.push_back();
     data_.back().resize(data.rows());
-    for (int i= data.beginRows(); i <= data.lastIdxRows(); ++i)
+    for (int i= data.beginRows(); i < data.endRows(); ++i)
     { data_.back()[i] = typeToString(data(i,j), std::scientific);}
     // store descriptor : this is the same for all the columns added
     descriptor_.push_back(desc);
   }
   return true;
 }
+
+template<typename Array>
+bool DataHandler::readDataFromArray( ExprBase<Array> const& data
+                                   , std::string const& idData
+                                   , std::string const& idModel)
+{
+  // add descriptor
+  Variable<std::string> desc(2);
+  desc[baseIdx] = idModel ; desc[baseIdx+1] = idData;
+  if (!addInfo(idData, idModel)) return false;
+  // store data at the end of the ReadWriteCsv array in a string format
+  for (int j=data.beginCols(); j<= data.lastIdxCols(); ++j)
+  {
+    data_.push_back();
+    data_.back().resize(data.rows());
+    for (int i= data.beginRows(); i < data.endRows(); ++i)
+    { data_.back()[i] = typeToString(data.elt(i,j), std::scientific);}
+    // store descriptor : this is the same for all the columns added
+    descriptor_.push_back(desc);
+  }
+  return true;
+}
+
 
 } // namespace STK
 

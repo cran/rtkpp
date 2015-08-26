@@ -40,7 +40,7 @@
  *
  * All the containers you can used in order to stored numeric values are
  * templated by the Type of numeric value you want to use. Some predefined type
- * have been defined for the Real type case.
+ * have been defined for the Real and the arithmetic cases.
  *
  * There is two kind of containers that have been defined and implemented in the
  * STK++ project:
@@ -48,12 +48,12 @@
  * vectors), Array2DPoint (row oriented vector), Array2DUpperTriangular,
  * Array2DLowerTriangular, Array2DDiagonal allowing to modify, resize, add,
  * remove rows/columns in a very flexible way.
- * @li and the set of Arrays: CArray, CArrayPoint, CarrayVector that can be used
+ * @li the set of Arrays: CArray, CArrayPoint, CarrayVector that can be used
  * as C-like containers (as theirs names indicate).
  *
  * Moreover a Meta-template mechanism (lazy evaluation) for optimization of
  * complex expressions at compile time is available. It is possible to mix any
- * kind of array in such expressiones.
+ * kind of array in such expressions.
  **/
 
 /** @ingroup Arrays
@@ -65,9 +65,6 @@
 #ifndef ARRAYS_H
 #define ARRAYS_H
 
-
-/* Uni-dimensionnal Array. */
-#include "../projects/Arrays/include/STK_Array1D.h"
 
 /* Array2D */
 #include "../projects/Arrays/include/STK_Array2DPoint.h"
@@ -95,5 +92,7 @@
 /* display arrays and expressions */
 #include "../projects/Arrays/include/STK_Display.h"
 
+/* Uni-dimensionnal Array. */
+#include "../projects/Arrays/include/STK_Array1D.h"
 
 #endif  /* ARRAYS_H */

@@ -44,9 +44,10 @@ namespace STK
 namespace hidden
 {
 /** @ingroup hidden
- *  MixtureBridgeTraits class for bridged mixtures
+ *  MixtureBridgeTraits struct for bridged mixtures
  **/
 template<class Derived> struct MixtureBridgeTraits;
+
 }
 
 /** @ingroup Clustering
@@ -66,29 +67,34 @@ template<class Derived>
 class IMixtureBridge: public IMixture, public IRecursiveTemplate<Derived>
 {
   public:
-    // type of Mixture
+    typedef std::vector<std::pair<int,int> >::const_iterator ConstIterator;
     typedef typename hidden::MixtureBridgeTraits<Derived>::Mixture Mixture;
-    typedef typename Clust::MixtureTraits<Mixture>::Param Param;
-    // class of mixture
+    typedef typename hidden::MixtureBridgeTraits<Derived>::Data Data;
+    typedef typename hidden::MixtureBridgeTraits<Derived>::Parameters Parameters;
+    typedef typename hidden::MixtureBridgeTraits<Derived>::ParamHandler ParamHandler;
     enum
     {
+      // class of mixture
       idMixtureClass_ = hidden::MixtureBridgeTraits<Derived>::idMixtureClass_
     };
 
   protected:
     /** default constructor. Remove the missing values from the data set and
      *  initialize the mixture by setting the data set.
+     *  @param p_data pointer on the MixtureData that will be used by the bridge.
      *  @param idData id name of the mixture model
      *  @param nbCluster number of cluster
      **/
-    IMixtureBridge( std::string const& idData, int nbCluster)
+    IMixtureBridge( MixtureData<Data>* p_data, std::string const& idData, int nbCluster)
                   : IMixture( idData, nbCluster)
                   , mixture_( nbCluster)
+                  , p_data_(p_data)
     {}
     /** copy constructor */
     IMixtureBridge( IMixtureBridge const& bridge)
                   : IMixture(bridge)
                   , mixture_(bridge.mixture_)
+                  , p_data_(bridge.p_data_)
     {}
     virtual ~IMixtureBridge() {}
 
@@ -111,7 +117,7 @@ class IMixtureBridge: public IMixture, public IRecursiveTemplate<Derived>
      * @param i,k Sample and Cluster numbers
      * @return the log-component probability
      */
-    virtual double lnComponentProbability(int i, int k)
+    virtual Real lnComponentProbability(int i, int k)
     { return mixture_.lnComponentProbability(i, k);}
     /** This function is equivalent to Mstep and must be defined to update
      * parameters.
@@ -130,11 +136,6 @@ class IMixtureBridge: public IMixture, public IRecursiveTemplate<Derived>
      *  @return Number of variables
      */
     virtual int nbVariable() const { return mixture_.nbVariable();}
-    /** This function can be used to write summary of parameters to the output stream.
-     * @param out Stream where you want to write the summary of parameters.
-     */
-    virtual void writeParameters(std::ostream& out) const
-    { mixture_.writeParameters(out);}
     /** @brief This function should be used to store any intermediate results
      * during various iterations after the burn-in period.
      * @param iteration Provides the iteration number beginning after the burn-in
@@ -157,11 +158,32 @@ class IMixtureBridge: public IMixture, public IRecursiveTemplate<Derived>
      *  be called only once after we finish running the estimation algorithm.
      */
     virtual void finalizeStep() { mixture_.finalizeStep();}
-    /** This function can be used in order to get the current values of the
-     *  parameters.
-     *  @param param the array with the parameters of the mixture.
+    /** @brief This function should be used for Imputation of data.
+     *  The default implementation (in the base class) is to do nothing.
      */
-    virtual void getParameters(Param& param) const { mixture_.getParameters(param);}
+    virtual void imputationStep();
+    /** @brief This function must be defined for simulation of all the latent
+     * variables and/or missing data excluding class labels. The class labels
+     * will be simulated by the framework itself because to do so we have to
+     * take into account all the mixture laws.
+     */
+    virtual void samplingStep();
+
+    /** @return the structure storing the current values of the parameters. */
+    ParamHandler const& paramHandler() const { return mixture_.paramHandler();}
+    /** set the parameter handler (current values) of the model */
+    void setParamHandler(ParamHandler const& param) { mixture_.setParamHandler(param);}
+    /** This function is used in order to set the current values of the
+     *  parameters to the paramHandler of the mixture.
+     *  @param param the array/expression with the parameters of the mixture to
+     *  store in the ParamHandler.
+     */
+    template<class Array>
+    void setParameters( Array const& param)
+    {
+//      ParamHandler handler(this->nbCluster(), param);
+      mixture_.setParamHandler(param);
+    }
 
   protected:
     /** protected constructor to use in order to create a bridge.
@@ -172,10 +194,28 @@ class IMixtureBridge: public IMixture, public IRecursiveTemplate<Derived>
     IMixtureBridge( Mixture const& mixture, std::string const& idData, int nbCluster)
                   : IMixture( idData, nbCluster)
                   , mixture_(mixture)
+                  , p_data_(0)
     {}
     /** The Mixture to bridge with the composer */
     Mixture mixture_;
+    /** pointer on the data manager */
+    MixtureData<Data>* p_data_;
 };
+
+// implementation
+template< class Derived>
+void IMixtureBridge<Derived>::imputationStep()
+{
+  for(ConstIterator it = p_data_->v_missing().begin(); it!= p_data_->v_missing().end(); ++it)
+  { p_data_->dataij_(it->first, it->second) = mixture_.impute(it->first, it->second);}
+}
+// implementation
+template< class Derived>
+void IMixtureBridge<Derived>::samplingStep()
+{
+  for(ConstIterator it = p_data_->v_missing().begin(); it!= p_data_->v_missing().end(); ++it)
+  { p_data_->dataij_(it->first, it->second) = mixture_.sample(it->first, it->second);}
+}
 
 } // namespace STK
 

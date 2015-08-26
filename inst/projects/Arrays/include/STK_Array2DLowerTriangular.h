@@ -176,7 +176,7 @@ class Array2DLowerTriangular : public IArray2D< Array2DLowerTriangular<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DLowerTriangular& operator=(ExprBase<Rhs> const& T)
+    Array2DLowerTriangular& operator=(ExprBase<Rhs> const& T)
     { return LowBase::operator=(T);}
     /** operator = : overwrite the Array2DLowerTriangular with T.
      *  @param T the container to copy
@@ -185,7 +185,17 @@ class Array2DLowerTriangular : public IArray2D< Array2DLowerTriangular<Type_> >
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2DLowerTriangular& operator=(Type const& v){ return LowBase::setValue(v);}
+    Array2DLowerTriangular& operator=(Type const& v){ return LowBase::setValue(v);}
+    /** New beginning index for the object.
+     *  @param beg first index of the container
+     **/
+    void shift1D(int beg)
+    { Base::shift(beg, beg);}
+    /** New size for the container.
+     *  @param I range of the columns and rows of the container
+     **/
+    Array2DLowerTriangular& resize1D( Range const& I)
+    { Base::resize(I, I); return *this;}
 };
 
 } // namespace STK

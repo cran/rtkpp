@@ -60,7 +60,7 @@ void IMixture::setMixtureComposer( IMixtureComposer const* p_composer) { p_compo
 int const* IMixture::classLabels() const { return p_composer_->p_zi()->p_data();}
 
 /* @return the proportions of the composer */
-double const* IMixture::proportions() const { return p_composer_->p_pk()->p_data();}
+Real const* IMixture::proportions() const { return p_composer_->p_pk()->p_data();}
 
 /* @return the number of sample */
 int IMixture::nbSample() const { return p_composer_->nbSample();}

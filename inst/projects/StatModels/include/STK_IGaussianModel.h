@@ -49,22 +49,29 @@
 
 namespace STK
 {
-/**
- * Compute the gaussian log likehood of a one dimensionnal gaussian model.
+/** Compute the gaussian log likehood of a one dimensionnal gaussian model.
  * @param data the data set
- * @param mu the mean of the gaussian law
- * @param sigma the variance of the gaussian law
- * @return
- */
-Real univariateGaussianLnLikelihood(Vector const& data, Real const& mu, Real const& sigma);
-
-/** Compute the gaussian log likelihood of a diagonal gaussian model.
- *  @param data the data set
- *  @param mu the mean of the gaussian law
- *  @param sigma the (diagonal) covairance matrix (only the diagonal is used)
- *  @return
- */
-Real diagonalGaussianLnLikelihood(ArrayXX const& data, Point const& mu, ArraySquareX const& sigma);
+ * @param mu, sigma the mean and varaince of the gaussian law
+ * @return the log-likelihood
+ **/
+template<class Vector>
+Real gaussianLnLikelihood(ExprBase<Vector> const& data, Real const& mu, Real const& sigma)
+{
+  if (sigma)
+  {
+    Real scale = 0., std = std::sqrt((double)sigma);
+    // compute scale
+    scale = ((data-mu)/std).maxElt();
+    Real sum = 0;
+    if (scale)
+    { sum = (((data-mu)/std)/scale).norm2();}
+    return - ( 0.5*sum*scale*scale
+             + data.size() * (std::log((double)std) + Const::_LNSQRT2PI_)
+             );
+  }
+  // 0 variance
+  return -STK::Arithmetic<Real>::infinity();
+}
 
 /** @ingroup StatModels
  *  @brief Compute the the maximum likelihood estimates of a complete Gaussian
@@ -85,13 +92,13 @@ Real diagonalGaussianLnLikelihood(ArrayXX const& data, Point const& mu, ArraySqu
  * The maximum likelihood estimate can be performed via matrix calculus formulae
  * Re-write the likelihood in the log form using the trace trick:
  * \f[
- * \ln L(\mu,\Sigma) = \operatorname{const} -{n \over 2} \ln \det(\Sigma)
+ * \ln L(\mu,\Sigma) = \operatorname{const} - \frac{n}{2} \ln \det(\Sigma)
  * -\frac{1}{2} \operatorname{tr} \left[ \Sigma^{-1} \sum_{i=1}^n (X_i-\mu) (X_i-\mu)^T \right].
  * \f]
  *
  * The differential of this ln-likelihood is
  * \f[
- *  d \ln L(\mu,\Sigma) = -{n \over 2} \operatorname{tr} \left[ \Sigma^{-1} \left\{ d \Sigma \right\} \right]
+ *  d \ln L(\mu,\Sigma) = -\frac{n}{2} \operatorname{tr} \left[ \Sigma^{-1} \left\{ d \Sigma \right\} \right]
  * -\frac{1}{2} \operatorname{tr} \left[ - \Sigma^{-1} \{ d \Sigma \} \Sigma^{-1}
  *  \sum_{i=1}^n (X_i-\mu)(X_i-\mu)^T - 2 \Sigma^{-1} \sum_{i=1}^n (X_i - \mu) \{ d \mu \}^T \right].
  * \f]

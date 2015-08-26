@@ -44,6 +44,15 @@ namespace STK
 namespace Funct
 {
 /** @ingroup Analysis
+ *  Compute the function
+ *  \f[ B_1(a,b,x) = \frac{ x^{a} (1-x)^{b}}{B(a,b)} \f]
+ *  using  the partial deviance \f$ (a+b) * (p*log(x/p)+q*log((1-x)/q)) \f$.
+ *  @param a,b,x parameters of the generalized beta
+ *  @param xm1 true if @e x is to be taken as @e 1-x
+ **/
+Real b1(Real const& a, Real const& b, Real const& x, bool xm1);
+
+/** @ingroup Analysis
  *  @brief compute the partial deviance \f$g_0(x) = x\log(x)+ 1 - x\f$.
  */
 Real g0(Real const& x);

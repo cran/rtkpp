@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*  Copyright (C) 2004-2014  Serge Iovleff, University Lille 1, Inria
+/*  Copyright (C) 2004-2015  Serge Iovleff, University Lille 1, Inria
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as
@@ -85,7 +85,7 @@ struct Traits< RVector<Type_> >
 } // namespace hidden
 
 template <typename Type_>
-class RVector : public ArrayBase< RVector<Type_> >
+class RVector : public ArrayBase< RVector<Type_> >, public TRef<1>
 {
   public:
     typedef typename hidden::Traits<RVector<Type_> >::Row Row;
@@ -112,13 +112,19 @@ class RVector : public ArrayBase< RVector<Type_> >
     typedef TRange<sizeCols_> ColRange;
 
     /** Default Constructor. */
-    inline RVector() : vector_(),rows_(), cols_(0,1) {}
+    inline RVector(): vector_(),rows_(), cols_(0,1) {}
     /** Constructor */
-    inline RVector (Rcpp::Vector<Rtype_> vector)
-                      : vector_(vector), rows_(), cols_(0,1) {}
+    inline RVector( Rcpp::Vector<Rtype_> vector)
+                  : vector_(vector), rows_(), cols_(0,1) {}
     /** Constructor with SEXP. */
     inline RVector( SEXP robj)
-                     : vector_(robj), rows_(0, vector_.size()), cols_(0,1) {}
+                  : vector_(robj), rows_(0, vector_.size()), cols_(0,1) {}
+    /** Constructor with SEXP. */
+    inline RVector( RVector robj, bool ref)
+                  : vector_(robj), rows_(0, robj.size()), cols_(0,1) {}
+
+    /** @return the underlying Rcpp matrix */
+    inline Rcpp::Vector<Rtype_> const& vector() const { return vector_;}
     /** set Vector .
      *  @param vector the Rcpp matrix to wrap
      *  @note cannot be passed as const& due to a bug from the (old versions of) Rcpp side
@@ -150,10 +156,14 @@ class RVector : public ArrayBase< RVector<Type_> >
     inline Row rowImpl(int i) const { return Row(this->asDerived(), i);}
     /** @return the i-th row of this. */
     inline SubVector sub(Range I) const { return SubVector(this->asDerived(), I);}
-    /** @return the ith element of the operator
+    /** @return a constant reference on ith element
      *  @param i index of the ith element
      **/
     inline Type const& elt1Impl(int i) const { return static_cast<Type const&>(vector_[i]);}
+    /** @return the ith element of the operator
+     *  @param i index of the ith element
+     **/
+    inline Type& elt1Impl(int i) { return static_cast<Type&>(vector_[i]);}
     /** overwrite the RVector with vec using Rcpp::operator=.
      *  @param vec the vector to copy
      **/

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -91,11 +91,26 @@ template < class  Derived  >
 class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, Derived>
 {
   public:
-    /** type of the Base Container Class. */
-    typedef typename hidden::Traits<Derived>::Type Type;
-    typedef IArray2DBase< Type*, Derived> Base;
+     typedef typename hidden::Traits<Derived>::Type Type;
+    typedef typename hidden::Traits<Derived>::Row  Row;
+    typedef typename hidden::Traits<Derived>::Col  Col;
+    typedef typename hidden::Traits<Derived>::SubRow SubRow;
+    typedef typename hidden::Traits<Derived>::SubCol SubCol;
+    typedef typename hidden::Traits<Derived>::SubVector SubVector;
+    typedef typename hidden::Traits<Derived>::SubArray SubArray;
 
-  protected:
+    enum
+    {
+      structure_ = hidden::Traits<Derived>::structure_,
+      orient_    = hidden::Traits<Derived>::orient_,
+      sizeRows_  = hidden::Traits<Derived>::sizeRows_,
+      sizeCols_  = hidden::Traits<Derived>::sizeCols_,
+      storage_   = hidden::Traits<Derived>::storage_
+    };
+
+     typedef IArray2DBase< Type*, Derived> Base;
+
+ protected:
     /** Default constructor */
     IArray2D() : Base() {}
     /** Constructor with specified ranges
@@ -204,10 +219,11 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       this->shift(I.begin(), J.begin());
       // check again if there is something to do
       if ((this->rows() == I) && (this->cols() == J)) return this->asDerived();
+      // just clear empty container
+      if (I.size()<=0 || J.size() <= 0) { this->clear(); return this->asDerived();}
       // number of rows and columns to delete or add
-      int rinc = I.lastIdx() - this->lastIdxRows();
-      int cinc = J.lastIdx() - this->lastIdxCols();
-
+      int rinc = I.end() - this->endRows();
+      int cinc = J.end() - this->endCols();
       // check if we add columns
       if ((cinc >=0)) // work first on rows as we add columns
       {
@@ -715,13 +731,13 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
      *  @param other the column to add to this
      **/
     template<class Other>
-    Derived& pushBackCols(ITContainer1D<Other> const& other)
+    Derived& pushBackCols(IArray1D<Other> const& other)
     {
       // check if the array is empty
       if (this->empty())
       {
         resize(other.rows(),1);
-        for (int i=other.begin(); i<=other.lastIdx(); i++)
+        for (int i=other.begin(); i<other.end(); i++)
           (*this)(i, baseIdx) = other[i];
         return this->asDerived();
       }
@@ -934,7 +950,7 @@ class IArray2D : public IArray2DBase< typename hidden::Traits<Derived>::Type*, D
       this->rangeCols_[pos] = I;
     }
     /** vertical memory deallocation.
-     *  @param J the range of the columns to liberate.
+     *  @param J the columns range to liberate.
      **/
     void freeCols(Range const& J)
     {

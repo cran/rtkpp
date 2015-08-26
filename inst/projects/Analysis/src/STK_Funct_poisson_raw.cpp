@@ -29,7 +29,7 @@
  **/
 
 /** @file STK_Funct_poisson_raw.cpp
- *  @brief In this file we implement functions around the poisson 
+ *  @brief In this file we implement the raw functions around the poisson function.
  *  density.
  **/
 
@@ -38,14 +38,14 @@
 #include "../include/STK_Const_Math.h"
 #include "../include/STK_Funct_gamma.h"
 #include "../include/STK_Funct_Util.h"
-#include "../include/STK_Funct_poisson_raw.h"
+#include "../include/STK_Funct_raw.h"
 
 namespace STK
 {
   
 namespace Funct
 {
-/** @ingroup Analysis
+/* @ingroup Analysis
  *  Compute the function:
  *  \f[
  *    p(x, \lambda) = e^{-\lambda} \lambda^x/\Gamma(x+1)
@@ -70,7 +70,7 @@ Real poisson_pdf_raw(Real const& x, Real const& lambda)
   return( std::exp(-gammaLnStirlingError(x)-dev0(x, lambda))/(Const::_SQRT2PI_*std::sqrt(x)));
 }
 
-/** @ingroup Analysis
+/* @ingroup Analysis
  *  Compute the function:
  *  \f[
  *    p(x, \lambda) = e^{-\lambda} \lambda^x/\Gamma(x+1)
@@ -86,7 +86,7 @@ Real poisson_pdf_raw(Real const& x, Real const& lambda)
 Real poisson_pdf_raw(int const& x, Real const& lambda)
 { return poisson_pdf_raw(Real(x), lambda);}
 
-/** @ingroup Analysis
+/* @ingroup Analysis
  *  Compute the function:
  *  \f[
  *    p(x, \lambda) = e^{-\lambda} \lambda^x/\Gamma(x+1)
@@ -111,7 +111,7 @@ Real poisson_lpdf_raw(Real const& x, Real const& lambda)
   return( -gammaLnStirlingError(x)-dev0(x, lambda)-Const::_LNSQRT2PI_-std::log(x)/2.);
 }
 
-/** @ingroup Analysis
+/* @ingroup Analysis
  *  Compute the function:
  *  \f[
  *    p(x, \lambda) = e^{-\lambda} \lambda^x/\Gamma(x+1)

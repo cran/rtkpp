@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -39,12 +39,13 @@
  *
  * The Algebra project propose some set of templated function for computing
  * dot product,  weighted dot product, vector norm, weighted vector norm
- * and so on... It proposes three linear algebra methods for the ArrayXX
+ * and so on... It proposes linear algebra methods for the ArrayXX
  * and the ArraySquareX classes:
  *    @li The Qr decomposition of an arbitrary matrix of Real, @sa Qr
  *    @li The svd decomposition of an arbitrary matrix of real, @sa Svd
  *    @li An Eigenvalue decomposition for symmetric (square) matrices and a
  *    generalized inverse method for such matrices, @sa SymEigen.
+*    @li methods for solving the linear least square problem.
  *
  * It propose also some set of method for performing
  * @li Givens rotation on a matrix
@@ -64,24 +65,25 @@
 #ifndef Algebra_H
 #define Algebra_H
 
-/* The Linear Algebra methods. */
+/* Utilities Algebra methods. */
 #include "../projects/Algebra/include/STK_Givens.h"
 #include "../projects/Algebra/include/STK_GramSchmidt.h"
 #include "../projects/Algebra/include/STK_Householder.h"
 
-/* The Algebra classes. */
+/* Algebra methods */
 #include "../projects/Algebra/include/STK_CG.h"
 
-/* The Algebra classes. */
 #include "../projects/Algebra/include/STK_Qr.h"
 #include "../projects/Algebra/include/STK_Svd.h"
 #include "../projects/Algebra/include/STK_SymEigen.h"
+#include "../projects/Algebra/include/STK_MultiLeastSquare.h"
 #include "../projects/Algebra/include/STK_GinvSymmetric.h"
 
 // the lapack classes
-#ifdef STKUSELAPACK
-#include "../projects/Algebra/include/STK_lapack_SymEigen.h"
 #include "../projects/Algebra/include/STK_lapack_Qr.h"
-#endif
+#include "../projects/Algebra/include/STK_lapack_Svd.h"
+#include "../projects/Algebra/include/STK_lapack_SymEigen.h"
+#include "../projects/Algebra/include/STK_lapack_MultiLeastSquare.h"
+
 #endif /*Algebra_H*/
 

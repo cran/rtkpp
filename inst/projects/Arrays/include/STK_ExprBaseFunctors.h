@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -168,7 +168,7 @@ struct ApplyWeightedFunctorByCol
   typedef Array2DPoint<Type> resultByColType;
 
   /** constructor */
-  inline ApplyWeightedFunctorByCol( ExprBase<Derived> const& lhs) : lhs_(lhs.asDerived()) {}
+  inline ApplyWeightedFunctorByCol( ExprBase<Derived> const& lhs): lhs_(lhs.asDerived()) {}
   template<class Weights>
   resultByColType operator()(ExprBase<Weights> const& w)
   {
@@ -259,7 +259,7 @@ struct ApplyWeightedFunctorByRow
   /** constructor */
   inline ApplyWeightedFunctorByRow( ExprBase<Derived> const& lhs) : lhs_(lhs.asDerived()) {}
   template<typename Weights>
-  inline resultByRowType operator()(ExprBase<Weights> const& w)
+  resultByRowType operator()( ExprBase<Weights> const& w)
   {
     resultByRowType res_(lhs_.rows());
     for (int i= lhs_.beginRows(); i < lhs_.endRows(); ++i)
@@ -311,7 +311,7 @@ struct ApplyFunctor
     typedef Type resultByRowType;
     /// constructor
     inline ApplyFunctor( ExprBase<Derived> const& lhs) : lhs_(lhs.asDerived())
-    { STK_STATICASSERT_VECTOR_ONLY(Derived);}
+    { STK_STATIC_ASSERT_VECTOR_ONLY(Derived);}
     /** apply without argument*/
     inline Type operator()() { return Funct(lhs_)();}
     /** apply with an option argument*/
@@ -334,8 +334,8 @@ struct ApplyWeightedFunctor
     typedef Type resultByColType;
     typedef Type resultByRowType;
     /// constructor
-    inline ApplyWeightedFunctor( ExprBase<Derived> const& lhs) : lhs_(lhs.asDerived())
-    { STK_STATICASSERT_VECTOR_ONLY(Derived);}
+    inline ApplyWeightedFunctor( ExprBase<Derived> const& lhs): lhs_(lhs.asDerived())
+    { STK_STATIC_ASSERT_VECTOR_ONLY(Derived);}
     /** apply with weights*/
     template<typename Weights>
     inline Type operator()(ExprBase<Weights> const& w) { return Funct(lhs_)(w);}

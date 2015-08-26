@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -53,16 +53,22 @@ namespace STK
  **/
 template<class Derived >
 class IArray1D  : public ITContainer1D<Derived>
-                , public AllocatorBase<typename hidden::Traits<Derived>::Type>
+                , public AllocatorBase<typename hidden::Traits<Derived>::Type, hidden::Traits<Derived>::sizeRows_>
 {
   protected:
     typedef typename hidden::Traits<Derived>::Type Type;
-    /** Type for the Base reference Class of a 1D Array. */
-    typedef AllocatorBase<Type> Allocator;
-    /** Type for the IArray1D Class. */
+    enum
+    {
+      size_ = hidden::Traits<Derived>::size_
+    };
+    typedef TRange<size_> RowRange;
+    typedef TRange<1> ColRange;
+
+    typedef AllocatorBase<Type, hidden::Traits<Derived>::sizeRows_> Allocator;
     typedef ITContainer1D< Derived > Base;
+
     /** Default constructor. */
-    IArray1D() : Base(), Allocator(Arrays::evalSizeCapacity(0)), capacity_(Arrays::evalSizeCapacity(0))
+    IArray1D() : Base(), Allocator(Arrays::evalSizeCapacity(0)), capacity_(this->sizeData())
     {}
     /** constructor with a specified Range.
       *  @param I range of the container
@@ -103,6 +109,29 @@ class IArray1D  : public ITContainer1D<Derived>
     ~IArray1D() {}
 
   public:
+    /**  @return the range of the rows of the container */
+    inline RowRange const& rows() const  { return this->range();}
+     /** @return the index of the first element */
+    inline int beginRows() const { return this->begin();}
+    /**  @return the ending index of the elements */
+    inline int endRows() const { return this->end();}
+    /**  @return the size of the container */
+    inline int sizeRows() const  { return this->size();}
+
+    /** @return the Horizontal range (1 column) */
+    ColRange cols() const { return ColRange(1);}
+    /** @return the index of the first column */
+    inline int beginCols() const { return baseIdx;}
+    /**  @return the index of the ending column */
+    inline int endCols() const  { return baseIdx+1;}
+    /** @return the number of columns */
+    inline int sizeCols() const  { return 1;};
+
+    /**  @return the index of the last element */
+    inline int lastIdxRows() const  { return this->lastIdx();}
+    /**  @return the index of the last element */
+    inline int lastIdxCols() const  { return baseIdx;}
+
     /** access to one element.
      *  @param pos index of the element
      **/
@@ -111,17 +140,6 @@ class IArray1D  : public ITContainer1D<Derived>
      *  @param pos index of the const element
      **/
     inline Type const& elt1Impl(int pos) const { return this->data(pos);}
-    /** access to many elements.
-     *  @param J the range of the elements
-     **/
-    inline Derived subImpl(Range const& J) const
-    {
-      if ((J.begin()<this->begin()))
-      { STKOUT_OF_RANGE_1ARG(IArray1D::sub,J,J.begin()<begin());}
-      if ((J.end()>this->end()))
-      { STKOUT_OF_RANGE_1ARG(IArray1D::sub,J,J.end()>end());}
-      return Derived(this->asDerived(), J);
-    }
     /** New beginning index for the object.
      *  @param beg the index of the first column to set
      **/
@@ -144,7 +162,7 @@ class IArray1D  : public ITContainer1D<Derived>
      * - call @c popBack if three will be less elements
      * @param I the range to set to the List1D
      **/
-    inline Derived& resizeImpl(Range const& I)
+    Derived& resizeImpl(Range const& I)
     {
       // check if there is something to do
       if ( this->range() == I) return this->asDerived();
@@ -161,7 +179,7 @@ class IArray1D  : public ITContainer1D<Derived>
     }
     /** @return the maximum possible number of elements without
      *  reallocation. */
-    inline int capacity() const { return capacity_;}
+    int capacity() const { return capacity_;}
     /** reserve internal memory for at least size elements.
      *  @param size number of elements to reserve
      **/
@@ -225,7 +243,7 @@ class IArray1D  : public ITContainer1D<Derived>
       { STKRUNTIME_ERROR_1ARG(IArray1D::popBack,n,cannot operate on reference);}
       // check if there is enough elts to erase
       if (this->size()<n)
-      { STKOUT_OF_RANGE_1ARG(Array1D::popBack,n,size() < n);}
+      { STKOUT_OF_RANGE_1ARG(IArray1D::popBack,n,size() < n);}
       // update range
       this->decLast(n);
       // if there is no more elts
@@ -255,7 +273,7 @@ class IArray1D  : public ITContainer1D<Derived>
       // update dimensions
       this->decLast(n);
       // if there is no more cols, free mem
-      if (this->size() == 0) this->freeMem();
+      if (this->size() <= 0) this->freeMem();
     }
     /** Insert n elts at the position pos of the container. The bound
      *  end_ should be modified at the very end of the insertion as pos
@@ -319,13 +337,13 @@ class IArray1D  : public ITContainer1D<Derived>
     /** STL compatibility : push front an element.
      *  @param v value to append
      **/
-    inline void push_front(Type const& v)
+    void push_front(Type const& v)
     { insert(Range(this->begin(), 0), v);}
 
     /** STL compatibility : append an element v.
      *  @param v value to append
      **/
-    inline void push_back(Type const& v)
+    void push_back(Type const& v)
     {
       this->pushBack();
       this->back() = v;
@@ -387,7 +405,7 @@ class IArray1D  : public ITContainer1D<Derived>
      *  reallocation.
      *  @param capacity capacity of the container
      **/
-    inline void setCapacity(int const& capacity =0)
+    void setCapacity(int const& capacity =0)
     { capacity_ = capacity;}
     /** function for memory allocation and initialization.
      *  This method will free all allocated memory owned by this
@@ -437,15 +455,6 @@ class IArray1D  : public ITContainer1D<Derived>
      **/
     void freeMem()
     {
-      if (this->isRef()) return;   // Nothing to do for ref
-      this->free1D();              // free the elts
-    }
-    /** Method for memory deallocation. If the derived class
-     *  use indirection, we have to free the mem if necessary prior
-     *  to this method. The beginning of the Container is not modified
-     **/
-    void free1D()
-    {
       // Nothing to do for ref
       if (this->isRef()) return;
       // free allocated memory
@@ -455,6 +464,7 @@ class IArray1D  : public ITContainer1D<Derived>
       // set range of the Cols to default
       this->setRange(Range(this->begin(), -1));
     }
+
   private:
     /** capacity of the array. */
     int capacity_;

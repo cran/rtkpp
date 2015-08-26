@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014 Serge IOVLEFF
+/*     Copyright (C) 2004-2015 Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@
 /*
  * Project:  stkpp::Clustering
  * created on: Dec 4, 2013
- * Authors: Serge Iovleff, Vincent KUBICKI
+ * Authors: Serge Iovleff
  **/
 
 /** @file STK_GammaBase.h
@@ -36,14 +36,16 @@
 #define STK_GAMMABASE_H
 
 #include "../STK_IMixtureModel.h"
-#include "STK_GammaParameters.h"
+#include "../STK_MixtureParameters.h"
+//#include "STK_GammaParameters.h"
 
-#include "../../../STatistiK/include/STK_Law_Categorical.h"
-#include "../../../STatistiK/include/STK_Stat_Functors.h"
+#include <STatistiK/include/STK_Law_Categorical.h>
+#include <STatistiK/include/STK_Law_Gamma.h>
+#include <STatistiK/include/STK_Stat_Functors.h>
 
-#include "../../../Analysis/include/STK_Algo_FindZero.h"
-#include "../../../Analysis/include/STK_Funct_raw.h"
-#include "../../../Analysis/include/STK_Funct_gamma.h"
+#include <Analysis/include/STK_Algo_FindZero.h>
+#include <Analysis/include/STK_Funct_raw.h>
+#include <Analysis/include/STK_Funct_gamma.h>
 
 namespace STK
 {
@@ -88,6 +90,46 @@ class invPsi : public IFunction<invPsi >
 
 } // namespace hidden
 
+/** base class of the Gamma models Parameter Handler */
+template<class Derived>
+struct ParametersHandlerGammaBase: public IRecursiveTemplate<Derived>
+{
+  /** @return the mean of the kth cluster and jth variable */
+  inline Real const& shape(int k, int j) const { return this->asDerived().shapeImpl(k,j);}
+  /** @return the mean of the kth cluster and jth variable */
+  inline Real const& scale(int k, int j) const { return this->asDerived().scaleImpl(k,j);}
+
+  /** mean and statistics of the means */
+  MixtureParametersSet<PointX> mean_;
+  /** mean and statistics of the log-means */
+  MixtureParametersSet<PointX> meanLog_;
+  /** standard deviation and statistics */
+  MixtureParametersSet<PointX> variance_;
+  /** copy operator */
+  inline ParametersHandlerGammaBase& operator=( Derived const& other)
+  { mean_ = other.mean_; meanLog_ = other.meanLog_; variance_ = other.variance_; return *this; }
+
+  /** default constructor */
+  ParametersHandlerGammaBase( int nbCluster)
+                            : mean_(nbCluster), meanLog_(nbCluster), variance_(nbCluster) {}
+  /** copy constructor */
+  ParametersHandlerGammaBase( ParametersHandlerGammaBase const& model)
+                            : mean_(model.mean_), meanLog_(model.meanLog_), variance_(model.variance_) {}
+  /** destructor */
+  inline ~ParametersHandlerGammaBase() {}
+  /** Initialize the parameters of the model.
+   *  This function initialize the parameters and the statistics.
+   **/
+  void resize(Range const& range)
+  {
+    mean_.resize(range);
+    mean_.initialize(1.);
+    meanLog_.resize(range);
+    meanLog_.initialize(0.);
+    variance_.resize(range);
+    variance_.initialize(1.);
+  }
+};
 
 /** @ingroup Clustering
  *  Base class for the gamma models
@@ -97,50 +139,43 @@ class GammaBase : public IMixtureModel<Derived >
 {
   public:
     typedef IMixtureModel<Derived > Base;
-
-    using Base::p_tik;
-    using Base::components;
+    using Base::p_tik; using Base::param_;
+    using Base::p_nk;
     using Base::p_data;
-    using Base::param;
-
 
   protected:
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline GammaBase( int nbCluster) : Base(nbCluster) {}
+    inline GammaBase( int nbCluster): Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline GammaBase( GammaBase const& model) : Base(model) {}
+    inline GammaBase( GammaBase const& model): Base(model) {}
     /** destructor */
     inline ~GammaBase() {}
 
   public:
+    /** @return the shape of the kth cluster and jth variable */
+    inline Real shape(int k, int j) const { return param_.shape(k,j);}
+    /** @return the scale of the kth cluster and jth variable */
+    inline Real scale(int k, int j) const { return param_.scale(k,j);}
+    /** Initialize the parameters of the model. */
+    void initializeModelImpl() { param_.resize(p_data()->cols());}
     /** @return a value to impute for the jth variable of the ith sample*/
     Real impute(int i, int j) const
     {
       Real sum = 0.;
-      for (int k= p_tik()->beginCols(); k < components().end(); ++k)
-      { sum += p_tik()->elt(i,k) * param(k).shape(j) * param(k).scale(j);}
+      for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+      { sum += p_tik()->elt(i,k) * shape(k,j) * scale(k,j);}
       return sum;
     }
     /** @return a simulated value for the jth variable of the ith sample
-     *  @param i,j indexes of the value to sample
+     *  in the kth cluster.
+     *  @param i,j,k indexes of the data to simulate
      **/
-    Real sample(int i, int j) const
-    {
-      int k = Law::Categorical::rand(p_tik()->row(i));
-      return Law::Gamma::rand(param(k).shape(j), param(k).scale(j));
-    }
-    /** get the parameters of the model
-     *  @param params the array to fill with the parameters of the model
-     **/
-    void getParameters(Array2D<Real>& params) const;
-    /** @return the parameters of the model in an array of size (K * 2d). */
-    ArrayXX getParametersImpl() const;
-    /** Write the parameters on the output stream os */
-    void writeParameters(ostream& os) const;
+    inline Real rand(int i, int j, int k) const
+    { return Law::Gamma::rand(shape(k,j), scale(k,j));}
 
   protected:
     /** compute the Q(theta) value. */
@@ -148,89 +183,36 @@ class GammaBase : public IMixtureModel<Derived >
     /** compute the weighted moments of a gamma mixture. */
     bool moments();
     /** get the weighted mean of the jth variable of the kth cluster. */
-    inline Real meanjk( int j, int k) { return param(k).mean_[j];}
+    inline Real meanjk( int j, int k) { return param_.mean_[k][j];}
     /** get the weighted variance of the jth variable of the kth cluster. */
-    inline Real variancejk( int j, int k) { return param(k).variance_[j];}
-    /** get the weighted mean of the jth variable of the kth cluster. */
-    inline Real meank( int k) { return param(k).mean_.mean();}
-    /** get the weighted variance of the jth variable of the kth cluster. */
-    inline Real variancek( int k) { return param(k).variance_.mean();}
+    inline Real variancejk( int j, int k) { return param_.variance_[k][j];}
+    /** get the mean of the weighted means of the kth cluster. */
+    inline Real meank( int k) { return param_.mean_[k].mean();}
+    /** get the mean of the weighted variances of the kth cluster. */
+    inline Real variancek( int k) { return param_.variance_[k].mean();}
 };
-
-/*get the parameters of the model*/
-template<class Derived>
-void GammaBase<Derived>::getParameters(Array2D<Real>& params) const
-{
-  int nbClust = this->nbCluster();
-  params.resize(2*nbClust, p_data()->cols());
-  for (int k= 0; k < nbClust; ++k)
-  {
-    for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    {
-      params(2*k+  baseIdx, j) = param(baseIdx+k).shape(j);
-      params(baseIdx+2*k+1, j) = param(baseIdx+k).scale(j);
-    }
-  }
-}
-/* get the parameters of the model in an array of size (K * 2d). */
-template<class Derived>
-ArrayXX GammaBase<Derived>::getParametersImpl() const
-{
-  ArrayXX params;
-  int nbClust = this->nbCluster();
-  params.resize(2*nbClust, p_data()->cols());
-  for (int k= 0; k < nbClust; ++k)
-  {
-    for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-    {
-      params(2*k+  baseIdx, j) = param(baseIdx+k).shape(j);
-      params(baseIdx+2*k+1, j) = param(baseIdx+k).scale(j);
-    }
-  }
-  return params;
-}
-
-/* Write the parameters on the output stream os */
-template<class Derived>
-void GammaBase<Derived>::writeParameters(ostream& os) const
-{
-    Array2DPoint<Real> shape(p_data()->cols()), scale(p_data()->cols());
-    for (int k= baseIdx; k < components().end(); ++k)
-    {
-      // store shape and scale values in an array for a nice output
-      for (int j= p_data()->beginCols();  j < p_data()->endCols(); ++j)
-      {
-        shape[j] = param(k).shape(j);
-        scale[j] = param(k).scale(j);
-      }
-      os << _T("---> Component ") << k << _T("\n");
-      os << _T("shape = ") << shape;
-      os << _T("scale = ") << scale;
-    }
-}
 
 /* compute safely the weighted moments of a gamma law. */
 template<class Derived>
 bool GammaBase<Derived>::moments()
 {
-  for (int k= p_tik()->beginCols(); k < components().end(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
-    CVectorX tikRowk(p_tik()->col(k), true); // create a reference
-    param(k).tk_ = tikRowk.sum();
+    CVectorX tikColk(p_tik()->col(k), true); // create a reference
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
     {
       // mean
-      Real mean =  p_data()->col(j).wmean(tikRowk);
+      Real mean =  p_data()->col(j).wmean(tikColk);
       if ( (mean<=0) || isNA(mean) ) { return false;}
-      param(k).mean_[j] = mean;
+      param_.mean_[k][j] = mean;
       // mean log
-      Real meanLog =  p_data()->col(j).log().wmean(tikRowk);
+      Real meanLog =  p_data()->col(j).log().wmean(tikColk);
       if (isNA(meanLog)) { return false;}
-      param(k).meanLog_[j] = meanLog;
+      param_.meanLog_[k][j] = meanLog;
       // variance
-      Real variance =  p_data()->col(j).wvariance(mean, tikRowk);
+      Real variance =  p_data()->col(j).wvariance(mean, tikColk);
       if ((variance<=0)||isNA(variance)){ return false;}
-      param(k).variance_[j] = variance;
+      param_.variance_[k][j] = variance;
     }
   }
   return true;
@@ -241,16 +223,16 @@ template<class Derived>
 Real GammaBase<Derived>::qValue() const
 {
   Real value = 0.;
-  for (int k= p_tik()->beginCols(); k < components().end(); ++k)
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
   {
     Real sumjk=0.0;
     for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
     {
-      Real shape = param(k).shape(j), scale = param(k).scale(j);
-      sumjk += shape * (param(k).meanLog_[j] -std::log(scale))
-              - param(k).mean_[j]/scale - STK::Funct::gammaLn(shape);
+      Real a = shape(k,j), b = scale(k,j);
+      sumjk += a * (param_.meanLog_[k][j]-std::log(b))
+             - param_.mean_[k][j]/b - STK::Funct::gammaLn(a);
     }
-    value += param(k).tk_ * sumjk;
+    value += p_nk()->elt(k) * sumjk;
   }
   return value;
 }

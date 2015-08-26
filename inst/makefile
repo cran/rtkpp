@@ -153,29 +153,29 @@ aamodels:
 obj: stkernel \
      sdk \
      arrays \
-     dmanager \
      clustering \
      algebra \
      analysis \
      statistik \
- #    statmodel \
- #    regress \
- #    reduct \
- #    aamodels
+     regress \
+     reduct \
+     aamodels \
+#     dmanager \
+#    statmodel \
 
 CPP_OBJS = \
   $(STKERNEL_OBJS) \
   $(ARRAYS_OBJS) \
   $(SDK_OBJS) \
-  $(DMANAGER_OBJS) \
   $(CLUSTERING_OBJS) \
   $(ALGEBRA_OBJS) \
   $(ANALYSIS_OBJS) \
   $(STATISTIK_OBJS) \
+  $(REGRESS_OBJS) \
+  $(REDUCT_OBJS) \
+  $(AAMODELS_OBJS) \
+#  $(DMANAGER_OBJS) \
 #  $(STATMODELS_OBJS) \
-#  $(REGRESS_OBJS) \
-#  $(REDUCT_OBJS) \
-#  $(AAMODELS_OBJS)
 
 #-----------------------------------------------------------------------
 # create the library adding the objects
@@ -202,10 +202,10 @@ clean_obj: \
   clean_algebra \
   clean_analysis \
   clean_statistik \
+  clean_regress \
+  clean_reduct \
+  clean_aamodels \
 #  clean_statmodel \
-#  clean_regress \
-#  clean_reduct \
-#  clean_aamodels \
 
 clean_stkernel:
 	$(RM) $(STKERNEL_OBJS)

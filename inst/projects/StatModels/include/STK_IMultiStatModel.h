@@ -43,7 +43,7 @@
 #include "STK_IMultiParameters.h"
 #include "Sdk/include/STK_IRunner.h"
 #include "Sdk/include/STK_Macros.h"
-#include "STatistiK/include/STK_Law_IMultiLaw.h"
+#include "STatistiK/include/STK_MultiLaw_IMultiLaw.h"
 
 namespace STK
 {

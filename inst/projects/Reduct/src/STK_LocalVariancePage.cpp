@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
  */
 
 /*
- * Project:  stkpp::aam
+ * Project:  stkpp::Reduct
  * created on: 27 sept. 2010
  * Purpose:  implement the LocalVariancePage class.
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -49,7 +49,7 @@ static const String LOCALVARIANCEERRORCODES[] =
 /* constructor. */
 LocalVariancePage::LocalVariancePage()
                                     : IPage(_T("LocalVariance"), 1, true)
-                                    , type_(LocalVariance::distance_)
+                                    , type_(Reduct::distance_)
                                     , nbNeighbor_(3)
 {
   // reserve for the 2 options
@@ -65,7 +65,7 @@ LocalVariancePage::LocalVariancePage()
 /* constructor. */
 LocalVariancePage::LocalVariancePage( int const& level)
                                     : IPage(_T("LocalVariance"), level, true)
-                                    , type_(LocalVariance::distance_)
+                                    , type_(Reduct::distance_)
                                     , nbNeighbor_(2)
 {
   // reserve for the 2 options
@@ -92,8 +92,8 @@ LocalVariancePage::~LocalVariancePage()
 bool LocalVariancePage::validate()
 {
   // validate first option
-  type_ = LocalVariance::stringToTypeGraph(options_[0].get(String()));
-  if (type_ == LocalVariance::unknown_ )
+  type_ = Reduct::stringToTypeGraph(options_[0].get(String()));
+  if (type_ == Reduct::unknown_graph_ )
   {
     msg_error_ = LOCALVARIANCEERRORCODES[1];
     msg_error_ += "graph type unknown.\n";

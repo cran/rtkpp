@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,6 +36,8 @@
 #define STK_LAW_EXPONENTIAL_H
 
 #include "STK_Law_IUnivLaw.h"
+#include <Sdk/include/STK_Macros.h>
+#include <STKernel/include/STK_Real.h>
 
 namespace STK
 {
@@ -43,23 +45,37 @@ namespace STK
 namespace Law
 {
 /** @ingroup Laws
- *  @brief class for the Exponential random generator.
- * 
- *  The Exponential distribution, is a continuous probability
- *  distribution with probability pdf function
+ *  @brief Exponential distribution law.
+ *
+ *  In probability theory and statistics, the <em>exponential distribution</em>
+ *  (a.k.a. negative exponential distribution) is the probability distribution
+ *  that describes the time between events in a Poisson process, i.e. a process
+ *  in which events occur continuously and independently at a constant average
+ *  rate. It is a particular case of gamma distribution. It is the continuous
+ *  analogue of the geometric distribution, and it has the key property of being
+ *  memoryless. In addition to being used for the analysis of Poisson processes,
+ *  it is found in various other contexts.
+ *
+ *  The probability density function (pdf) of an exponential distribution is
  *  \f[
  *    f(x; \lambda) = \frac{1}{\lambda} e^{- x/\lambda} 1_{x\geq 0}
  *  \f]
- *  where \f$\lambda>0\f$ is the scale parameter.
+ *  where \f$\lambda>0\f$ is the scale (inverse rate) parameter.
 **/
 class Exponential : public IUnivLaw<Real>
 {
   public:
     typedef IUnivLaw<Real> Base;
     /** constructor. */
-    Exponential( Real const& scale=1);
+    inline Exponential( Real const& scale=1)
+                      : Base(String(_T("Exponential"))), scale_(scale)
+    {
+      // check parameters
+      if ( !Arithmetic<Real>::isFinite(scale) || scale <= 0 )
+        STKDOMAIN_ERROR_1ARG(Exponential::Exponential,scale,invalid argument);
+    }
     /** destructor. */
-	  virtual ~Exponential();
+	  inline virtual ~Exponential() {}
 
     /** Generate a pseudo Exponential random variate. */
     virtual Real rand() const;
@@ -90,23 +106,54 @@ class Exponential : public IUnivLaw<Real>
      *  parameter.
      *  @param scale the scale of the distribution
      **/
-    static Real rand( Real const& scale=1);
+    static Real rand( Real const& scale);
     /** Give the value of the pdf at x.
      *  @param x a real value
      *  @param scale the scale of the distribution
      **/
-    static Real pdf( Real const& x, Real const& scale=1);
+    static Real pdf( Real const& x, Real const& scale);
     /** Give the value of the log-pdf at x.
      *  @param x a real value
      *  @param scale the scale of the distribution
      **/
-    static Real lpdf( Real const& x, Real const& scale=1);
+    static Real lpdf( Real const& x, Real const& scale);
+    /** Compute he cumulative distribution function
+     *  @param t a real value
+     *  @param scale the scale of the distribution
+     **/
+    static Real cdf( Real const& t, Real const& scale);
+    /** Compute rhe inverse cumulative distribution function
+     *  @param p a probability
+     *  @param scale the scale of the distribution
+     **/
+    static Real icdf( Real const& p, Real const& scale);
 
   protected:
     /** The scale parameter. */
     Real scale_;
 };
 
+#ifdef IS_RTKPP_LIB
+
+inline Real Exponential::rand() const { return ::Rf_rexp(scale_);}
+inline Real Exponential::pdf( Real const& x) const { return ::Rf_dexp(x, scale_, false);}
+inline Real Exponential::lpdf( Real const& x) const { return ::Rf_dexp(x, scale_, true);}
+inline Real Exponential::cdf( Real const& t) const { return ::Rf_pexp(t, scale_, true, false);}
+inline Real Exponential::icdf( Real const& p) const { return ::Rf_qexp(p , scale_, true, false);}
+
+// static
+inline Real Exponential::rand( Real const& scale)
+{ return ::Rf_rexp(scale);}
+inline Real Exponential::pdf(Real const& x, Real const& scale)
+{ return ::Rf_dexp(x, scale, false);}
+inline Real Exponential::lpdf(Real const& x, Real const& scale)
+{ return ::Rf_dexp(x, scale, true);}
+inline Real Exponential::cdf(Real const& t, Real const& scale)
+{ return ::Rf_pexp(t, scale, true, false);}
+inline Real Exponential::icdf(Real const& p, Real const& scale)
+{ return ::Rf_qexp(p, scale, true, false);}
+
+#endif
 } // namespace Law
 
 } // namespace STK

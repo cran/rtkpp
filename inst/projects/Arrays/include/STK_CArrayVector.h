@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -127,52 +127,78 @@ class CArrayVector : public ICArray < CArrayVector<Type_, SizeRows_, Orient_> >
     };
 
     /** Default constructor. */
-    inline CArrayVector() : Base() {}
+    CArrayVector() : Base() {}
     /** constructor with specified dimension.
      *  @param sizeRows size of the rows
      **/
-    inline CArrayVector( int sizeRows) : Base(sizeRows, 1) {}
-    /** constructor with sizeRows specified,
-     *  initialization with a constant.
+    CArrayVector( int sizeRows) : Base(sizeRows, 1) {}
+    /** constructor with specified ranges.
+     *  @param range range of the rows
+     **/
+    CArrayVector( Range range): Base(range.size(), 1)
+    { this->shift(range.begin());}
+    /** constructor with sizeRows specified, initialization with a constant.
      *  @param sizeRows size of the rows
      *  @param v initial value of the container
      **/
-    inline CArrayVector( int sizeRows, Type const& v) : Base(sizeRows, 1, v) {}
+    CArrayVector( int sizeRows, Type const& v) : Base(sizeRows, 1, v) {}
+    /** constructor with range specified, initialization with a constant.
+     *  @param range range of the rows
+     *  @param v initial value of the container
+     **/
+    CArrayVector( Range range, Type const& v): Base(range.size(), 1, v)
+    { this->shift(range.begin());}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
      **/
-    inline CArrayVector( const CArrayVector &T, bool ref=false) : Base(T, ref) {}
+    CArrayVector( const CArrayVector &T, bool ref=false) : Base(T, ref) {}
+    /** constructor by reference, ref_=1.
+     *  @param T the container to wrap
+     *  @param I the columns range to wrap
+     **/
+    CArrayVector( CArrayVector const& T, Range const& I)
+                : Base(T.allocator(), I, T.cols())
+    {}
+    /** constructor by reference, ref_=1.
+     *  @param T the container to wrap
+     *  @param I the range of the data to wrap
+     *  @param col the index of the col to wrap
+     **/
+    template<class OtherArray>
+    CArrayVector( ICArray<OtherArray> const& T, Range const& I, int col)
+                : Base(T.allocator(), I, Range(col, 1))
+    {}
     /** wrapper constructor for 0 based C-Array.
      *  @param q pointer on the array
      *  @param nbRow number of rows
      **/
-    inline CArrayVector( Type* const& q, int nbRow): Base(q, nbRow, 1) {}
+    CArrayVector( Type* const& q, int nbRow): Base(q, nbRow, 1) {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/
     template<class OtherAllocator>
-    inline CArrayVector( CAllocatorBase<OtherAllocator> const& allocator): Base(allocator.asDerived()) {}
+    CArrayVector( ITContainer2D<OtherAllocator> const& allocator): Base(allocator.asDerived()) {}
     /** Copy constructor using an expression.
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    inline CArrayVector( ExprBase<OtherDerived> const& T): Base(T.size(), 1) { LowBase::operator=(T);}
+    CArrayVector( ExprBase<OtherDerived> const& T): Base(T.size(), 1) { LowBase::operator=(T);}
     /** destructor. */
-    inline ~CArrayVector() {}
+    ~CArrayVector() {}
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
-    inline CArrayVector& operator=(Type const& v) { return LowBase::setValue(v);}
+    CArrayVector& operator=(Type const& v) { return LowBase::setValue(v);}
     /** operator = : overwrite the CArrayPoint with the Right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArrayVector& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
+    CArrayVector& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy
      **/
-    inline CArrayVector& operator=(CArrayVector const& rhs) { return LowBase::assign(rhs);}
+    CArrayVector& operator=(CArrayVector const& rhs) { return LowBase::assign(rhs);}
 };
 
 } // namespace STK

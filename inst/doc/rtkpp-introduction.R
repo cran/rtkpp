@@ -10,7 +10,7 @@ rtkpp.date <- packageDescription("rtkpp")$Date
 
 
 ###################################################
-### code chunk number 2: rtkpp-introduction.Rnw:75-76
+### code chunk number 2: rtkpp-introduction.Rnw:82-83
 ###################################################
 .Call("stk_version", FALSE, PACKAGE="rtkpp")
 

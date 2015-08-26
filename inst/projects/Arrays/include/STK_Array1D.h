@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -35,12 +35,13 @@
 #ifndef STK_ARRAY1D_H
 #define STK_ARRAY1D_H
 
+#include <Arrays/include/STK_ExprBase.h>
 #include "STK_IArray1D.h"
 
 namespace STK
 {
 
-template<class Type > class Array1D;
+template<class Type, int Size_ = UnknownSize > class Array1D;
 
 
 namespace hidden
@@ -48,15 +49,15 @@ namespace hidden
 /** @ingroup hidden
  *  @brief Specialization of the Traits class for Array1D class.
  **/
-template<class Type_>
-struct Traits< Array1D<Type_> >
+template<class Type_, int Size_>
+struct Traits< Array1D<Type_, Size_> >
 {
-  typedef Array1D<Type_> Row;
-  typedef Array1D<Type_> Col;
-  typedef Array1D<Type_> SubRow;
-  typedef Array1D<Type_> SubCol;
-  typedef Array1D<Type_> SubArray;
-  typedef Array1D<Type_> SubVector;
+  typedef Array1D<Type_, 1> Row;
+  typedef Array1D<Type_, Size_> Col;
+  typedef Array1D<Type_, UnknownSize> SubRow;
+  typedef Array1D<Type_, UnknownSize> SubCol;
+  typedef Array1D<Type_, UnknownSize> SubArray;
+  typedef Array1D<Type_, UnknownSize> SubVector;
 
   typedef Type_ Type;
   typedef typename RemoveConst<Type_>::Type const& ReturnType;
@@ -65,8 +66,9 @@ struct Traits< Array1D<Type_> >
   {
     structure_ = Arrays::vector_,
     orient_    = Arrays::by_col_,
+    size_      = Size_,
     sizeCols_  = 1,
-    sizeRows_  = UnknownSize,
+    sizeRows_  = Size_,
     storage_   = Arrays::dense_ // always dense
   };
 };
@@ -84,18 +86,18 @@ struct Traits< Array1D<Type_> >
  *
  * @tparam the Type of the objects stored in the @c Array1D
  **/
-template<class Type >
-class Array1D : public IArray1D< Array1D<Type> >
+template<class Type, int Size_ >
+class Array1D : public IArray1D< Array1D<Type, Size_> >
 {
   public:
-    typedef typename hidden::Traits<Array1D<Type> >::Row Row;
-    typedef typename hidden::Traits<Array1D<Type> >::Col Col;
-    typedef typename hidden::Traits<Array1D<Type> >::SubRow SubRow;
-    typedef typename hidden::Traits<Array1D<Type> >::SubCol SubCol;
-    typedef typename hidden::Traits<Array1D<Type> >::SubVector SubVector;
-    typedef typename hidden::Traits<Array1D<Type> >::SubArray SubArray;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::Row Row;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::Col Col;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::SubRow SubRow;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::SubCol SubCol;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::SubVector SubVector;
+    typedef typename hidden::Traits<Array1D<Type, Size_> >::SubArray SubArray;
     /** Type for the Array1DBase Class. */
-    typedef IArray1D< Array1D<Type> > Base;
+    typedef IArray1D< Array1D<Type, Size_> > Base;
     /** Default constructor. */
     Array1D() : Base(){}
     /** constructor with a specified Range
@@ -124,44 +126,55 @@ class Array1D : public IArray1D< Array1D<Type> >
     Array1D( Type* q, Range const& I) : Base(q, I) {}
     /** destructor: allocated memory is liberated by AllocatorBase base class. */
     ~Array1D() {}
-    /** operator = : overwrite the Array1D with t.
+    /** operator = : overwrite the Array1D with T.
      *  We resize the object if this and T does not have the same size
      *  but if they have the same size, we don't modify the range
      *  of the object.
      *  @param T the container to copy
      **/
-    inline Array1D<Type>& operator=(Array1D<Type> const& T)
+    Array1D& operator=(Array1D const& T)
     {
       // check size
-      if (this->size()!=T.size()) this->resize(T.range());
+      if (this->range()!=T.range()) this->resize(T.range());
       // copy without ovelapping.
-      const int first = this->begin(), last = this->lastIdx();
-      if (first < T.begin())
-      { for (int i=first, j=T.begin(); i<=last; i++, j++) this->elt(i) = T.elt(j);}
+      if (this->begin() < T.begin())
+      { for (int i=this->begin(), j=T.begin(); i<this->end(); i++, j++) this->elt(i) = T.elt(j);}
       else
-      { for (int i=last, j=T.lastIdx(); i>=first; i--, j--) this->elt(i) = T.elt(j);}
+      { for (int i=this->lastIdx(), j=T.lastIdx(); i>=this->begin(); i--, j--) this->elt(i) = T.elt(j);}
       return *this;
     }
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array1D& operator=(Type const& v)
+    Array1D& operator=(Type const& v)
     {
-      for (int i=this->begin(); i<=this->lastIdx(); i++) this->elt(i)= v;
+      for (int i=this->begin(); i<this->end(); i++) this->elt(i)= v;
+      return *this;
+    }
+    /** Copy an other type of 1D array in an Array1D.
+     *  @param T the array to copy
+     **/
+    template<class OtherArray>
+    Array1D& operator=(ITContainer1D<OtherArray> const& T)
+    {
+      // check size
+      if (this->range()!=T.range()) this->resize(T.range());
+      for (int i=this->begin(), j=T.begin(); i<this->end(); i++, j++) this->elt(i) = T.elt(j);
+      return *this;
+    }
+    /** Copy an other type of array/expression in an Array1D.
+     *  @param T the array/expression to copy
+     **/
+    template<class OtherArray>
+    Array1D& operator=(ExprBase<OtherArray> const& T)
+    {
+      // check size
+      if (this->size()!=T.size()) this->resize(T.range());
+      for (int i=this->begin(); i<this->end(); i++) this->elt(i)= T[i];
       return *this;
     }
 };
 
-/** @ingroup Arrays
- *  ostream for Array1D.
- *  @param s the output stream
- *  @param V the Array1D to write
- **/
-template<class Type>
-ostream& operator<<(ostream& s, const Array1D<Type>& V)
-{ return out1D(s,V);}
-
 } // namespace STK
 
-#endif
-// STK_ARRAY1D_H
+#endif // STK_ARRAY1D_H

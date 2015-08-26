@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -35,9 +35,9 @@
 #ifndef STK_LAW_CATEGORICAL_H
 #define STK_LAW_CATEGORICAL_H
 
-#include "Arrays/include/STK_Array2DVector.h"
+#include <Arrays/include/STK_Array2DVector.h>
 #include "STK_Law_IUnivLaw.h"
-#include "../include/STK_Law_Util.h"
+#include "STK_Law_Util.h"
 
 namespace STK
 {
@@ -46,13 +46,13 @@ namespace Law
 {
 
 /** @ingroup Laws
- *  @brief Implement the Categorical probability law.
+ *  @brief Categorical probability law.
  *
- * In probability theory and statistics, a categorical distribution (also called
- * a "generalized Bernoulli distribution" or, less precisely, a "discrete
- * distribution") is a probability distribution that describes the result of a
- * random event that can take on one of @e K possible outcomes, with the
- * probability of each outcome separately specified. There is not necessarily
+ * In probability theory and statistics, a <em>categorical distribution</em>
+ * (also called a "generalized Bernoulli distribution" or, less precisely, a
+ * "discrete distribution") is a probability distribution that describes the
+ * result of a random event that can take on one of @e K possible outcomes, with
+ * the probability of each outcome separately specified. There is not necessarily
  * an underlying ordering of these outcomes, but numerical labels are attached
  * for convenience in describing the distribution, often in the range 1 to K.
  * Note that the K-dimensional categorical distribution is the most general
@@ -157,6 +157,65 @@ class Categorical: public IUnivLaw<int>
   private:
     void computeCumProb();
 };
+
+/* @return a @c Type random variate . */
+inline int Categorical::rand() const
+{
+  Real u = Law::generator.randUnif();
+  int k;
+  for(k = cumProb_.begin(); k< cumProb_.end(); k++)
+  { if (u<=cumProb_[k]) return k;}
+  return k;
+}
+
+/* @brief compute the probability distribution function (density)
+ *  Give the value of the pdf at the point x.
+ *  @param x the value to compute the pdf.
+ *  @return the value of the pdf
+ **/
+inline Real Categorical::pdf(int const& x) const
+{ return prob_[x];}
+/* @brief compute the log probability distribution function
+ *  Give the value of the log-pdf at the point x.
+ *  @param x the value to compute the lpdf.
+ *  @return the value of the log-pdf
+ **/
+inline Real Categorical::lpdf(int const& x) const
+{ return (prob_[x] == 0) ? -Arithmetic<Real>::infinity() : std::log(prob_[x]);}
+/* @brief compute the cumulative distribution function
+ *  Give the probability that a Categorical random variate is less or equal
+ *  to t.
+ *  @param t the value to compute the cdf.
+ *  @return the value of the cdf
+ **/
+inline Real Categorical::cdf(Real const& t) const
+{ return (t<prob_.begin()) ? 0. : (t>=prob_.lastIdx()) ? 1. : cumProb_[std::floor(t)];}
+
+/* @brief inverse cumulative distribution function
+ *  Compute the Real quantile t such that the probability of a random
+ *  variate less to t is less or equal to p.
+ *  @param p value of the probability giving the quantile
+ **/
+inline int Categorical::icdf(Real const& prob) const
+{
+  if (prob<0) STKDOMAIN_ERROR_1ARG(Categorical::icdf,prob,prob must be >= 0);
+  if (prob>1) STKDOMAIN_ERROR_1ARG(Categorical::icdf,prob,prob must be <= 1);
+  int k;
+  for (k = cumProb_.begin(); k< cumProb_.lastIdx(); ++k)
+  { if (cumProb_[k] >= prob) return k;}
+  return k;
+}
+
+inline void Categorical::computeCumProb()
+{
+  cumProb_.resize(prob_.range());
+  Real sum=0.;
+  for (int k=prob_.begin(); k< prob_.end(); ++k)
+  { cumProb_[k] = (sum+=prob_[k]);}
+  // normalize
+  if (sum) {cumProb_/=sum; prob_ /=sum;}
+  else {STKINVALIDARGUMENT_ERROR_NO_ARG(Categorical::computeCumProb,sum of the probabilities is zero);}
+}
 
 } // namespace Law
 

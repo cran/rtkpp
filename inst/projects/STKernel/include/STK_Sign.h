@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2007  Serge Iovleff
+/*     Copyright (C) 2007-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -99,31 +99,67 @@ struct IdTypeImpl<Sign>
  *  @param os the output stream
  *  @param value the value to send to the stream
  **/
-ostream& operator << (ostream& os, const Sign& value);
+inline ostream& operator << (ostream& os, const Sign& value)
+{ return Arithmetic<Sign>::isNA(value)
+      ? (os << stringNa) : (os << static_cast<int>(value));
+}
 
 /** @ingroup stream
  *  @brief Overloading of the istream >> for the type Sign.
  *  @param is the input stream
  *  @param value the value to get from the stream
  **/
-istream& operator >> (istream& is, Sign& value);
+inline istream& operator >> (istream& is, Sign& value)
+{
+  // get current file position
+  int res;
+  // try to read an integer
+  if (!(is >> res).fail())
+  {
+    switch (res)
+    {
+      case 1:
+        value = positive_;
+        break;
+      case -1:
+        value = negative_;
+        break;
+      default:
+        value = signNA_;
+        break;
+    }
+  }
+  else
+  { value = signNA_; is.clear(); is.setstate(std::ios::failbit);}
+  return is;
+}
 
 /** @ingroup Base
  *  @brief Convert a String to a Sign.
- *  @param type the String we want to convert
+ *  @param str the String we want to convert
  *  @return the Sign represented by the String @c type. if the string
  *  does not match any known name, the @c signNA_ value is returned.
  **/
-Sign stringToSign( String const& type);
+inline Sign stringToSign( String const& str)
+{
+  if (toUpperString(str) == toUpperString(_T("-1"))) return negative_;
+  if (toUpperString(str) == toUpperString(_T("1"))) return positive_;
+  return signNA_;
+}
 
 /** @ingroup Base
  *  @brief Convert a String to a Sign using a map.
- *  @param type the String we want to convert
+ *  @param str the String we want to convert
  *  @param mapping the mapping between the string and the Sign
  *  @return the Sign represented by the String @c type. if the string
  *  does not match any known name, the @c signNA_ value is returned.
  **/
-Sign stringToSign( String const& type, std::map<String, Sign> const& mapping);
+inline Sign stringToSign( String const& str, std::map<String, Sign> const& mapping)
+{
+  std::map<String, Sign>::const_iterator it=mapping.find(str);
+  if (it == mapping.end())  return signNA_;
+  return it->second;
+}
 
 /** @ingroup Base
  *  @brief Convert a Sign to a String.
@@ -131,7 +167,13 @@ Sign stringToSign( String const& type, std::map<String, Sign> const& mapping);
  *  @param f format, by default write every number in decimal
  *  @return the string associated to this value.
  **/
-String signToString( Sign const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
+inline String signToString( Sign const& value, std::ios_base& (*f)(std::ios_base&) = std::dec)
+{
+  if (Arithmetic<Sign>::isNA(value)) return stringNa;
+  ostringstream os;
+  os << f << static_cast<int>(value);
+  return os.str();
+}
 
 /** @ingroup Base
  *  @brief Convert a Sign to a String.
@@ -139,7 +181,8 @@ String signToString( Sign const& value, std::ios_base& (*f)(std::ios_base&) = st
  *  @param mapping the mapping between the Sign and the String
  *  @return the string associated to this type.
  **/
-String signToString( Sign const& value, std::map<Sign, String> mapping);
+inline String signToString( Sign const& value, std::map<Sign, String> mapping)
+{ return mapping.find(value)->second;}
 
 /** @ingroup Base
  *  @brief specialization for Sign

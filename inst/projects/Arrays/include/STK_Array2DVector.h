@@ -142,15 +142,15 @@ class Array2DVector : public IArray2D< Array2DVector<Type_> >
                  : Base(T, ref) {}
     /** constructor by reference, ref_=1.
      *  @param T the container to wrap
-     *  @param I the range of the columns to wrap
+     *  @param I the columns range to wrap
      **/
-    Array2DVector( const Array2DVector<Type>& T, Range const& I)
+    Array2DVector( const Array2DVector& T, Range const& I)
                  : Base(T, I, T.cols())
     {}
     /** constructor by reference, ref_=1.
      *  @param T the container to wrap
      *  @param I the range of the data to wrap
-     *  @param col the index of the col to wrap
+     *  @param col the index of the column to wrap
      **/
     template<class OtherArray>
     Array2DVector( IArray2D<OtherArray> const& T, Range const& I, int col)
@@ -165,7 +165,7 @@ class Array2DVector : public IArray2D< Array2DVector<Type_> >
     /** constructor by reference, ref_=1.
      *  @param p_data a pointer on the data to wrap
      *  @param I the range of the data to wrap
-     *  @param col the index of the col to wrap
+     *  @param col the index of the column to wrap
      **/
      Array2DVector( Type** p_data, Range const& I, int col)
                   : Base(p_data, I, Range(col, 1))
@@ -175,7 +175,7 @@ class Array2DVector : public IArray2D< Array2DVector<Type_> >
     /** @return a constant reference on the ith element
      *  @param i index of the element (const)
      **/
-    inline Type const & elt1Impl( int i) const { return this->data(this->beginCols())[i];}
+    Type const & elt1Impl( int i) const { return this->data(this->beginCols())[i];}
     /** @return a reference on the ith element
      *  @param i index of the element
      **/
@@ -187,7 +187,7 @@ class Array2DVector : public IArray2D< Array2DVector<Type_> >
     /**  Resize the container.
      *  @param I the range to set to the container
      **/
-    inline Array2DVector<Type>& resize1D( Range const& I)
+    Array2DVector<Type>& resize1D( Range const& I)
     { Base::resize(I, this->cols()); return *this;}
     /** Add n elements to the container.
      *  @param n number of elements to add
@@ -210,15 +210,15 @@ class Array2DVector : public IArray2D< Array2DVector<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DVector& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
+    Array2DVector& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
      **/
-    inline Array2DVector& operator=(Array2DVector const& T) { return LowBase::assign(T);}
+    Array2DVector& operator=(Array2DVector const& T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2DVector& operator=(Type const& v) { return LowBase::setValue(v);}
+    Array2DVector& operator=(Type const& v) { return LowBase::setValue(v);}
 };
 
 } // namespace STK

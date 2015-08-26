@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
  */
 
 /*
- * Project:  stkpp::Model
+ * Project:  stkpp::StatModel
  * created on: 13 août 2011
  * Purpose:  Create a gaussian statistical model.
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -38,6 +38,8 @@
 #define STK_GAUSSIANMODEL_H
 
 #include "STK_IGaussianModel.h"
+#include <STatistiK/include/STK_Stat_MultivariateReal.h>
+#include <STatistiK/include/STK_MultiLaw_Normal.h>
 
 namespace STK
 {
@@ -46,28 +48,37 @@ namespace STK
  *  @brief Compute the maximum likelihood estimates of a complete Gaussian
  *  statistical model.
  **/
-class GaussianModel : public IGaussianModel<ArrayXX>
+template <class Array>
+class GaussianModel : public IGaussianModel<Array>
 {
   public:
+    typedef IGaussianModel<Array> Base;
+    using Base::p_data_;
+    using Base::nbVariable;
+    using Base::mean_;
+    using Base::p_law_;
+
+    typedef typename Array::Col ColVector;
+    typedef typename Array::Row RowVector;
     /** constructor.
      * @param p_data pointer on the data set
      */
-    GaussianModel( ArrayXX const* p_data);
+    GaussianModel( Array const* p_data);
     /** constructor.
      * @param data reference on the data set
      */
-    GaussianModel( ArrayXX const& data);
+    GaussianModel( Array const& data);
     /** destructor. */
-    virtual ~GaussianModel();
+    ~GaussianModel();
     /** implementation of the Gaussian statistical model
      * @return @c true if no error occur and @c false otherwise.
      */
-    virtual bool run();
+    bool run();
     /** implementation of the weighted Gaussian statistical model
      * @param weights the weights of the samples
      * @return @c true if no error occur and @c false otherwise.
      */
-    virtual bool run(Vector const& weights);
+    bool run(ColVector const& weights);
     /** get the empirical covariance
      * @return the empirical covariance
      */
@@ -76,12 +87,87 @@ class GaussianModel : public IGaussianModel<ArrayXX>
     /** ArrayXX of the empirical covaiance */
     ArraySquareX cov_;
     /** compute the empirical covariance matrix. */
-    virtual void compCovariance();
+    void compCovariance();
     /** compute the empirical weighted covariance matrix.
      * @param weights the weights of the samples
      **/
-    virtual void compWeightedCovariance(ArrayXX::Col const& weights);
+    void compWeightedCovariance(ColVector const& weights);
 };
+
+/* constructor */
+template <class Array>
+GaussianModel<Array>::GaussianModel( Array const* p_data)
+                            : Base(p_data)
+                            , cov_(p_data_->cols())
+{
+  this->setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
+}
+
+/* constructor */
+template <class Array>
+GaussianModel<Array>::GaussianModel( Array const& data)
+                            : Base(data)
+                            , cov_(data.cols())
+{
+  setNbFreeParameter(nbVariable() + (nbVariable()* (nbVariable()-1))/2);
+}
+
+/* destructor */
+template <class Array>
+GaussianModel<Array>::~GaussianModel()
+{ if (p_law_) delete p_law_;}
+
+/* implementation of the Gaussian statistical model
+ * @return @c true if no error occur and @c false otherwise.
+ */
+template <class Array>
+bool GaussianModel<Array>::run()
+{
+  // compute the mean
+  this->compMean();
+  // compute the covariance matrix
+  compCovariance();
+  // create p_law_ (will be deleted in base class)
+  // update gaussian law (will be deleted in base class)
+  if (!p_law_) p_law_ = new MultiLaw::Normal<RowVector>(mean_, cov_);
+  else static_cast<MultiLaw::Normal<RowVector>*>(p_law_)->setParameters(mean_, cov_);
+  // compute log likelihood of the gaussian law
+  this->setLnLikelihood(static_cast<MultiLaw::Normal<RowVector>* >(p_law_)->lnLikelihood(*p_data_ ));
+  // everything ok
+  return true;
+}
+
+/* implementation of the weighted Gaussian statistical model
+ * @param weights the weights of the samples
+ * @return @c true if no error occur and @c false otherwise.
+ */
+template <class Array>
+bool GaussianModel<Array>::run(ColVector const& weights)
+{
+  // compute the mean
+  this->compWeightedMean(weights);
+  // compute the covariance matrix
+  compWeightedCovariance(weights);
+  // create p_law_ (will be deleted in base class)
+  // update gaussian law (will be deleted in base class)
+  if (!p_law_) p_law_ = new MultiLaw::Normal<RowVector>(mean_, cov_);
+  else static_cast<MultiLaw::Normal<RowVector>*>(p_law_)->setParameters(mean_, cov_);
+  // compute log likelihood of the gaussian law
+  this->setLnLikelihood(static_cast<MultiLaw::Normal<RowVector>* >(p_law_)->lnLikelihood(*p_data_ ));
+  // everything ok
+  return true;
+}
+
+/** compute the empirical covariance matrix. */
+template <class Array>
+void GaussianModel<Array>::compCovariance()
+{ Stat::covariance(*p_data_,cov_);}
+/** compute the empirical weighted covariance matrix.
+ * @param weights the weights of the samples
+ **/
+template <class Array>
+void GaussianModel<Array>::compWeightedCovariance(ColVector const& weights)
+{ Stat::covariance(*p_data_, weights, cov_);}
 
 } // namespace STK
 

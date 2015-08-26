@@ -179,12 +179,12 @@ void IPage::write( ostream& os) const
   const int nbWhiteSpace = 2*(level_-1);
   const String padding = String((int)nbWhiteSpace, CHAR_BLANK);
   // write keyword
-  os << padding << keyword_ << STRING_NL;
+  os << padding << keyword_ << _T("\n");
   // write options
   for( ContOption::const_iterator it = options_.begin(); it != options_.end(); it++)
   {
     os << padding; it->write(os);
-    if (it->type() != Option::page_) os << STRING_NL;
+    if (it->type() != Option::page_) os << _T("\n");
   }
   os.flush();
 }

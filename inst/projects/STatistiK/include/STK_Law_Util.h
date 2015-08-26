@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  stkpp::
+ * Project:  stkpp::STatistiK::Law
  * created on: 2 sept. 2013
  * Author:   iovleff, serge.iovleff@stkpp.org
  **/
@@ -45,7 +45,7 @@ namespace STK
 namespace Law
 {
 
-/** defautl random number generator. */
+/** default random number generator. */
 static RandBase generator;
 
 }  // namespace Law

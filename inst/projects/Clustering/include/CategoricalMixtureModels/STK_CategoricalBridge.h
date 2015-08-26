@@ -55,11 +55,19 @@ namespace hidden
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Categorical_pjk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< CategoricalBridge<Clust::Categorical_pjk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< CategoricalBridge<Clust::Categorical_pjk_, Data_> >
 {
+  /** Structure storing the Data */
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the Mixture model */
   typedef Categorical_pjk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Categorical_pjk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Categorical_
@@ -68,11 +76,19 @@ struct MixtureBridgeTraits< CategoricalBridge<Clust::Categorical_pjk_, Data> >
 /** @ingroup hidden
  *  Partial specialization of the MixtureBridgeTraits for the Categorical_pk model
  **/
-template<class Data>
-struct MixtureBridgeTraits< CategoricalBridge< Clust::Categorical_pk_, Data> >
+template<class Data_>
+struct MixtureBridgeTraits< CategoricalBridge< Clust::Categorical_pk_, Data_> >
 {
+  /** Structure storing the Data */
+  typedef Data_ Data;
+  /** Data Type */
+  typedef typename Data_::Type Type;
   /** Type of the mixture model */
   typedef Categorical_pk<Data> Mixture;
+  /** Type of the parameter handler */
+  typedef ParametersHandler<Clust::Categorical_pk_> ParamHandler;
+  /** Structure storing Parameters */
+  typedef ArrayXX Parameters;
   enum
   {
     idMixtureClass_ = Clust::Categorical_
@@ -81,10 +97,6 @@ struct MixtureBridgeTraits< CategoricalBridge< Clust::Categorical_pk_, Data> >
 
 } // namespace hidden
 
-} // namespace STK
-
-namespace STK
-{
 /** @ingroup Clustering
  *  @brief Templated implementation of the IMixture interface allowing
  *  to bridge a STK++ mixture with the composer.
@@ -102,6 +114,8 @@ class CategoricalBridge: public IMixtureBridge< CategoricalBridge<Id,Data> >
     typedef IMixtureBridge< CategoricalBridge<Id,Data> > Base;
     // type of Mixture
     typedef typename hidden::MixtureBridgeTraits< CategoricalBridge<Id,Data> >::Mixture Mixture;
+    typedef typename hidden::MixtureBridgeTraits< CategoricalBridge<Id,Data> >::ParamHandler ParamHandler;
+    typedef typename hidden::MixtureBridgeTraits< CategoricalBridge<Id,Data> >::Parameters Parameters;
     // type of data
     typedef typename Data::Type Type;
     // class of mixture
@@ -109,11 +123,11 @@ class CategoricalBridge: public IMixtureBridge< CategoricalBridge<Id,Data> >
     {
       idMixtureClass_ = Clust::Categorical_
     };
-    // parameters type to get
-    typedef typename Clust::MixtureTraits<Mixture>::Param Param;
 
     typedef std::vector<std::pair<int,int> >::const_iterator ConstIterator;
     using Base::mixture_;
+    using Base::p_data_;
+    using Base::p_tik;
 
     /** default constructor. Remove the missing values from the data set and
      *  initialize the mixture by setting the data set.
@@ -122,13 +136,10 @@ class CategoricalBridge: public IMixtureBridge< CategoricalBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     CategoricalBridge( MixtureData<Data>* p_data, std::string const& idData, int nbCluster)
-                  : Base( idData, nbCluster)
-                  , p_data_(p_data)
+                     : Base( p_data, idData, nbCluster)
     { removeMissing(); initializeMixture();}
     /** copy constructor */
-    CategoricalBridge( CategoricalBridge const& bridge)
-                  : Base(bridge)
-                  , p_data_(bridge.p_data_)
+    CategoricalBridge( CategoricalBridge const& bridge): Base(bridge)
     { initializeMixture();}
     /** destructor */
     virtual ~CategoricalBridge() {}
@@ -156,7 +167,9 @@ class CategoricalBridge: public IMixtureBridge< CategoricalBridge<Id,Data> >
      *  parameters.
      *  @param params the array with the parameters of the mixture.
      */
-    virtual void getParameters(ArrayXX& params) const;
+    virtual void getParameters(Parameters& params) const;
+    /** Write the parameters on the output stream os */
+    void writeParameters(ostream& os) const;
 
   private:
     /** This function will be used for the imputation of the missing data
@@ -174,11 +187,8 @@ class CategoricalBridge: public IMixtureBridge< CategoricalBridge<Id,Data> >
      *  @param nbCluster number of cluster
      **/
     CategoricalBridge( Mixture const& mixture, std::string const& idData, int nbCluster)
-                 : Base(mixture, idData, nbCluster)
-                 , p_data_(0)
+                     : Base(mixture, idData, nbCluster)
     {}
-    /** pointer on the data manager */
-    MixtureData<Data>* p_data_;
     /** @return a safe value for the jth variable
      *  @param  dataij the matrix of the data set
      *  @param j index of the column with the safe value needed */
@@ -215,7 +225,7 @@ void CategoricalBridge<Id, Data>::removeMissing()
 }
 
 template<int Id, class Data>
-void CategoricalBridge<Id, Data>::getParameters(ArrayXX& params) const
+void CategoricalBridge<Id, Data>::getParameters(Parameters& params) const
 {
     int nbCluster    = this->nbCluster();
     int nbModalities = mixture_.modalities().size();
@@ -226,9 +236,27 @@ void CategoricalBridge<Id, Data>::getParameters(ArrayXX& params) const
       for (int j = mixture_.p_data()->beginCols(); j < mixture_.p_data()->endCols(); ++j)
       {
         for (int l = 0; l < nbModalities; ++l)
-        { params(baseIdx+k * nbModalities + l, j) = mixture_.param(baseIdx+k).proba(j, mixture_.modalities().begin() + l);}
+        { params(baseIdx+k * nbModalities + l, j) = mixture_.proba(baseIdx+k, j, mixture_.modalities().begin() + l);}
       }
     }
+}
+
+/* Write the parameters on the output stream os */
+template<int Id, class Data>
+void CategoricalBridge<Id, Data>::writeParameters(ostream& os) const
+{
+  ArrayXX p(mixture_.modalities(), mixture_.p_data()->cols());
+  for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+  {
+    // store proba values in an array for a nice output
+    for (int j= p.beginCols();  j < p.endCols(); ++j)
+    {
+      for (int l= mixture_.modalities().begin(); l < mixture_.modalities().end(); ++l)
+      { p(l, j) = mixture_.proba(k,j,l);}
+    }
+    os << _T("---> Component ") << k << _T("\n");
+    os << _T("probabilities =\n") << p  << _T("\n");
+  }
 }
 
 } // namespace STK

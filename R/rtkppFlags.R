@@ -68,9 +68,12 @@ LdFlags <- function() { cat(.rtkppLdFlags()) }
 {
   path1 <- .rtkpp.system.file( "include" )
   path2 <- .rtkpp.system.file( "projects" )
-  if (.Platform$OS.type=="windows") { path1 <- .asBuildPath(path1) }
-  if (.Platform$OS.type=="windows") { path2 <- .asBuildPath(path2) }
-  paste("-DIS_RTKPP_LIB -DSTKUSELAPACK -I", path1, " -I", path2, if (cpp11) " -std=c++11 " else "", sep="")
+  if (.Platform$OS.type=="windows")
+  {
+    path1 <- .asBuildPath(path1);
+    path2 <- .asBuildPath(path2);
+  }
+  paste("-I", path1, " -I", path2, if (cpp11) " -std=c++11 " else "", sep="")
 }
 
 # Provide internal STK++ macros

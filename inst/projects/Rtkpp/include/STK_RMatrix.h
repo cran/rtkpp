@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*  Copyright (C) 2004-2014  Serge Iovleff, University Lille 1, Inria
+/*  Copyright (C) 2004-2015  Serge Iovleff, University Lille 1, Inria
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as
@@ -84,7 +84,7 @@ struct Traits< RMatrix<Type_> >
 } // namespace hidden
 
 template <typename Type_>
-class RMatrix : public ArrayBase< RMatrix<Type_> >
+class RMatrix : public ArrayBase< RMatrix<Type_> >, public TRef<1>
 {
   public:
     typedef typename hidden::Traits<RMatrix<Type_> >::Row Row;
@@ -110,15 +110,22 @@ class RMatrix : public ArrayBase< RMatrix<Type_> >
     typedef TRange<sizeCols_> ColRange;
 
     /** Default Constructor. */
-    inline RMatrix() : matrix_(),rows_(), cols_() {}
+    inline RMatrix(): matrix_(),rows_(), cols_() {}
     /** Constructor with SEXP. */
     inline RMatrix( SEXP robj)
-                     : matrix_(robj),rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
+                  : matrix_(robj),rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
     {}
     /** Constructor */
     inline RMatrix( Rcpp::Matrix<Rtype_> matrix)
-                     : matrix_(matrix),rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
+                  : matrix_(matrix), rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
     {}
+    /** Copy Constructor. @c ref is only there for compatibility */
+    inline RMatrix( RMatrix const& matrix, bool ref)
+                  : matrix_(matrix), rows_(0, matrix_.rows()), cols_(0, matrix_.cols())
+    {}
+
+    /** @return the underlying Rcpp matrix */
+    inline Rcpp::Matrix<Rtype_> const& matrix() const { return matrix_;}
     /** set Matrix .
      *  @param matrix the Rcpp matrix to wrap
      *  @note cannot be passed as const& due to a bug from the Rcpop side
@@ -153,11 +160,11 @@ class RMatrix : public ArrayBase< RMatrix<Type_> >
     inline Col colImpl(int j) const { return Col(this->asDerived(), j);}
     /** @return the i-th row of this. */
     inline Row rowImpl(int i) const { return Row(this->asDerived(), i);}
-   /** @return a constant reference on element (i,j) of the 2D container
+   /** @return a constant reference on element (i,j)
      *  @param i, j indexes of the row and of the column
      **/
     inline Type const& elt2Impl(int i, int j) const { return static_cast<Type const&>(matrix_(i,j));}
-    /** @return a reference on the element (i,j) of the 2D container.
+    /** @return a reference on the element (i,j)
      *  @param i, j indexes of the row and of the column
      **/
     inline Type& elt2Impl(int i, int j) { return (matrix_(i,j));}

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -36,8 +36,7 @@
 #ifndef STK_PROXY_H
 #define STK_PROXY_H
 
-#include "Sdk/include/STK_MetaTemplate.h"
-#include "STK_Global.h"
+#include <Sdk/include/STK_MetaTemplate.h>
 
 namespace STK
 {

@@ -53,7 +53,7 @@ struct MinOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MinOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /**  @return the minimal value of the variable V
      *  \f[ \min_{i=1}^n v_i \f]
      **/
@@ -71,7 +71,7 @@ struct MinOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       Type min  = Arithmetic<Type>::max();
       for (int i=V_.begin(); i<V_.end(); i++)
       { min = std::min(min, w[i]*V_[i]);}
@@ -90,7 +90,7 @@ struct MinSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MinSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /**  @return the safely computed minimal value of the variable V */
     Type const operator()() const
     {
@@ -105,7 +105,7 @@ struct MinSafeOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       Type min  = Arithmetic<Type>::max();
       for (int i=V_.begin(); i<V_.end(); i++)
       { if (!Arithmetic<Type>::isNA(V_[i])) min = std::min(min, w[i]*V_[i]);}
@@ -124,7 +124,7 @@ struct MaxOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MaxOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the maximal value of the variable V
      *  \f[ \max_{i=1}^n v_i \f]
      **/
@@ -142,7 +142,7 @@ struct MaxOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       Type max  = -Arithmetic<Type>::max();
       for (int i=V_.begin(); i<V_.end(); i++)
       { max = std::max(max, w[i]*V_[i]);}
@@ -161,7 +161,7 @@ struct MaxSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MaxSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the safely computed maximal value of the variable V */
     Type const operator()() const
     {
@@ -176,7 +176,7 @@ struct MaxSafeOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       Type max  = -Arithmetic<Type>::max();
       for (int i=V_.begin(); i<V_.end(); i++)
       { if (!Arithmetic<Type>::isNA(V_[i])) max = std::max(max, w[i]*V_[i]);}
@@ -195,7 +195,7 @@ struct SumOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline SumOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the mean of the variable V
      *  \f[ \hat{\mu} = \frac{1}{n} \sum_{i=1}^n V(i) \f]
      **/
@@ -214,7 +214,7 @@ struct SumOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // sum the weighted samples
       Type sum  = 0.0, sum1weights= 0.0;
       for (int i=V_.begin(); i<V_.end(); i++)
@@ -235,7 +235,7 @@ struct SumSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline SumSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the safely computed mean of the variable V discarding all missing values. */
     Type const operator()() const
     {
@@ -252,7 +252,7 @@ struct SumSafeOp
     template< class Weights>
     inline Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       if (V_.range() != w.range())
         STKRUNTIME_ERROR_NO_ARG(wmeanSafe,V.range()!=w.range());
 
@@ -278,7 +278,7 @@ struct MeanOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MeanOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the mean of the variable V
      *  \f[ \hat{\mu} = \frac{1}{n} \sum_{i=1}^n V(i) \f]
      **/
@@ -299,7 +299,7 @@ struct MeanOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       // sum the weighted samples
@@ -326,7 +326,7 @@ struct MeanSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline MeanSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the safely computed mean of the variable V discarding all missing values. */
     Type const operator()() const
     {
@@ -347,7 +347,7 @@ struct MeanSafeOp
     template< class Weights>
     inline Type const operator()( ExprBase<Weights> const&  w) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       if (V_.range() != w.range())
@@ -379,7 +379,7 @@ struct VarianceOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline VarianceOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the variance of the variable V.
      *  \f[ \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n (V(i)-\hat{\mu})^2. \f]
      *  @param unbiased @c true if we want an unbiased estimate of the variance,
@@ -421,7 +421,7 @@ struct VarianceOp
     template< class Weights>
     inline Type const operator()( ExprBase<Weights> const&  w, bool unbiased) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       // Compute the mean
@@ -456,7 +456,7 @@ struct VarianceSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline VarianceSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the variance of the variable V discarding all missing values.
      *  \f[ \hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n (V(i)-\hat{\mu})^2. \f]
      *  @param unbiased @c true if we want an unbiased estimate of the variance,
@@ -504,7 +504,7 @@ struct VarianceSafeOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const&  w, bool unbiased) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       // Compute the mean
@@ -543,7 +543,7 @@ struct VarianceWithFixedMeanOp
   typedef typename Derived::Type Type;
   /** constructor */
   inline VarianceWithFixedMeanOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-  { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+  { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
   /** @return the variance of the variable V with fixed mean.
    *  \f[ \hat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (V(i) - \mu)^2. \f]
    *  using a compensated algorithm.
@@ -590,7 +590,7 @@ struct VarianceWithFixedMeanOp
     template< class Weights>
     Type const operator()( ExprBase<Weights> const& w, Type const& mu, bool unbiased) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       // sum the weighted samples
@@ -623,7 +623,7 @@ struct VarianceWithFixedMeanSafeOp
     typedef typename Derived::Type Type;
     /** constructor */
     inline VarianceWithFixedMeanSafeOp( ExprBase<Derived> const&  V) :  V_(V.asDerived())
-    { STK_STATICASSERT_ONE_DIMENSION_ONLY(Derived);}
+    { STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Derived);}
     /** @return the safely computed variance of the variable V with fixed mean.
      *  \f[ \hat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (V(i) - \mu)^2. \f]
      *  using a compensated algorithm and discarding the missing values.
@@ -675,7 +675,7 @@ struct VarianceWithFixedMeanSafeOp
     Type const operator()( ExprBase<Weights> const& w, Type const& mu
                          , bool unbiased) const
     {
-      STK_STATICASSERT_ONE_DIMENSION_ONLY(Weights);
+      STK_STATIC_ASSERT_ONE_DIMENSION_ONLY(Weights);
       // no samples
       if (V_.empty()) { return Arithmetic<Type>::NA();}
       if (V_.range() != w.range())

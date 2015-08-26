@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -80,8 +80,8 @@ template<typename Derived, template<class> class Visitor>
 struct Traits< VisitorByCol <Derived, Visitor> >
 {
   typedef typename Derived::Type Type_;
-  typedef typename Visitor<Type_>::return_type Type;
-  typedef Type ReturnType;
+  typedef typename Visitor<Type_>::Type Type;
+  typedef typename Visitor<Type_>::ReturnType ReturnType;
 
   typedef RowOperator< VisitorByCol <Derived, Visitor> > Row;
   typedef ColOperator< VisitorByCol <Derived, Visitor> > Col;
@@ -112,7 +112,8 @@ class VisitorByCol : public VisitorByColBase< Derived, Visitor >, public TRef<1>
 {
   public:
     typedef typename Derived::Type Type_;
-    typedef typename Visitor<Type_>::return_type Type;
+    typedef typename Visitor<Type_>::Type Type;
+    typedef typename Visitor<Type_>::ReturnType ReturnType;
 
     typedef typename hidden::Traits< VisitorByCol<Derived, Visitor> >::Allocator Allocator;
     typedef VisitorByCol Result;
@@ -130,7 +131,7 @@ class VisitorByCol : public VisitorByColBase< Derived, Visitor >, public TRef<1>
     typedef TRange<sizeCols_> ColRange;
 
     /** constructor */
-    inline VisitorByCol( Derived const& lhs) : lhs_(lhs), result_(1,lhs_.sizeCols())
+    VisitorByCol( Derived const& lhs) : lhs_(lhs), result_(1,lhs_.sizeCols())
     {
       result_.shift(lhs_.beginCols());
       for (int j= lhs_.beginCols(); j < lhs_.endCols(); ++j)
@@ -141,21 +142,8 @@ class VisitorByCol : public VisitorByColBase< Derived, Visitor >, public TRef<1>
     }
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return result_.rows();}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return(result_.beginRows());}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return(result_.endRows());}
-    /** @return the number of rows */
-    inline int sizeRowsImpl() const { return(result_.sizeRows());}
-
-    /** @return the range of the columns */
-    inline ColRange const& colsImpl() const { return result_.cols();}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return(result_.beginCols());}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return(result_.endCols());}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return result_.sizeCols();}
+    /** @return the columns range */
+    inline ColRange const&colsImpl() const { return result_.cols();}
 
     /** @return the left hand side expression */
     inline Derived const& lhs() const { return lhs_; }
@@ -206,8 +194,8 @@ template<typename Derived, template<class> class Visitor>
 struct Traits< VisitorByRow <Derived, Visitor> >
 {
   typedef typename Derived::Type Type_;
-  typedef typename Visitor<Type_>::return_type Type;
-  typedef Type ReturnType;
+  typedef typename Visitor<Type_>::Type Type;
+  typedef typename Visitor<Type_>::Type ReturnType;
 
   typedef RowOperator< VisitorByRow <Derived, Visitor> > Row;
   typedef ColOperator< VisitorByRow <Derived, Visitor> > Col;
@@ -239,7 +227,9 @@ class VisitorByRow : public VisitorByRowBase< Derived, Visitor >, public TRef<1>
 {
   public:
     typedef typename Derived::Type Type_;
-    typedef typename Visitor<Type_>::return_type Type;
+    typedef typename Visitor<Type_>::Type Type;
+    typedef typename Visitor<Type_>::ReturnType ReturnType;
+
     typedef typename hidden::Traits< VisitorByRow<Derived, Visitor> >::Allocator Allocator;
     typedef VisitorByRow Result;
     enum
@@ -256,7 +246,7 @@ class VisitorByRow : public VisitorByRowBase< Derived, Visitor >, public TRef<1>
     typedef TRange<sizeCols_> ColRange;
 
     /** constructor */
-    inline VisitorByRow( Derived const& lhs) : lhs_(lhs), result_(lhs_.sizeRows(), 1)
+    VisitorByRow( Derived const& lhs): lhs_(lhs), result_(lhs_.sizeRows(), 1)
     {
       result_.shift(lhs_.beginRows());
       for (int i= lhs_.beginRows(); i < lhs_.endRows(); ++i)
@@ -267,21 +257,8 @@ class VisitorByRow : public VisitorByRowBase< Derived, Visitor >, public TRef<1>
     }
     /**  @return the range of the rows */
     inline RowRange const& rowsImpl() const { return result_.rows();}
-    /** @return the first index of the rows */
-    inline int beginRowsImpl() const { return(result_.beginRows());}
-    /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return(result_.endRows());}
-    /** @return the number of rows */
-    inline int sizeRowsImpl() const { return(result_.sizeRows());}
-
-    /** @return the range of the columns */
-    inline ColRange const& colsImpl() const { return result_.cols();}
-    /** @return the first index of the columns */
-    inline int beginColsImpl() const { return(result_.beginCols());}
-    /** @return the ending index of the columns */
-    inline int endColsImpl() const { return(result_.endCols());}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return result_.sizeCols();}
+    /** @return the columns range */
+    inline ColRange const&colsImpl() const { return result_.cols();}
 
     /** @return the left hand side expression */
     inline Derived const& lhs() const { return lhs_; }
@@ -325,8 +302,9 @@ template<typename Derived, template<class> class Visitor>
 struct ApplyVisitor
 {
   typedef typename Derived::Type Type_;
-  typedef typename Visitor<Type_>::return_type Type;
+  typedef typename Visitor<Type_>::Type Type;
   typedef Type Result;
+
   /** constructor */
   inline ApplyVisitor( ExprBase<Derived> const& lhs) : lhs_(lhs.asDerived())
   {

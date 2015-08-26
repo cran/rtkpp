@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2007  Serge Iovleff
+/*     Copyright (C) 2007-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -91,14 +91,40 @@ struct IdTypeImpl<Binary>
  *  @param os the output stream
  *  @param value the value to send to the stream
  **/
-ostream& operator << (ostream& os, Binary const& value);
+inline ostream& operator << (ostream& os, Binary const& value)
+{
+  return Arithmetic<Binary>::isNA(value) ? (os <<  stringNa)
+                                         : (os << static_cast<int>(value));
+}
 
 /** @ingroup stream
  *  @brief Overloading of the istream >> for the type Binary.
  *  @param is the input stream
  *  @param value the value to get from the stream
  **/
-istream& operator >> (istream& is, Binary& value);
+inline istream& operator >> (istream& is, Binary& value)
+{
+  int res;
+  // try to read an integer
+  if (!(is >> res).fail())
+  {
+    switch (res)
+    {
+      case 0:
+        value = zero_;
+        break;
+      case 1:
+        value = one_;
+        break;
+      default:
+        value = binaryNA_;
+        break;
+    }
+  }
+  else
+  { value = binaryNA_; is.clear(); is.setstate(std::ios::failbit);}
+  return is;
+}
 
 /** @ingroup Base
  *  Convert a String to a Binary.
@@ -106,7 +132,12 @@ istream& operator >> (istream& is, Binary& value);
  *  @return the Binary represented by the String @c str. If the string
  *  does not match any known name, the @c binaryNA_ value  is returned.
  **/
-Binary stringToBinary( String const& str);
+inline Binary stringToBinary( String const& str)
+{
+  if (toUpperString(str) == toUpperString(_T("0"))) return zero_;
+  if (toUpperString(str) == toUpperString(_T("1"))) return one_;
+  return binaryNA_;
+}
 
 /** @ingroup Base
  *  Convert a String to a Binary using a map.
@@ -115,7 +146,11 @@ Binary stringToBinary( String const& str);
  *  @return the Binary represented by the String @c str. If the string
  *  does not match any known name, the @c binaryNA_ type is returned.
  **/
-Binary stringToBinary( String const& str, std::map<String, Binary> const& mapping);
+inline Binary stringToBinary( String const& str, std::map<String, Binary> const& mapping)
+{
+  std::map<String, Binary>::const_iterator it=mapping.find(str);
+  return (it == mapping.end()) ? binaryNA_ : it->second;
+}
 
 /** @ingroup Base
  *  Convert a Binary to a String.
@@ -123,7 +158,13 @@ Binary stringToBinary( String const& str, std::map<String, Binary> const& mappin
  *  @param f format, by default write every number in decimal
  *  @return the string associated to this type.
  **/
-String binaryToString( Binary const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
+inline String binaryToString( Binary const& value, std::ios_base& (*f)(std::ios_base&) = std::dec)
+{
+  if (Arithmetic<Binary>::isNA(value)) return stringNa;
+  ostringstream os;
+  os << f << static_cast<int>(value);
+  return os.str();
+}
 
 /** @ingroup Base
  *  Convert a Binary to a String.
@@ -131,7 +172,11 @@ String binaryToString( Binary const& value, std::ios_base& (*f)(std::ios_base&) 
  *  @param mapping the mapping between the Binary and the String
  *  @return the string associated to this value.
  **/
-String binaryToString( Binary const& value, std::map<Binary, String> const& mapping);
+inline String binaryToString( Binary const& value, std::map<Binary, String> const& mapping)
+{
+  std::map<Binary, String>::const_iterator it=mapping.find(value);
+  return (it == mapping.end()) ? Arithmetic<String>::NA() : it->second;
+}
 
 /** @ingroup Base
  *  @brief specialization for Binary

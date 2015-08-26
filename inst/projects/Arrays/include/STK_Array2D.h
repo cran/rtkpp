@@ -169,20 +169,30 @@ class Array2D : public IArray2D< Array2D<Type_> >
      **/
     Array2D( Type** q, Range const& I, Range const& J) : Base(q, I, J) {}
     /** destructor. */
-    inline ~Array2D() {}
+    ~Array2D() {}
     /** operator = : overwrite the Array2D with the right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2D& operator=( ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
+    Array2D& operator=( ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** overwrite the Array2D with T.
      *  @param T the container to copy
      **/
-    inline Array2D& operator=( Array2D const& T) { return LowBase::assign(T);}
+    Array2D& operator=( Array2D const& T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2D& operator=( Type const& v) { return LowBase::setValue(v);}
+    Array2D& operator=( Type const& v) { return LowBase::setValue(v);}
+    /** New beginning index for the object.
+     *  @param beg first index of the container
+     **/
+    void shift1D(int beg)
+    { Base::shift(beg, beg);}
+    /** New size for the container.
+     *  @param I range of the columns and rows of the container
+     **/
+    Array2D& resize1D( Range const& I)
+    { Base::resize(I, I); return *this;}
     /** Swapping the pos1 row and the pos2 row.
      *  @param pos1,pos2 position of the rows to swap
      **/

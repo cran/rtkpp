@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -140,53 +140,63 @@ class CArraySquare
       storage_   = hidden::Traits< CArraySquare <Type_, Size_, Orient_> >::storage_
     };
     /** Default constructor. */
-    inline CArraySquare() : Base() {}
+    CArraySquare() : Base() {}
     /** constructor with specified dimension.
      *  @param size range of the columns
      **/
-    inline CArraySquare( int const& size): Base(size, size) {}
-    /** constructor with rbeg, rend, cbeg and cend specified,
-     *  initialization with a constant.
+    CArraySquare( int const& size): Base(size, size) {}
+    /** constructor with specified ranges.
+     *  @param range range of the rows and columns
+     **/
+    CArraySquare( Range range): Base(range.size(), range.size())
+    { this->shift(range.begin());}
+    /** constructor with specified dimension, initialization with a constant.
      *  @param size range of the columns
      *  @param v initial value of the container
      **/
-    inline CArraySquare( int const& size, Type const& v): Base(size, size, v) {}
+    CArraySquare( int size, Type const& v): Base(size, size, v) {}
+    /** constructor with specified ranges, initialization with a constant.
+     *  @param range range of the rows and columns
+     *  @param v initial value of the container
+     **/
+    CArraySquare( Range range, Type const& v): Base(range.size(), range.size(), v)
+    { this->shift(range.begin());}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
      **/
-    inline CArraySquare( CArraySquare const& T, bool ref=false): Base(T, ref) {}
+    CArraySquare( CArraySquare const& T, bool ref=false): Base(T, ref) {}
     /** wrapper constructor for 0 based C-Array.
      *  @param q pointer on the array
      *  @param size number of rows/columns
      **/
-    inline CArraySquare( Type* const& q, int size): Base(q, size, size) {}
+    CArraySquare( Type* const& q, int size): Base(q, size, size) {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/
     template<class OtherAllocator>
-    inline CArraySquare( CAllocatorBase<OtherAllocator> const& allocator): Base(allocator.asDerived()) {}
+    CArraySquare( ITContainer2D<OtherAllocator> const& allocator): Base(allocator.asDerived()) {}
     /** Copy constructor using an expression.
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    inline CArraySquare( ExprBase<OtherDerived> const& T): Base(T.size(), T.size())
+    CArraySquare( ExprBase<OtherDerived> const& T): Base(T.size(), T.size())
     { LowBase::operator=(T);}
     /** destructor. */
-    inline ~CArraySquare() {}
+    ~CArraySquare() {}
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
-    inline CArraySquare& operator=(Type const& v) { return LowBase::setValue(v);}
+    CArraySquare& operator=(Type const& v) { return LowBase::setValue(v);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArraySquare& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
+    CArraySquare& operator=( ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArray with the Right hand side rhs.
      *  @param rhs the container to copy
      **/
-    inline CArraySquare& operator=(CArraySquare const& rhs) { return LowBase::assign(rhs);}
+    CArraySquare& operator=(CArraySquare const& rhs) { return LowBase::assign(rhs);}
 };
 
 } // namespace STK

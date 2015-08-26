@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -35,6 +35,7 @@
 #ifndef STK_ISYMEIGEN_H
 #define STK_ISYMEIGEN_H
 
+#include "STK_Algebra_Util.h"
 #include "STKernel/include/STK_Real.h"
 #include "Sdk/include/STK_IRunner.h"
 
@@ -64,18 +65,19 @@ namespace STK
 template<class Derived>
 class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
 {
-  public:
+  protected:
+    typedef typename hidden::AlgebraTraits<Derived>::SquareArray SquareArray;
     typedef IRunnerBase Base;
     /** @brief Constructor
      *  The original data set can be overwritten by the eigenvectors if it is
      *  stored in a CSquareXd. Observe that in this case the base index have
-     *  to be 0 otherwise.
+     *  to be 0.
      *  @param data reference on a symmetric square matrix
      *  @param ref @c true if we overwrite the data set, @c false otherwise
      */
-    ISymEigen( CSquareXd const& data, bool ref =false)
+    ISymEigen( SquareArray const& data, bool ref =false)
              : Base()
-             , norm_(0.), rank_(0), det_(0.)
+             , range_(data.range()), norm_(0.), rank_(0), det_(0.)
              , eigenVectors_(data, ref)
              , eigenValues_(data.size(), 0.)
              , SupportEigenVectors_(2*data.size(), 0)
@@ -86,24 +88,24 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     template<class OtherDerived>
     ISymEigen( ExprBase<OtherDerived> const& data)
              : Base()
-             , norm_(0.), rank_(0), det_(0.)
+             , range_(data.range()), norm_(0.), rank_(0), det_(0.)
              , eigenVectors_(data.asDerived())
              , eigenValues_(data.size(), 0.)
              , SupportEigenVectors_(2*data.size(), 0)
     {
-      STK_STATICASSERT(OtherDerived::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
+      STK_STATIC_ASSERT(OtherDerived::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
     }
     /** Copy constructor.
      *  @param eigen the EigenValue to copy
      **/
     ISymEigen( ISymEigen const& eigen)
              : Base(eigen)
-             , norm_(eigen.norm_), rank_(eigen.rank_), det_(eigen.det_)
+             , range_(eigen.range_), norm_(eigen.norm_), rank_(eigen.rank_), det_(eigen.det_)
              , eigenVectors_(eigen.eigenVectors_)
              , eigenValues_(eigen.eigenValues_)
              , SupportEigenVectors_(eigen.SupportEigenVectors_)
     {}
-
+  public:
     /** virtual destructor */
     inline virtual ~ISymEigen() {}
     /** Operator = : overwrite the ISymEigen with eigen.
@@ -112,24 +114,27 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
      **/
     ISymEigen& operator=( ISymEigen const& eigen)
     {
-      norm_   = eigen.norm_;     // norm of the matrix
-      rank_   = eigen.rank_;     // rank of the matrix
-      det_    = eigen.det_;      // determinant of the matrix
+      range_ = eigen.range_;
+      norm_  = eigen.norm_;     // norm of the matrix
+      rank_  = eigen.rank_;     // rank of the matrix
+      det_   = eigen.det_;      // determinant of the matrix
       eigenVectors_ = eigen.eigenVectors_;
       eigenValues_  = eigen.eigenValues_;
       SupportEigenVectors_ = eigen.SupportEigenVectors_;
       return *this;
     }
+    /** @return the range of the matrix */
+    inline Range const& range()  const { return range_;}
     /** @return the trace norm of the matrix */
-    inline Real norm()  const { return norm_;}
+    inline Real const& norm()  const { return norm_;}
     /** @return the rank of the matrix */
-    inline int rank()  const { return rank_;}
+    inline int const& rank()  const { return rank_;}
     /** @return the determinant of the Array */
-    inline Real det()  const { return det_;}
+    inline Real const& det()  const { return det_;}
     /**  @return the rotation matrix */
-    inline CSquareXd const& rotation() const{ return eigenVectors_;}
+    inline CSquareX const& rotation() const{ return eigenVectors_;}
     /**  @return the rotation matrix */
-    inline CSquareXd const& eigenVectors() const{ return eigenVectors_;}
+    inline CSquareX const& eigenVectors() const{ return eigenVectors_;}
     /** @return the eigenvalues */
     inline CVectorX const& eigenValues() const { return eigenValues_;}
     /** Compute the generalized inverse of the symmetric matrix and put
@@ -137,23 +142,18 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
      *  @param res the generalized inverse of the ArrayXX.
      */
     template<class ArraySquare>
-    void ginv(ArraySquare& res)
+    ArraySquare& ginv(ArraySquare& res)
     {
-      STK_STATICASSERT(ArraySquare::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
+      STK_STATIC_ASSERT(ArraySquare::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
       // create pseudo inverse matrix
       res.resize(eigenVectors_.range());
       res = 0;
       // compute tolerance
       Real tol = Arithmetic<Real>::epsilon() * norm_;
-      // compute PDP'
-      for (int k = eigenVectors_.begin(); k< eigenVectors_.end(); k++)
-      {
-        Real value = eigenValues_[k];
-        if (std::abs(value) > tol)
-        {
-          res += (eigenVectors_.col(k) * eigenVectors_.col(k).transpose())/value;
-        }
-      }
+      // compute PD^-P'
+      res = eigenVectors_ * eigenValues_.diagonalize().safeInverse(tol) * eigenVectors_.transpose();
+      // result
+      return res;
     }
     /** overloading of setData.
      * @param data the data set to set.
@@ -161,11 +161,13 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     template<class OtherDerived>
     void setData( ExprBase<OtherDerived> const& data)
     {
-      norm_ = 0.; rank_ = 0; det_ = 0.;
+      STK_STATIC_ASSERT(OtherDerived::structure_==(int)Arrays::square_,YOU_HAVE_TO_USE_A_SQUARE_MATRIX_IN_THIS_METHOD)
+      norm_ = 0.; rank_ = 0; det_ = 0.; range_ = data.range();
       eigenVectors_ = data;
-      eigenValues_.resize(data.range());
+      eigenValues_.resize(range_);
       SupportEigenVectors_.resize(2*data.size());
     }
+    /** Find the eigenvalues and eigenvectors of the matrix */
     virtual bool run()
     {
       if (eigenVectors_.empty()) { return true;}
@@ -173,22 +175,24 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
     }
 
   protected:
+    /** range of the original data set.  **/
+    Range range_;
     /** trace norm */
     Real norm_;
     /** rank */
     int rank_;
     /** determinant */
     Real det_;
-   /** Square matrix or the eigenvectors. */
-   CSquareXd eigenVectors_;
-   /** Array of the eigenvalues */
-   CVectorX eigenValues_;
-   /** Array for the support of the eigenvectors */
-   CArrayVector<int> SupportEigenVectors_;
-   /** finalize the computation by computing the rank, the trace norm and the
-    * determinant of the matrix.
-    **/
-   void finalizeStep();
+    /** Square matrix or the eigenvectors. */
+    CSquareX eigenVectors_;
+    /** Array of the eigenvalues */
+    CVectorX eigenValues_;
+    /** Array for the support of the eigenvectors */
+    CVectorXi SupportEigenVectors_;
+    /** finalize the computation by computing the rank, the trace norm and the
+     * determinant of the matrix.
+     **/
+    void finalizeStep();
 };
 
 
@@ -198,26 +202,22 @@ class ISymEigen : public IRunnerBase, public IRecursiveTemplate<Derived>
 template<class Derived>
 void ISymEigen<Derived>::finalizeStep()
 {
-  norm_ = 0;
-  rank_ = eigenValues_.size();
+  norm_ = 0.;
+  rank_ = eigenValues_.size(); // full rank
   det_  = 0;
-  // compute trace norm sign of the determinant
+  Real tol = norm_ * Arithmetic<Real>::epsilon();
   int s = 1;
+  // compute trace norm sign of the determinant and rank
   for (int i=eigenValues_.begin(); i< eigenValues_.end(); ++i )
   {
     Real value = eigenValues_.elt(i);
     norm_ += value;
-    s     *= sign(value);
-    if (std::abs(value) < Arithmetic<Real>::epsilon()) { rank_--;}
+    s *= sign(value);
+    if (std::abs(value) < tol) { rank_--;}
   }
-  // compute the determinant for full rank matrices
-  if (rank_ == eigenValues_.size())
-  {
-    Real sum = 0.;
-    for (int i=eigenValues_.begin(); i< eigenValues_.end(); ++i )
-    { sum += std::log(std::abs(eigenValues_.elt(i)));}
-    det_ = s* std::exp(sum);
-  }
+  // compute the determinant for matrices with non zero eigenValues
+  if (eigenValues_.abs().minElt() > 0)
+  { det_ = s * std::exp(eigenValues_.abs().log().sum());}
 }
 
 } // namespace STK

@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2014  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,6 +36,7 @@
 #define STK_LAW_POISSON_H
 
 #include "STK_Law_IUnivLaw.h"
+#include <Sdk/include/STK_Macros.h>
 
 namespace STK
 {
@@ -43,6 +44,20 @@ namespace STK
 namespace Law
 {
 /** @ingroup Laws
+ *  @brief Poisson distribution law.
+ *
+ *  In probability theory and statistics, the <em>Poisson distribution</em>,
+ *  named after French mathematician Siméon Denis Poisson, is a discrete
+ *  probability distribution that expresses the probability of a given number
+ *  of events occurring in a fixed interval of time and/or space if these events
+ *  occur with a known average rate and independently of the time since the last
+ *  event.
+ *
+ * The Poisson distribution can be applied to systems with a large number of
+ * possible events, each of which is rare. How many such events will occur
+ * during a fixed time interval? Under the right circumstances, this is a
+ * random number with a Poisson distribution.
+ *
  * A discrete random variable @e X is said to have a Poisson distribution with
  * parameter \f$ \lambda >0 \f$ (the mean) if the probability mass function
  * of @e X is given by
@@ -51,11 +66,6 @@ namespace Law
  * \f]
  * The positive real number \f$ \lambda \f$ is equal to the expected value of
  * @e X and also to its variance.
- *
- * The Poisson distribution can be applied to systems with a large number of
- * possible events, each of which is rare. How many such events will occur
- * during a fixed time interval? Under the right circumstances, this is a
- * random number with a Poisson distribution.
  */
 class Poisson: public IUnivLaw<int>
 {
@@ -64,7 +74,8 @@ class Poisson: public IUnivLaw<int>
     /** constructor
      * @param lambda mean of a Poisson distribution
      **/
-    Poisson(Real const& lambda = 1.);
+    inline Poisson( Real const& lambda = 1.)
+                  : Base(_T("Poisson")), lambda_(lambda) {}
     /** destructor */
     inline virtual ~Poisson() {}
     /** @return the mean */
@@ -72,7 +83,8 @@ class Poisson: public IUnivLaw<int>
     /** @param lambda mean to set */
     inline void setLambda(Real const& lambda )
     {
-      if (lambda<0) STKDOMAIN_ERROR_1ARG(Poisson::setLambda,lambda,lambda must be >= 0);
+      if (lambda<0)
+      { STKDOMAIN_ERROR_1ARG(Poisson::setLambda,lambda,lambda must be >= 0);}
       lambda_ = lambda;
     }
 
@@ -140,11 +152,33 @@ class Poisson: public IUnivLaw<int>
      **/
     static int icdf(Real const& p, Real const& lambda);
 
-
   protected:
     /** mean of the Poisson distribution */
     Real lambda_;
 };
+
+#ifdef IS_RTKPP_LIB
+
+/* @return a Poisson random variate . */
+inline int Poisson::rand() const { return (int)::Rf_rpois(lambda_);}
+inline Real Poisson::pdf(int const& x) const { return ::Rf_dpois((double)x, lambda_, false);}
+inline Real Poisson::lpdf(int const& x) const { return ::Rf_dpois((double)x, lambda_, true);}
+inline Real Poisson::cdf(Real const& t) const { return ::Rf_ppois(t, lambda_, true, false);}
+inline int Poisson::icdf(Real const& p) const { return (int)::Rf_qpois(p, lambda_, true, false);}
+
+/* static */
+inline int Poisson::rand(Real const& lambda)
+{return (int)::Rf_rpois(lambda);}
+inline Real Poisson::pdf(int const& x, Real const& lambda)
+{ return ::Rf_dpois((double)x, lambda, false);}
+inline Real Poisson::lpdf(int const& x, Real const& lambda)
+{ return ::Rf_dpois((double)x, lambda, true);}
+inline Real Poisson::cdf(Real const& t, Real const& lambda)
+{ return ::Rf_ppois(t, lambda, true, false);}
+inline int Poisson::icdf(Real const& p, Real const& lambda)
+{ return (int)::Rf_qpois(p, lambda, true, false);}
+
+#endif
 
 } // namespace Law
 

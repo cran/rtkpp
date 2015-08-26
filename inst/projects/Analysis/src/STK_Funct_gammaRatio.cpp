@@ -39,7 +39,6 @@
 #include "../include/STK_Algo.h"
 #include "../include/STK_Funct_gamma.h"
 #include "../include/STK_Funct_Util.h"
-#include "../include/STK_Funct_poisson_raw.h"
 #include "../include/STK_Funct_raw.h"
 
 #include "STKernel/include/STK_Exceptions.h"

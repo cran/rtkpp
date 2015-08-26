@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -36,8 +36,7 @@
 #ifndef STK_IREGRESSION_H
 #define STK_IREGRESSION_H
 
-#include "../../../include/STKernel.h"
-#include "../../../include/Arrays.h"
+#include <STKernel/include/STK_String.h>
 
 namespace STK
 {
@@ -93,7 +92,7 @@ namespace STK
  * In this interface, the pure virtual function to implement are
  * @code
  *   virtual void regressionStep();
- *   virtual void regression( WArray const& weights);
+ *   virtual void regressionStep( Weights const& weights);
  *   virtual void predictionStep();
  *   virtual int const& computeNbFreeParameter() const;
  *   virtual void extrapolate( XArray const& x, YArray& y) const;
@@ -104,25 +103,48 @@ namespace STK
  * @endcode
  * can be overloaded.
  */
-template <class YArray, class XArray, class WArray>
+template <class YArray, class XArray, class Weights>
 class IRegression
 {
   protected:
     /** Constructor. Initialize the data members.
-     * @param p_y array with the observed output
-     * @param p_x array with the predictors (inputs) of the model
+     * @param p_y pointer array with the observed output
+     * @param p_x pointer array with the predictors (inputs) of the model
      */
     IRegression( ArrayBase<YArray> const* p_y =0, ArrayBase<XArray> const* p_x =0)
                : p_y_((p_y == 0) ? 0 : p_y->asPtrDerived())
                , p_x_((p_x == 0) ? 0 : p_x->asPtrDerived())
                , predicted_()
                , residuals_()
-               , nbFreeParameter_(Arithmetic<int>::NA())
+               , nbFreeParameter_(0)
+     {}
+    /** Constructor. Initialize the data members.
+     * @param y array with the observed output
+     * @param x array with the predictors (inputs) of the model
+     */
+    IRegression( ArrayBase<YArray> const& y, ArrayBase<XArray> const& x)
+               : p_y_(y.asPtrDerived())
+               , p_x_(x.asPtrDerived())
+               , predicted_()
+               , residuals_()
+               , nbFreeParameter_(0)
      {}
 
   public:
     /** virtual destructor. */
-    virtual ~IRegression() { clear();}
+    virtual ~IRegression() { }
+    /** @return the last error message*/
+    inline String const& error() const { return msg_error_;}
+    /** @return the predicted values */
+    inline YArray const& predicted() const { return predicted_;}
+    /** @return the residuals */
+    inline YArray const& residuals() const {  return residuals_;}
+    /** @return the pointer on the predicted values */
+    inline YArray* p_predicted() { return &predicted_;}
+    /**  @return the pointer on the residuals */
+    inline YArray* p_residuals() { return &residuals_;}
+    /**  @return the number of parameter of the regression function */
+    inline int nbFreeParameter() const { return nbFreeParameter_;}
     /** run the computations. Default Implementation. */
     virtual bool run()
     {
@@ -139,16 +161,15 @@ class IRegression
       // return the result of the computations
       return true;
     }
-
     /** run the weighted computations.
      *  @param weights weights of the samples
      **/
-    bool run( WArray const& weights)
+    virtual bool run( Weights const& weights)
     {
       // perform any pre-operation needed before the regression step
       initializeStep();
       // compute weighted regression
-      regression(weights);
+      regressionStep(weights);
       // Compute the number of parameter of the regression function.
       nbFreeParameter_ = computeNbFreeParameter();
       // create array of the predicted value and compute prediction
@@ -160,55 +181,20 @@ class IRegression
       // return the result of the computations
       return true;
     }
-    /** get the last error message.
-     * @return the last error message
-     **/
-    inline String const& error() const { return msg_error_;}
-
-    /** get the array of the predicted values.
-     * The array @c p_predicted_ will not be deleted by @c this.
-     * @return the pointer on the predicted values
-     **/
-    inline YArray const& predicted() const { return predicted_;}
-    /** get the pointer of the array of the residuals. The array
-     *  @c p_residuals_ will not be deleted by @c this.
-     *  @return the pointer on the residuals
-     **/
-    inline YArray const& residuals() const {  return residuals_;}
-
-    /** get the pointer of the array of the predicted values.
-     * The array @c p_predicted_ will not be deleted by @c this.
-     * @return the pointer on the predicted values
-     **/
-    inline YArray* p_predicted() { return &predicted_;}
-    /** get the pointer of the array of the residuals. The array
-     *  @c p_residuals_ will not be deleted by @c this.
-     *  @return the pointer on the residuals
-     **/
-    inline YArray* p_residuals() { return &residuals_;}
-
-    /** Give the number of parameter of the regression function.
-     *  @return the number of parameter of the regression function
-     **/
-    inline int nbFreeParameter() const { return nbFreeParameter_;}
-
     /** Set the data set the regression method should use.
      * @param p_y data set to adjust
      * @param p_x data set of the predictors
      */
     void setData( YArray const* p_y, XArray const* p_x)
     { p_y_ = p_y; p_x_ = p_x;}
-
     /** Set the Y data set the regression method should use.
      * @param p_y data set to adjust
      */
     void setY( YArray const* p_y) { p_y_ = p_y;}
-
     /** Set the X data set.
      * @param p_x data set of the predictors
      */
     void setX( XArray const* p_x) { p_x_ = p_x;}
-
     /** @return the extrapolated values of y from the value @c x.
      *  Given the data set @c x will compute the values \f$ y = \hat{f}(x) \f$.
      *  The regression function @e f have to be estimated previously.
@@ -243,13 +229,12 @@ class IRegression
   private:
     /** number of parameter of the regression method. */
     int nbFreeParameter_;
-
     /** compute the regression function. */
     virtual void regressionStep() =0;
     /** compute the weighted regression function.
      * @param weights the weights of the samples
      **/
-    virtual void regression(WArray const& weights) =0;
+    virtual void regressionStep(Weights const& weights) =0;
     /** Compute the predicted outputs by the regression function and store the
      * result in the p_predicted_ array. */
     virtual void predictionStep() =0;
@@ -257,12 +242,6 @@ class IRegression
      * @return the number of parameter of the regression function
      **/
     virtual int computeNbFreeParameter() const =0;
-    /** delete allocated memory. */
-    void clear()
-    {
-      predicted_.clear();
-      residuals_.clear();
-    }
 
   protected:
     /** String with the last error message. */

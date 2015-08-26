@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -174,7 +174,13 @@ struct IdTypeImpl<const Real>
  *  @param str the String we want to convert
  *  @return the Real
  **/
-Real stringToReal( String const& str);
+inline Real stringToReal( String const& str)
+{
+  istringstream is(str);
+  Real x;
+  is >> Proxy<Real>(x);
+  return x;
+}
 
 /** @ingroup Base
  *  Convert a String to a Real using a map.
@@ -183,7 +189,11 @@ Real stringToReal( String const& str);
  *  @return the real represented by the String @c str. If the string
  *  does not match any known name, the @c NA value is returned.
  **/
-Real stringToReal( String const& str, std::map<String, Real> const& mapping);
+inline Real stringToReal( String const& str, std::map<String, Real> const& mapping)
+{
+  std::map<String, Real>::const_iterator it=mapping.find(str);
+  return (it == mapping.end()) ? Arithmetic<Real>::NA() : it->second;
+}
 
 /** @ingroup Base
  *  Convert a Real to a String.
@@ -191,15 +201,26 @@ Real stringToReal( String const& str, std::map<String, Real> const& mapping);
  *  @param f format, by default write every number in decimal
  *  @return the string associated to this value.
  **/
-String realToString( Real const& value, std::ios_base& (*f)(std::ios_base&) = std::dec);
+inline String realToString( Real const& value, std::ios_base& (*f)(std::ios_base&) = std::dec)
+{
+  if (isNA(value)) return stringNa;
+  ostringstream os;
+  os << f << value;
+  return os.str();
+}
 
 /** @ingroup Base
- *  Convert an int to a String.
- *  @param str the String we want to convert
+ *  Convert a real to a String.
+ *  @param type the Real we want to convert
  *  @param mapping the mapping between the Real and the String
  *  @return the string associated to this type.
  **/
-String realToString( Real const& str, std::map<Real, String> const& mapping);
+inline String realToString( Real const& type, std::map<Real, String> const& mapping)
+{
+  std::map<Real, String>::const_iterator it=mapping.find(type);
+  if (it == mapping.end())  return stringNa;
+  return it->second;
+}
 
 /** @ingroup Base
  *  @brief specialization for Real

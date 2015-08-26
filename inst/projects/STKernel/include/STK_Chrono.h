@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  Base
+ * Project:  STKernel::Base
  * Purpose:  Utility for computing elapsed time.
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  *
@@ -39,6 +39,7 @@
 #define STK_CHRONO_H
 
 #include "STK_Real.h"
+#include <ctime>
 
 namespace STK
 {
@@ -48,17 +49,24 @@ namespace STK
  **/
 namespace Chrono
 {
+  /** Contained the starting time when the chrono is started */
+  static clock_t t_start;
+  /** Contained the ending time when the chrono is stopped */
+  static clock_t t_end;
   /** @ingroup Base
    *  @brief Start the Chrono. */
-  void start();
-
+  inline void start() { t_start = clock(); }
   /** @ingroup Base
    *  @brief Compute the elapsed time (in second) since last @c start() call.
    *  @return the elapsed time
    **/
-  Real elapsed();
+  inline Real elapsed()
+  {
+    t_end = clock();
+    return Real(Real(t_end - t_start)/CLOCKS_PER_SEC);
+  }
+
 } // namespace Chrono
 
 } // namespace STK
-
 #endif /*STK_CHRONO_H*/

@@ -132,7 +132,7 @@ class JointGaussianModel : public IMultiStatModel<Array, WColVector, JointGaussi
     virtual Real computeLnLikelihood( RowVector const& rowData) const
     {
       Real sum =0.;
-      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
+      for (Integer j= rowData.begin(); j < rowData.end(); ++j)
       { sum += Law::Normal::lpdf(rowData[j], p_param()->mu(j), p_param()->sigma(j));}
       return sum;
     }

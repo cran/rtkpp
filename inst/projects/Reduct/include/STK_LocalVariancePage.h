@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
  */
 
 /*
- * Project:  stkpp::aam
+ * Project:  stkpp::Reduct
  * created on: 27 sept. 2010
  * Purpose:  Define the STK_LocalVariancePage.
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
@@ -37,8 +37,8 @@
 #ifndef STK_LOCALVARIANCEPAGE_H
 #define STK_LOCALVARIANCEPAGE_H
 
-#include "DManager/include/STK_IPage.h"
-#include "STK_LocalVariance.h"
+#include "STK_Reduct_Util.h"
+#include <DManager/include/STK_IPage.h>
 
 namespace STK
 {
@@ -79,7 +79,7 @@ class LocalVariancePage: public IPage
     /** get the type of graph
      *  @return the TypeGraph used for computing the local variance
      **/
-    inline LocalVariance::TypeGraph typeGraph() const { return type_;}
+    inline Reduct::TypeGraph typeGraph() const { return type_;}
     /** @return the number of neighbors to used in order to construct the
      *  proximity graph
      **/
@@ -91,7 +91,7 @@ class LocalVariancePage: public IPage
 
   private:
     /** type of the graph to compute */
-    LocalVariance::TypeGraph type_;
+    Reduct::TypeGraph type_;
     /** number of neighbors of each individual in the graph. */
     int nbNeighbor_;
 };

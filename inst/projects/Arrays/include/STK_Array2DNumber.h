@@ -119,7 +119,6 @@ class Array2DNumber : public IArray2D< Array2DNumber<Type_> >
     /** Default constructor */
     Array2DNumber() : Base(Range(1), Range(1)) {}
     /** constructor with specified range, initialization with a constant.
-     *  @param J range of the container
      *  @param v initial value of the container
      **/
     Array2DNumber( Type const& v) : Base(Range(1), Range(1))
@@ -145,8 +144,8 @@ class Array2DNumber : public IArray2D< Array2DNumber<Type_> >
     { LowBase::operator=(T);}
     /** constructor by reference, ref_=1.
      *  @param p_data a pointer on the data to wrap
-     *  @param J the range of the data to wrap
      *  @param row the index of the row to wrap
+     *  @param col the index of the column to wrap
      **/
      Array2DNumber( Type** p_data, int row, int col)
                   : Base(p_data, Range(row, 1), Range(col, 1)) {}
@@ -166,15 +165,15 @@ class Array2DNumber : public IArray2D< Array2DNumber<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DNumber& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
+    Array2DNumber& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** operator = : overwrite the CArray with the Right hand side T.
      *  @param T the container to copy
      **/
-    inline Array2DNumber& operator=(const Array2DNumber &T) { return LowBase::assign(T);}
+    Array2DNumber& operator=(const Array2DNumber &T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2DNumber& operator=(Type const& v) { return LowBase::setValue(v);}
+    Array2DNumber& operator=(Type const& v) { return LowBase::setValue(v);}
 };
 
 } // namespace STK

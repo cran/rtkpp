@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -37,8 +37,7 @@
 #define STK_MIXTUREALGO_H
 
 #include "STK_Clust_Util.h"
-
-#include "Sdk/include/STK_IRunner.h"
+#include <Sdk/include/STK_IRunner.h>
 
 namespace STK
 {
@@ -57,7 +56,7 @@ class IMixtureAlgo : public IRunnerBase
 {
   protected:
     /** default constructor */
-    inline IMixtureAlgo() : IRunnerBase(), p_model_(0), nbIterMax_(0), epsilon_(0.), threshold_(2.) {}
+    inline IMixtureAlgo(): IRunnerBase(), p_model_(0), nbIterMax_(0), epsilon_(0.), threshold_(2.) {}
     /** Copy constructor.
      *  @param algo the algorithm to copy */
     inline IMixtureAlgo( IMixtureAlgo const& algo) : IRunnerBase(algo)
@@ -126,7 +125,7 @@ class EMAlgo: public IMixtureAlgo
 
 /** @ingroup Clustering
  *  @brief Implementation of the SEM algorithm.
- *  The SEM algorithm call alternatively the steps:
+ *  The CEM algorithm calls alternatively the steps:
  *  - cStep()
  *  - mStep()
  *  - eStep()
@@ -155,10 +154,13 @@ class CEMAlgo: public IMixtureAlgo
 
 /** @ingroup Clustering
  *  @brief Implementation of the SEM algorithm.
- *  The CEM algorithm call alternatively the steps:
+ *  The SEM algorithm calls alternatively the steps:
  *  - sStep()
+ *  - samplingStep()
+ *  - pStep()
  *  - mStep()
  *  - eStep()
+ *  - storeIntermediateResults(iter)
  *  until the maximum number of iterations is reached.
  **/
 class SEMAlgo: public IMixtureAlgo
@@ -182,10 +184,12 @@ class SEMAlgo: public IMixtureAlgo
 
 /** @ingroup Clustering
  *  @brief Implementation of the SemiSEM algorithm.
- *  The SemiSEM algorithm call alternatively the steps:
+ *  The SemiSEM algorithm calls alternatively the steps:
+ *  - samplingStep()
+ *  - pStep()
  *  - mStep()
- *  - simulStep()
  *  - eStep()
+ *  - storeIntermediateResults(iter)
  *  until the maximum number of iterations is reached.
  **/
 class SemiSEMAlgo: public IMixtureAlgo
@@ -202,6 +206,90 @@ class SemiSEMAlgo: public IMixtureAlgo
     inline virtual SemiSEMAlgo* clone() const { return new SemiSEMAlgo(*this);}
     /** run the algorithm on the model calling sStep, mStep and eStep of the
      *  model until the maximal number of iteration is reached.
+     *  @return @c true if no error occur, @c false otherwise.
+     **/
+    virtual bool run();
+};
+
+/** @ingroup Clustering
+ *  @brief Implementation of the EMPredict algorithm.
+ *  The EMPredict algorithm calls alternatively the steps:
+ *  - imputationStep()
+ *  - eStep()
+ *  until the maximum number of iterations or the threshold is reached.
+ *  This is the counterpart of EMSAlgo for prediction.
+ **/
+class EMPredict: public IMixtureAlgo
+{
+  public:
+    /** default constructor */
+    inline EMPredict(): IMixtureAlgo() {}
+    /** Copy constructor.
+     *  @param algo the algorithm to copy */
+    inline EMPredict( EMPredict const& algo) : IMixtureAlgo(algo) {}
+    /** destructor */
+    inline virtual ~EMPredict(){}
+    /** clone pattern */
+    inline virtual EMPredict* clone() const { return new EMPredict(*this);}
+    /** run the algorithm on the model until the maximal number of iteration
+     * or the threshold is reached.
+     *  @return @c true if no error occur, @c false otherwise.
+     **/
+    virtual bool run();
+};
+
+/** @ingroup Clustering
+ *  @brief Implementation of the SEMPredict algorithm.
+ *  The SEMPredict algorithm calls alternatively the steps:
+ *  - sStep()
+ *  - samplingStep()
+ *  - eStep()
+ *  - storeIntermediateResults(iter)
+ *  until the maximum number of iterations is reached.
+ *  This is the counterpart of SEMSAlgo for prediction.
+ **/
+class SEMPredict: public IMixtureAlgo
+{
+  public:
+    /** default constructor */
+    inline SEMPredict() : IMixtureAlgo() {}
+    /** Copy constructor.
+     *  @param algo the algorithm to copy */
+    inline SEMPredict( SEMPredict const& algo) : IMixtureAlgo(algo) {}
+    /** destructor */
+    inline virtual ~SEMPredict(){}
+    /** clone pattern */
+    inline virtual SEMPredict* clone() const { return new SEMPredict(*this);}
+    /** run the algorithm on the model until the maximal number of iteration is
+     *  reached.
+     *  @return @c true if no error occur, @c false otherwise.
+     **/
+    virtual bool run();
+};
+
+/** @ingroup Clustering
+ *  @brief Implementation of the SemiSEMPredict algorithm.
+ *  The SemiSEMPredict algorithm calls alternatively the steps:
+ *  - samplingStep()
+ *  - eStep()
+ *  - storeIntermediateResults(iter)
+ *  until the maximum number of iterations is reached.
+ *  This is the counterpart of SemiSEMSAlgo for prediction.
+ **/
+class SemiSEMPredict: public IMixtureAlgo
+{
+  public:
+    /** default constructor */
+    inline SemiSEMPredict(): IMixtureAlgo() {}
+    /** Copy constructor.
+     *  @param algo the algorithm to copy */
+    inline SemiSEMPredict( SemiSEMPredict const& algo) : IMixtureAlgo(algo) {}
+    /** destructor */
+    inline virtual ~SemiSEMPredict(){}
+    /** clone pattern */
+    inline virtual SemiSEMPredict* clone() const { return new SemiSEMPredict(*this);}
+    /** run the algorithm on the model until the maximal number of iteration is
+     *  reached.
      *  @return @c true if no error occur, @c false otherwise.
      **/
     virtual bool run();

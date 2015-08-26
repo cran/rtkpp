@@ -59,7 +59,7 @@ class GinvSymmetric
     template<class ArraySquare>
     inline void operator()(ArraySquare*& x)
     {
-      SymEigen* decomp = new SymEigen(*x);
+      SymEigen<ArraySquare>* decomp = new SymEigen<ArraySquare>(*x);
       decomp->run();
       decomp->ginv(*x);
       delete decomp;
@@ -69,12 +69,13 @@ class GinvSymmetric
      *  @param x the matrix to inverse.
      **/
     template<class ArraySquare>
-    inline void operator()(ArraySquare& x)
+    inline ArraySquare& operator()(ArraySquare& x)
     {
-      SymEigen* decomp = new SymEigen(x);
+      SymEigen<ArraySquare>* decomp = new SymEigen<ArraySquare>(x);
       decomp->run();
       decomp->ginv(x);
       delete decomp;
+      return x;
     }
 };
 

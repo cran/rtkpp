@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -38,8 +38,7 @@
 #ifndef STK_CLUST_UTIL_H
 #define STK_CLUST_UTIL_H
 
-#include "STKernel/include/STK_Real.h"
-
+#include <STKernel/include/STK_Real.h>
 
 namespace STK
 {
@@ -54,7 +53,11 @@ namespace Clust
 {
 
 /** @ingroup Clustering
- *  initialization type
+ *  @brief initialization type.
+ *  There is trheee ways to initialize the mixture model:
+ *  - using random values for the parameters
+ *  - using random class for the individuals
+ *  - using random probabilities class for the individuals
  **/
 enum initType
 {
@@ -68,7 +71,7 @@ enum initType
  *  Convert a String to a initType. The recognized strings are
  * <table>
  * <tr> <th> Initialization   </th></tr>
- * <tr> <td> "randomInit"</td></tr>
+ * <tr> <td> "randomInit" (DEPECATED) </td></tr>
  * <tr> <td> "randomParamInit"</td></tr>
  * <tr> <td> "randomClassInit"</td></tr>
  * <tr> <td> "randomFuzzyInit"</td></tr>
@@ -172,6 +175,7 @@ enum MixtureClass
   Gaussian_,
   Categorical_,
   Poisson_,
+  Kernel_,
   unknown_mixture_class_
 };
 
@@ -201,6 +205,8 @@ enum Mixture
   Poisson_ljk_,
   Poisson_lk_,
   Poisson_ljlk_,
+  KernelGaussian_sk_,
+  KernelGaussian_s_,
   unknown_mixture_
 };
 
@@ -236,6 +242,8 @@ MixtureClass mixtureToMixtureClass( Mixture const& type);
  * <tr> <td> "Poisson_ljk"     </td></tr>
  * <tr> <td> "Poisson_lk"      </td></tr>
  * <tr> <td> "Poisson_ljlk"    </td></tr>
+ * <tr> <td> "KernelGaussian_sk" </td></tr>
+ * <tr> <td> "KernelGaussian_s"  </td></tr>
  * </table>
  *  @param type the String we want to convert
  *  @return the Mixture represented by the String @c type. if the string
@@ -269,6 +277,8 @@ Mixture stringToMixture( std::string const& type);
  * <tr> <td> "Poisson_pk_ljk"     </td><td> "Poisson_p_ljk"     </td> </tr>
  * <tr> <td> "Poisson_pk_lk"      </td><td> "Poisson_p_lk"      </td> </tr>
  * <tr> <td> "Poisson_pk_ljlk"    </td><td> "Poisson_p_ljlk"    </td> </tr>
+ * <tr> <td> "KernelGaussian_pk_sk" </td><td> "KernelGaussian_p_sk"    </td> </tr>
+ * <tr> <td> "KernelGaussian_pk_s" </td><td> "KernelGaussian_p_s"    </td> </tr>
  * </table>
  *  @param type the String we want to convert
  *  @param[out] freeProp @c true if the model have free proportions, @c false otherwise.
@@ -299,11 +309,14 @@ std::string mixtureToString(Mixture type, bool freeProp);
 const int defaultNbTry = 5;
 
 /** @ingroup Clustering
- * Default number of trial in an initialization */
-const int defaultNbTrialInInit = 5;
+ * Default algorithm type in short run */
+const Clust::initType defaultInitType = randomFuzzyInit_;
+/** @ingroup Clustering
+ * Default number of initializations to perform */
+const int defaultNbInit = 5;
 /** @ingroup Clustering
  * Default algorithm type in initialization */
-const Clust::algoType defaultAlgoInInit = semAlgo_;
+const Clust::algoType defaultAlgoInInit = emAlgo_;
 /** @ingroup Clustering
  * Default number of iteration in an initialization algorithm */
 const int defaultNbIterMaxInInit = 20;
@@ -313,23 +326,23 @@ const Real defaultEpsilonInInit = 1e-02;
 
 /** @ingroup Clustering
  * Default algorithm type in short run */
-const Clust::algoType algoShortRun = cemAlgo_;
+const Clust::algoType defaultAlgoShortRun = emAlgo_;
 /** @ingroup Clustering
  * Default number of iterations in the short runs (used in FullStrategy) */
-const int maxIterShortRun = 200;
+const int defaultMaxIterShortRun = 200;
 /** @ingroup Clustering
  *  Default epsilon in the short runs (used in strategy) */
-const Real epsilonShortRun = 1e-04;
+const Real defaultEpsilonShortRun = 1e-04;
 
 /** @ingroup Clustering
  * Default algorithm type in long run */
-const Clust::algoType algoLongRun = emAlgo_;
+const Clust::algoType defaultAlgoLongRun = emAlgo_;
 /**  @ingroup Clustering
  * Default number of iterations in the long run (used in FullStrategy) */
-const int maxIterLongRun = 1000;
+const int defaultMaxIterLongRun = 1000;
 /**  @ingroup Clustering
  * Default epsilon in the long run (used in strategy) */
-const Real epsilonLongRun = 1e-08;
+const Real defaultEpsilonLongRun = 1e-08;
 
 /** @ingroup Clustering
  *  utility function for creating an estimation algorithm.
@@ -340,28 +353,6 @@ const Real epsilonLongRun = 1e-08;
 IMixtureAlgo* createAlgo( Clust::algoType algo, int nbIterMax, Real epsilon);
 
 /** @ingroup Clustering
- *  utility function for creating a a short Run algorithm.
- *  @param algo the algorithm to create
- *  @param nbIterMax the maximal number of iteration of the algorithm
- *  @param epsilon the tolerance of the algorithm
- **/
-inline IMixtureAlgo* createShortRunAlgo( Clust::algoType algo = algoShortRun
-                                       , int nbIterMax = maxIterShortRun
-                                       , Real epsilon = epsilonShortRun)
-{ return createAlgo(algo, nbIterMax, epsilon);}
-
-/** @ingroup Clustering
- *  utility function for creating a a short Run algorithm.
- *  @param algo the algorithm to create
- *  @param nbIterMax the maximal number of iteration of the algorithm
- *  @param epsilon the tolerance of the algorithm
- **/
-inline IMixtureAlgo* createLongRunAlgo( Clust::algoType algo = algoLongRun
-                                      , int nbIterMax = maxIterLongRun
-                                      , Real epsilon = epsilonLongRun)
-{ return createAlgo(algo, nbIterMax, epsilon);}
-
-/** @ingroup Clustering
  *  Utility function for creating a model initializer.
  *  @param init the kind of initializer to create
  *  @param nbInits the number of initialization to try
@@ -369,11 +360,31 @@ inline IMixtureAlgo* createLongRunAlgo( Clust::algoType algo = algoLongRun
  *  @param nbIterMax the maximal number of iteration of the initialization algorithm
  *  @param epsilon the tolerance of the initialization algorithm
  **/
-IMixtureInit* createInit( Clust::initType init
-                        , int nbInits = Clust::defaultNbTrialInInit
+IMixtureInit* createInit( Clust::initType init = defaultInitType
+                        , int nbInits          = defaultNbInit
                         , Clust::algoType algo = defaultAlgoInInit
-                        , int nbIterMax = defaultNbIterMaxInInit
-                        , Real epsilon = defaultEpsilonInInit);
+                        , int nbIterMax        = defaultNbIterMaxInInit
+                        , Real epsilon         = defaultEpsilonInInit);
+/** @ingroup Clustering
+ *  utility function for creating a a short Run algorithm.
+ *  @param algo the algorithm to create
+ *  @param nbIterMax the maximal number of iteration of the algorithm
+ *  @param epsilon the tolerance of the algorithm
+ **/
+inline IMixtureAlgo* createShortRunAlgo( Clust::algoType algo = defaultAlgoShortRun
+                                       , int nbIterMax        = defaultMaxIterShortRun
+                                       , Real epsilon         = defaultEpsilonShortRun)
+{ return createAlgo(algo, nbIterMax, epsilon);}
+/** @ingroup Clustering
+ *  utility function for creating a a short Run algorithm.
+ *  @param algo the algorithm to create
+ *  @param nbIterMax the maximal number of iteration of the algorithm
+ *  @param epsilon the tolerance of the algorithm
+ **/
+inline IMixtureAlgo* createLongRunAlgo( Clust::algoType algo = defaultAlgoLongRun
+                                      , int nbIterMax        = defaultMaxIterLongRun
+                                      , Real epsilon         = defaultEpsilonLongRun)
+{ return createAlgo(algo, nbIterMax, epsilon);}
 
 /** @ingroup Clustering
  *  Utility function for creating a SimpleStrategy.
@@ -405,7 +416,6 @@ IMixtureStrategy* createFullStrategy( IMixtureComposer*& p_composer
                                     , int nbShortRun, IMixtureAlgo* const& shortRunAlgo
                                     , IMixtureAlgo* const& longRunAlgo);
 }  // namespace Clust
-
 
 }  // namespace STK
 

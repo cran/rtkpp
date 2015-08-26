@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2007  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,14 +23,13 @@
 */
 
 /*
- * Project:  StatDesc
- * Purpose:  Compute multivariate elementary statistics for
- * a 2D container.
+ * Project:  stkpp::Stat
+ * Purpose:  Compute multivariate elementary statistics for a Real 2D container.
  * Author:   Serge Iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
 
 /** @file STK_Stat_MultivariateReal.h
- *  @brief In this file we specialize the class Multivariate to real type.
+ *  @brief In this file we specialize the class Multivariate to Real type.
  **/
 
 #ifndef STK_STAT_MULTIVARIATEREAL_H
@@ -38,6 +37,7 @@
 
 #include "STKernel/include/STK_Misc.h"
 
+#include "Arrays/include/STK_Array2DPoint.h"
 #include "Arrays/include/STK_Array2DSquare.h"
 
 #include "STK_Stat_BivariateRealReal.h"
@@ -48,9 +48,6 @@ namespace STK
 {
 namespace Stat
 {
-
-typedef Multivariate<ArrayXX, Real> MultivariateArrayXX;
-
 /** @ingroup StatDesc
  *  @brief Computation of the Multivariate Statistics of a 2D Container
  *  of Real.
@@ -66,69 +63,60 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
   typedef typename Array::Col ColVector;
   /** type of runner */
   typedef IRunnerUnsupervised< Array, ColVector> Runner;
+  typedef typename Array::Type Type_;
+  enum
+  {
+    value_ = hidden::isSame<Type_, Real>::value
+  };
 
   public:
+    /** Default Constructor. */
+    Multivariate(): Runner()
+                  , nbSamples_(0), nbVar_(0)
+                  , min_(), max_(), mean_(), var_(), cov_()
+  { STK_STATIC_ASSERT(value_, YOU_CANNOT_USED_THIS_TYPE_OF_DATA_WITH_THIS_OBJECT);}
     /** Constructor.
-     *  Compute the Multivariate statistics of the Array data set.
-     *  @param data the data set
+     *  @param data a reference on the data set
      **/
     Multivariate( Array const& data)
                 : Runner(&data)
-                , nbSamples_(0)
-                , nbVar_(0)
-                , min_()
-                , max_()
-                , mean_()
-                , var_()
-                , cov_()
-    { }
-
+                , nbSamples_(data.sizeRows()), nbVar_(data.sizeCols())
+                , min_(), max_(), mean_(), var_(), cov_()
+    { STK_STATIC_ASSERT(value_, YOU_CANNOT_USED_THIS_TYPE_OF_DATA_WITH_THIS_OBJECT);}
     /** Constructor.
-     *  Compute the Multivariate statistics of the Array p_data set.
      *  @param p_data a pointer on the data set
      **/
     Multivariate( Array const* p_data)
                 : Runner(p_data)
-                , nbSamples_(0)
-                , nbVar_(0)
-                , min_()
-                , max_()
-                , mean_()
-                , var_()
-                , cov_()
-    {}
-
+                , nbSamples_((p_data) ? p_data->sizeRows() : 0)
+                , nbVar_((p_data) ? p_data->sizeCols() : 0)
+                , min_(), max_(), mean_(), var_(), cov_()
+    { STK_STATIC_ASSERT(value_, YOU_CANNOT_USED_THIS_TYPE_OF_DATA_WITH_THIS_OBJECT);}
     /** copy constructor.
      *  @param stat the statistics to copy
      **/
     Multivariate( Multivariate const& stat)
                 : Runner(stat)
-                , nbSamples_(stat.nbSamples_)
-                , nbVar_(stat.nbVar_)
-                , min_(stat.min_)
-                , max_(stat.max_)
-                , mean_(stat.mean_)
-                , var_(stat.var_)
-                , cov_(stat.cov_)
+                , nbSamples_(stat.nbSamples_), nbVar_(stat.nbVar_)
+                , min_(stat.min_), max_(stat.max_), mean_(stat.mean_)
+                , var_(stat.var_), cov_(stat.cov_)
     {}
     /** virtual destructor.*/
     virtual ~Multivariate() { }
-
     /** clone pattern */
     inline virtual Multivariate* clone() const { return new Multivariate(*this);}
-
     /** @return the number of variables in the p_data_ set (the number of columns) */
     inline int nbVariable() const {return nbVar_;}
     /** @return the number of samples in the p_data_ set (the number of rows) */
     inline int nbSamples() const {return nbSamples_;}
     /** @return the minimal values of the variables in a RowVector */
-    inline RowVector const& min() const { return min_;}
+    inline Point const& min() const { return min_;}
     /** @return the maximal values of the variables in a RowVector  */
-    inline RowVector const& max() const { return max_;}
+    inline Point const& max() const { return max_;}
     /** @return the mean of the variables in a RowVector */
-    inline RowVector const& mean() const { return mean_;}
+    inline Point const& mean() const { return mean_;}
     /**@return the variance of the variables in a RowVector */
-    inline RowVector const& variance() const { return var_;}
+    inline Point const& variance() const { return var_;}
     /** @return the covariance of the variables in a square matrix */
     inline ArraySquareX const& covariance() const { return cov_;}
 
@@ -136,19 +124,19 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
     virtual bool run()
     {
       if (!this->p_data_)
-      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArrayXX::run(),data have not be set);
+      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArray::run(),data is not set);
         return false;
       }
       try
       {
-        resize(this->p_data_->cols());
-        // for each variables
-        for (int j=this->p_data_->beginCols(); j<=this->p_data_->lastIdxCols(); j++)
+        mean_.move(Stat::mean(*this->p_data_));
+        min_.move(Stat::min(*this->p_data_));
+        max_.move(Stat::max(*this->p_data_));
+        var_.move(varianceWithFixedMean(*this->p_data_, mean_, false));
+
+        cov_.resize(this->p_data_->cols());
+        for (int j=this->p_data_->beginCols(); j<this->p_data_->endCols(); j++)
         {
-          mean_[j] = Stat::mean(this->p_data_->col(j));
-          min_[j] = Stat::min(this->p_data_->col(j));
-          max_[j] = Stat::max(this->p_data_->col(j));
-          var_[j]  = varianceWithFixedMean(this->p_data_->col(j), mean_[j], false);
           cov_(j, j) = var_[j];
           for (int i=this->p_data_->beginCols(); i<j; i++)
           {
@@ -159,7 +147,7 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
       }
       catch (Exception const& error)
       {
-        this->msg_error_ += _T("Error in MultivariateArrayXX::run():\nWhat: ");
+        this->msg_error_ += _T("Error in Multivariate::run():\nWhat: ");
         this->msg_error_ += error.error();
         return false;
       }
@@ -172,21 +160,24 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
     virtual bool run( ColVector const& weights)
     {
       if (!this->p_data_)
-      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArrayXX::run(weights),data have not be set);
+      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArray::run(weights),data is not set);
         return false;
       }
-      if (this->p_data_->rows() != weights.rows())
-      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArrayXX::run(weights),data and weights does not have not the same size);
+      if (this->p_data_->rows() != weights.range())
+      { this->msg_error_ = STKERROR_NO_ARG(MultivariateArray::run(weights),p_data_->rows() != weights.range());
         return false;
       }
       try
       {
-        resize(this->p_data_->cols());
+        mean_.move(Stat::mean(*this->p_data_, weights));
+        min_.move(Stat::min(*this->p_data_,weights));
+        max_.move(Stat::max(*this->p_data_, weights));
+        var_.move(varianceWithFixedMean(*this->p_data_, weights, mean_, false));
+
+        cov_.resize(this->p_data_->cols());
         // for each variables
-        for (int j= this->p_data_->beginCols(); j<= this->p_data_->lastIdxCols(); j++)
+        for (int j= this->p_data_->beginCols(); j< this->p_data_->endCols(); j++)
         {
-          mean_[j] = Stat::mean(this->p_data_->col(j), weights);
-          var_[j]  = varianceWithFixedMean(this->p_data_->col(j), weights, mean_[j], false);
           cov_(j, j) = var_[j];
           // compute the covariances
           for (int i= this->p_data_->beginCols(); i<j; i++)
@@ -198,7 +189,7 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
       }
       catch (Exception const& error)
       {
-        this->msg_error_  = _T("Error in MultivariateArrayXX::run(weights): ");
+        this->msg_error_  = _T("Error in Multivariate::run(weights): ");
         this->msg_error_ += error.error();
         return false;
       }
@@ -213,13 +204,13 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
     int nbVar_;
 
     /** Vector of the mean of the Variables */
-    RowVector min_;
+    Point min_;
     /** Vector of the mean of the Variables */
-    RowVector max_;
+    Point max_;
     /** Vector of the mean of the Variables */
-    RowVector mean_;
+    Point mean_;
     /** Vector of the variance of the variables */
-    RowVector var_;
+    Point var_;
     /** Array of the covariance of the variables */
     ArraySquareX cov_;
 
@@ -231,19 +222,7 @@ class Multivariate<Array, Real> : public IRunnerUnsupervised< Array, typename Ar
       {
         nbSamples_ = this->p_data_->sizeRows();
         nbVar_     = this->p_data_->sizeCols();
-        resize(Range());
       }
-    }
-
-  private:
-    /** @param J range of the statistics  */
-    void resize(Range const& J)
-    {
-      min_.resize(J);
-      max_.resize(J);
-      mean_.resize(J);
-      var_.resize(J);
-      cov_.resize(J);
     }
 };
 

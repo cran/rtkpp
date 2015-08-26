@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -36,8 +36,7 @@
 #define STK_GAMMA_A_BJK_H
 
 #include "STK_GammaBase.h"
-
-#include "../../../STatistiK/include/STK_Law_Exponential.h"
+#include <STatistiK/include/STK_Law_Exponential.h>
 
 namespace STK
 {
@@ -48,16 +47,102 @@ namespace Clust
 /** @ingroup Clustering
  * Traits class for the Gamma_a_bjk traits policy
  **/
-template<class _Array>
-struct MixtureTraits< Gamma_a_bjk<_Array> >
+template<class Array_>
+struct MixtureTraits< Gamma_a_bjk<Array_> >
 {
-  typedef _Array Array;
-  typedef typename Array::Type Type;
-  typedef Gamma_a_bjk_Parameters        Parameters;
-  typedef Array2D<Real>        Param;
+  typedef Array_ Array;
+  typedef ParametersHandler<Clust::Gamma_a_bjk_> ParamHandler;
 };
 
 } // namespace Clust
+
+/** Specialization of the ParametersHandler struct for Gamma_a_bjk model */
+template <>
+struct ParametersHandler<Clust::Gamma_a_bjk_>: public ParametersHandlerGammaBase<  ParametersHandler<Clust::Gamma_a_bjk_> >
+{
+  typedef ParametersHandlerGammaBase Base;
+  /** shape parameters and statistics */
+  MixtureParameters<Real> shape_;
+  /** scale parameters and statistics */
+  MixtureParametersSet<PointX> scale_;
+  /** @return the shape of the kth cluster and jth variable */
+  inline Real const&  shapeImpl(int k, int j) const { return shape_();}
+  /** @return the scale of the kth cluster and jth variable */
+  inline Real const& scaleImpl(int k, int j) const { return scale_[k][j];}
+  /** copy operator */
+  inline ParametersHandler& operator=( ParametersHandler const& other)
+  { Base::operator =(other);
+    shape_ = other.shape_; scale_ = other.scale_;
+    return *this;
+  }
+  /** copy operator using an array/expression storing the values */
+  template<class Array>
+  inline ParametersHandler& operator=( ExprBase<Array> const& param)
+  {
+    int nbCluster = mean_().size();
+    shape_() = 0.;
+    for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    {
+      for (int j= param.beginCols();  j< param.endCols(); ++j)
+      {
+        scale_[k][j] = param(k2+1, j);
+        shape_()    += param(k2  , j);
+      }
+    }
+    shape_() /= (nbCluster*param.sizeCols());
+    return *this;
+  }
+
+  /** default constructor */
+  ParametersHandler( int nbCluster)
+                   : Base(nbCluster), shape_(), scale_(nbCluster) {}
+  /** copy constructor */
+  ParametersHandler( ParametersHandler const& model)
+                   : Base(model), shape_(model.shape_), scale_(model.scale_) {}
+  /** Initialize the parameters with an array/expression of value */
+  template<class Array>
+  inline ParametersHandler( int nbCluster, ExprBase<Array> const& param)
+                          : Base(nbCluster), shape_(), scale_(nbCluster)
+  {
+    Base::resize(param.cols());
+    scale_.resize(param.cols());
+    shape_() = 0.;
+    for (int k2= param.beginRows(), k= param.beginRows(); k2 < param.endRows(); k2+=2, k++)
+    {
+      for (int j= param.beginCols();  j< param.endCols(); ++j)
+      {
+        scale_[k][j] = param(k2+1, j);
+        shape_()    += param(k2  , j);
+      }
+    }
+    shape_() /= (nbCluster*param.sizeCols());
+  }
+
+  /** destructor */
+  inline ~ParametersHandler() {}
+  /** Initialize the parameters of the model.
+   *  This function initialize the parameters and the statistics.
+   **/
+  void resize(Range const& range)
+  {
+    Base::resize(range);
+    shape_.initialize(1.);
+    scale_.resize(range);
+    scale_.initialize(1.);
+  }
+  /** Store the intermediate results of the Mixture.
+   *  @param iteration Provides the iteration number beginning after the burn-in period.
+   **/
+  inline void storeIntermediateResults(int iteration)
+  { shape_.storeIntermediateResults(iteration); scale_.storeIntermediateResults(iteration);}
+  /** Release the stored results. This is usually used if the estimation
+   *  process failed.
+   **/
+  inline void releaseIntermediateResults()
+  { shape_.releaseIntermediateResults(); scale_.releaseIntermediateResults();}
+  /** set the parameters stored in stat_proba_ and release stat_proba_. */
+  inline void setParameters() { shape_.setParameters(); scale_.setParameters();}
+};
 
 /** @ingroup Clustering
  *  Gamma_a_bjk is a mixture model of the following form
@@ -72,53 +157,32 @@ template<class Array>
 class Gamma_a_bjk : public GammaBase< Gamma_a_bjk<Array> >
 {
   public:
-    typedef typename Clust::MixtureTraits< Gamma_a_bjk<Array> >::Parameters Parameters;
     typedef GammaBase< Gamma_a_bjk<Array> > Base;
-
-    using Base::p_tik;using Base::components;
+    using Base::p_tik; using Base::param_;
+    using Base::p_nk;
     using Base::p_data;
-    using Base::param;
-
     using Base::meanjk;
     using Base::variancejk;
 
     /** default constructor
      * @param nbCluster number of cluster in the model
      **/
-    inline Gamma_a_bjk( int nbCluster) : Base(nbCluster), shape_(1), stat_shape_() {}
+    inline Gamma_a_bjk( int nbCluster): Base(nbCluster) {}
     /** copy constructor
      *  @param model The model to copy
      **/
-    inline Gamma_a_bjk( Gamma_a_bjk const& model)
-                      : Base(model), shape_(model.shape_), stat_shape_(model.stat_shape_) {}
+    inline Gamma_a_bjk( Gamma_a_bjk const& model): Base(model) {}
     /** destructor */
     inline ~Gamma_a_bjk() {}
-    /** Initialize the component of the model.
-     *  In this interface, the shape_ parameter is shared between all the
-     *  components.
+    /** @return the value of the probability of the i-th sample in the k-th component.
+     *  @param i,k indexes of the sample and of the component
      **/
-    void initializeModelImpl()
+    inline Real lnComponentProbability(int i, int k) const
     {
-      shape_ = 1.;
-      for (int k= baseIdx; k < components().end(); ++k)
-      { param(k).p_shape_ = &shape_;}
-      stat_shape_.initialize();
-    }
-    /** Store the intermediate results of the Mixture.
-     *  @param iteration Provides the iteration number beginning after the burn-in period.
-     **/
-    void storeIntermediateResultsImpl(int iteration)
-    { stat_shape_.update(shape_);}
-    /** Release the stored results. This is usually used if the estimation
-     *  process failed.
-     **/
-    void releaseIntermediateResultsImpl()
-    { stat_shape_.release();}
-    /** set the parameters stored in stat_proba_ and release stat_proba_. */
-    void setParametersImpl()
-    {
-      shape_ = stat_shape_.param_;
-      stat_shape_.release();
+      Real sum =0.;
+      for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
+      { sum += Law::Gamma::lpdf(p_data()->elt(i,j), param_.shape_(), param_.scale_[k][j]);}
+      return sum;
     }
     /** Initialize randomly the parameters of the Gamma mixture. The shape
      *  will be selected randomly using an exponential of parameter mean^2/variance
@@ -131,12 +195,6 @@ class Gamma_a_bjk : public GammaBase< Gamma_a_bjk<Array> >
     /** @return the number of free parameters of the model */
     inline int computeNbFreeParameters() const
     { return this->nbCluster()*this->nbVariable() + 1;}
-
-  protected:
-    /** common shape */
-    Real shape_;
-    /** Satistics on the shape */
-    MixtureStatReal stat_shape_;
 };
 
 template<class Array>
@@ -148,17 +206,16 @@ void Gamma_a_bjk<Array>::randomInit()
   Real value = 0.0;
   for (int j=p_data()->beginCols(); j<p_data()->endCols(); ++j)
   {
-    for (int k= baseIdx; k < components().end(); ++k)
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
     {
       Real mean = meanjk(j,k), variance = variancejk(j,k);
-      param(k).scale_[j] = Law::Exponential::rand((variance/mean));
-      value += param(k).tk_ * (mean*mean/variance);
+      param_.scale_[k][j] = Law::Exponential::rand((variance/mean));
+      value += p_nk()->elt(k) * (mean*mean/variance);
     }
   }
-  shape_ = Law::Exponential::rand(value/(this->nbSample()*this->nbVariable()));
+  param_.shape_() = Law::Exponential::rand(value/(this->nbSample()*this->nbVariable()));
 #ifdef STK_MIXTURE_VERY_VERBOSE
   stk_cout << _T("Gamma_a_bjk<Array>::randomInit() done\n");
-  this->writeParameters(stk_cout);
 #endif
 }
 
@@ -168,14 +225,14 @@ bool Gamma_a_bjk<Array>::mStep()
 {
   if (!this->moments()) { return false;}
   // estimate a
-  Real y =0.0, x0 = 0.0, x1 = shape_;
+  Real y =0.0, x0 = 0.0, x1 = param_.shape_();
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
   {
-    for (int k= baseIdx; k < components().end(); ++k)
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
     {
       Real mean = meanjk(j,k);
-      y  += param(k).tk_ * (param(k).meanLog_[j]-std::log(mean));
-      x0 += param(k).tk_ * (mean*mean/variancejk(j,k));
+      y  += p_nk()->elt(k) * (param_.meanLog_[k][j]-std::log(mean));
+      x0 += p_nk()->elt(k) * (mean*mean/variancejk(j,k));
     }
   }
   y  /= (this->nbSample()*this->nbVariable());
@@ -198,12 +255,12 @@ bool Gamma_a_bjk<Array>::mStep()
     a = x0; // use moment estimate
   }
   // set values
-  shape_ = a;
+  param_.shape_() = a;
   // estimate bjk
   for (int j=p_data()->beginCols(); j < p_data()->endCols(); ++j)
   {
-    for (int k= baseIdx; k < components().end(); ++k)
-    { param(k).scale_[j] = param(k).mean_[j]/a;}
+    for (int k= p_tik()->beginCols(); k < p_tik()->endCols(); ++k)
+    { param_.scale_[k][j] = param_.mean_[k][j]/a;}
   }
   return true;
 }

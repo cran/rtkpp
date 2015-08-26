@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -38,8 +38,9 @@
 #define STK_IMIXTUREMODEL_H
 
 #include "STK_IMixtureModelBase.h"
-#include "Arrays/include/STK_Array1D.h"
-#include "Arrays/include/STK_Array2D.h"
+#include <Arrays/include/STK_Array1D.h>
+#include <Arrays/include/STK_Array2D.h>
+#include <STatistiK/include/STK_Law_Categorical.h>
 
 #ifdef STK_MIXTURE_DEBUG
 #include "Arrays/include/STK_Display.h"
@@ -57,6 +58,10 @@ template <class Mixture> struct MixtureTraits;
 
 } // namespace Clust
 
+/** Parameters Handler class. All mixture models implemented has an Id defined
+ *  in STK::Clust::Mixture enumeration.
+ **/
+template <int Id> struct ParametersHandler;
 
 /**@ingroup Clustering
  * @brief Main interface class for mixture models.
@@ -64,13 +69,10 @@ template <class Mixture> struct MixtureTraits;
  *
  * The pseudo virtual methods to implement in derived class are
  * @code
- * // implementation of this method is required
- * Param getParametersImpl() const;
- *
  * // default implementation (do nothing) provided to all these methods
  * void initializeModelImpl();
  * bool initializeStepImpl(); // return true by default
- * void finalizeModelImpl();
+ * void finalizeStepImpl();
  * void setParametersImpl();
  * void storeIntermediateResultsImpl(int iter);
  * void releaseIntermediateResultsImpl();
@@ -79,12 +81,11 @@ template <class Mixture> struct MixtureTraits;
  * @sa IMixtureModelBase, IRecursiveTemplate
  **/
 template<class Derived>
-class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBase
+class IMixtureModel: public IRecursiveTemplate<Derived>, public IMixtureModelBase
 {
   public:
     typedef typename Clust::MixtureTraits<Derived>::Array Array;
-    typedef typename Clust::MixtureTraits<Derived>::Parameters Parameters;
-    typedef typename Clust::MixtureTraits<Derived>::Param Param;
+    typedef typename Clust::MixtureTraits<Derived>::ParamHandler ParamHandler;
 
   protected:
     /** Default constructor.
@@ -92,19 +93,19 @@ class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBa
      **/
     inline IMixtureModel( int nbCluster)
                         : IMixtureModelBase(nbCluster)
+                        , param_(nbCluster)
                         , p_dataij_(0)
-                        , components_(nbCluster)
     {}
     /** copy constructor.
+     *  - The Parameter class is copied using the copy constructor.
      *  - The pointer on the data set is copied as-is. Check if you should not
      *  change it on the copied object.
-     *  - The Parameter class is copied using the assign operator.
      *  @param model the model to copy
      **/
     IMixtureModel( IMixtureModel const& model)
                  : IMixtureModelBase(model)
+                 , param_(model.param_)
                  , p_dataij_(model.p_dataij_)
-                 , components_(model.components_)
     {}
 
   public:
@@ -114,78 +115,82 @@ class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBa
     inline IMixtureModel* create() const { return new Derived(this->nbCluster());}
     /** @return a pointer on the current data set */
     inline Array const* p_data() const { return p_dataij_;}
-    /** @return a constant reference on the k-th parameter */
-    inline Parameters const& param(int k) const { return components_[k];}
-    /** Set the data set and initialize the model.
-     *  @param data the data set to set*/
-    void setData(Array const& data)
+    /** @return the parameter handler of the model */
+    inline ParamHandler const& paramHandler() const { return param_;}
+
+    /** set the parameter handler of the model */
+    inline void setParamHandler(ParamHandler const& param) { param_ = param;}
+    /** set the parmater handler using an array/expression storing the values */
+    template<class Array>
+    inline void setParamHandler(ExprBase<Array> const& param) { param_ = param;}
+    /** @brief Set the data set.
+     *  Setting a (new) data set will trigger the initialization process of the model.
+     *  @param data the data set to set
+     **/
+    inline void setData(Array const& data)
     {
       p_dataij_ = &data;
       initializeModel();
     }
-    /** @return the value of the probability of the i-th sample in the k-th component.
-     *  @param i,k indexes of the sample and of the component
-     **/
-    inline Real lnComponentProbability(int i, int k)
-    { return components_[k].computeLnLikelihood(p_dataij_->row(i));}
     /** @brief This function will be called once the model is created and data is set.
      *  @note a stk++ mixture create and initialize all the containers when the data
      *  is set. Thus the default behavior is @c return true.
      */
-    bool initializeStep() { return this->asDerived().initializeStepImpl();}
+    inline bool initializeStep() { return this->asDerived().initializeStepImpl();}
     /** Store the intermediate results of the Mixture.
-     *  @param iteration Provides the iteration number beginning after the burn-in period.
+      *  @param iteration Provides the iteration number beginning after the burn-in period.
      **/
-    void storeIntermediateResults(int iteration)
+    inline void storeIntermediateResults(int iteration)
     {
-      for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k].storeIntermediateResults(iteration); }
+      param_.storeIntermediateResults(iteration);
       this->asDerived().storeIntermediateResultsImpl(iteration);
     }
     /** Release the stored results. This is usually used if the estimation
      *  process failed.
      **/
-    void releaseIntermediateResults()
+    inline void releaseIntermediateResults()
     {
-      for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k].releaseIntermediateResults(); }
-      // release shared parameters statistics if any
+      param_.releaseIntermediateResults();
       this->asDerived().releaseIntermediateResultsImpl();
     }
-    /** call specific model finalization stuff */
-    void finalizeStep() { this->asDerived().finalizeModelImpl();}
-    /** set the parameters stored in the Stat* structures. */
-    void setParameters()
+    /** set the parameters stored in stat_proba_ and release stat_proba_. */
+    inline void setParameters()
     {
-      for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k].setParameters(); }
-      // set shared parameters if any
+      param_.setParameters();
       this->asDerived().setParametersImpl();
     }
-    /**  @return the parameters of the mixture in the structure Param */
-    Param getParameters() const
-    { return this->asDerived().getParametersImpl();}
+    /** @brief This function will be called once the model is estimated.
+     *  perform specific model finalization stuff */
+    inline void finalizeStep() { this->asDerived().finalizeStepImpl();}
 
     // default implementation of the pseudo-virtual methods
     /** default implementation of initializeModelImpl (do nothing) */
-    void initializeModelImpl() {}
+    inline void initializeModelImpl() {}
     /** default implementation of initializeStepImpl (return true) */
-    bool initializeStepImpl() { return true;}
-    /** default implementation of finalizeModelImpl (do nothing) */
-    void finalizeModelImpl() {}
+    inline bool initializeStepImpl() { return true;}
+    /** default implementation of finalizeStepImpl (do nothing) */
+    inline void finalizeStepImpl() {}
     /** default implementation of storeIntermediateResultsImpl (do nothing) */
-    void storeIntermediateResultsImpl(int iteration) {}
+    inline void storeIntermediateResultsImpl(int iteration) {}
     /** default implementation of setParametersImpl (do nothing) */
-    void setParametersImpl() {}
+    inline void setParametersImpl() {}
     /** default implementation of releaseIntermediateResultsImpl (do nothing) */
-    void releaseIntermediateResultsImpl() {}
+    inline void releaseIntermediateResultsImpl() {}
+
+    /** @return a simulated value for the jth variable of the ith sample
+     *  @param i,j indexes of the data to simulate
+     **/
+    inline Real sample(int i, int j) const
+    { return this->asDerived().rand(i, j, Law::Categorical::rand(p_tik()->row(i)));}
 
   protected:
+    /** @return the parameter handler of the model */
+    inline ParamHandler& paramHandler() { return param_;}
+
     /** @brief Initialize the model before its first use.
-     * This function is triggered when the data is set.
+     * This function is triggered when data set is set.
      * In this interface, the @c initializeModel() method
      *  - set the number of samples and variables of the mixture model
-     *  - resize the parameters of each component with the range of the variables
      *  - call the derived class implemented method
      * @code
      *   initializeModelImpl()
@@ -197,24 +202,15 @@ class IMixtureModel : public IRecursiveTemplate<Derived>, public IMixtureModelBa
       // set dimensions
       this->setNbSample(p_dataij_->sizeRows());
       this->setNbVariable(p_dataij_->sizeCols());
-      // initialize the parameters
-      for (int k= components_.begin(); k < components_.end(); ++k)
-      { components_[k].resize(p_dataij_->cols());}
       // call specific model initialization stuff
       this->asDerived().initializeModelImpl();
     }
-    /** @return the array with the components */
-    inline Array1D<Parameters> const& components() const { return components_;}
-    /** @return the array with the components */
-    inline Array1D<Parameters>& components() { return components_;}
-    /** @return a pointer on the k-th parameter */
-    inline Parameters& param(int k) { return components_[k];}
+    /** parameter handler associated with the derived mixture model */
+    ParamHandler param_;
 
   private:
     /** pointer on the data set */
     Array const* p_dataij_;
-    /** Array of the components of the mixture model */
-    Array1D< Parameters > components_;
 };
 
 } // namespace STK

@@ -159,20 +159,18 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
     /** New beginning index for the object.
      *  @param beg first index of the container
      **/
-    inline void shift1D(int beg)
+    void shift1D(int beg)
     { Base::shift(beg, beg);}
-
     /** New size for the container.
      *  @param I range of the columns and rows of the container
      **/
-    inline Array2DDiagonal& resize1D( Range const& I)
+    Array2DDiagonal& resize1D( Range const& I)
     { Base::resize(I, I); return *this;}
-
     /** Insert n rows and column at the given position to the container.
      *  @param pos position to insert the Rows and Cols
      *  @param n number of Rows and Cols insert
      **/
-    inline void insert( int const& pos, int const& n =1)
+    void insert( int const& pos, int const& n =1)
     {
       Base::insertCols(pos, n);
       Base::insertRows(pos, n);
@@ -183,7 +181,7 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
      *  @param pos position to erase the Rows and Cols
      *  @param n number of Rows and Cols erase
      **/
-    inline void erase( int const& pos, int const& n=1)
+    void erase( int const& pos, int const& n=1)
     {
       Base::eraseRows(pos, n);
       Base::eraseCols(pos, n);
@@ -192,7 +190,7 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
     /** Add n rows and columns to the container.
      *  @param n number of Rows and Cols to add
      **/
-    inline void pushBack(int n=1)
+    void pushBack(int n=1)
     {
       Base::pushBackRows(n);
       Base::pushBackCols(n);
@@ -201,7 +199,7 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
     /** Delete n rows and columns at the end of the container.
      *  @param n number of Rows and Cols to delete
      **/
-    inline void popBack(int const& n=1)
+    void popBack(int const& n=1)
     {
       Base::popBackRows(n);
       Base::popBackCols(n);
@@ -211,16 +209,16 @@ class Array2DDiagonal : public IArray2D< Array2DDiagonal<Type_> >
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline Array2DDiagonal& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
+    Array2DDiagonal& operator=(ExprBase<Rhs> const& T) { return LowBase::operator=(T);}
     /** overwrite the Array2D with T.
      *  @note If the size match, @c this is not resized
      *  @param T the container to copy
      **/
-    inline Array2DDiagonal& operator=(const Array2DDiagonal &T) { return LowBase::assign(T);}
+    Array2DDiagonal& operator=(const Array2DDiagonal &T) { return LowBase::assign(T);}
     /** set the container to a constant value.
      *  @param v the value to set
      **/
-    inline Array2DDiagonal& operator=(Type const& v){ return LowBase::setValue(v);}
+    Array2DDiagonal& operator=(Type const& v){ return LowBase::setValue(v);}
 };
 
 } // namespace STK

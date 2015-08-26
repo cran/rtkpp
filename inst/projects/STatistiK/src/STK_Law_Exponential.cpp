@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -32,50 +32,25 @@
  *  @brief In this file we implement the exponential law.
  **/
 
+
+#ifndef IS_RTKPP_LIB
 #include "../include/STK_Law_Exponential.h"
 #include "../include/STK_Law_Util.h"
+#endif
 
 namespace STK
 {
 
 namespace Law
 {
-/* Ctor
- */
-Exponential::Exponential( Real const& scale)
-                        : Base(String(_T("Exponential")))
-                        , scale_(scale)
-{
-  // check parameters
-  if ( !Arithmetic<Real>::isFinite(scale) || scale <= 0 )
-    STKDOMAIN_ERROR_1ARG(Exponential::Exponential,scale,invalid argument);
-}
 
-/* Dtor
- */
-Exponential::~Exponential() {}
+#ifndef IS_RTKPP_LIB
 
 /*
  *  Generate a pseudo Exponential random variate.
  */
-Real Exponential::rand() const { return Law::generator.randExp() * scale_;}
-
-/*
- *  Generate a pseudo Exponential random variate with the specified parameters.
- *  (static)
- */
-Real Exponential::rand( Real const& scale)
-{
-#ifdef STK_DEBUG
-  // check parameters
-  if ( !Arithmetic<Real>::isFinite(scale) || scale <= 0 )
-    STKDOMAIN_ERROR_1ARG(Exponential::pdf,scale,invalid argument);
-#endif
-  // check parameters
-  if ( scale <= 0 )
-    STKDOMAIN_ERROR_1ARG(Exponential::rand,scale,invalid argument);
-  return generator.randExp() * scale;
-}
+Real Exponential::rand() const
+{  return Law::generator.randExp() * scale_;}
 
 /*
  *  Give the value of the pdf at x.
@@ -92,25 +67,6 @@ Real Exponential::pdf( Real const& x) const
 }
 
 /*
- *  Give the value of the pdf at x.
- */
-Real Exponential::pdf( Real const& x, Real const& scale)
-{
-#ifdef STK_DEBUG
-  // check parameters
-  if ( !Arithmetic<Real>::isFinite(scale) || scale <= 0 )
-    STKDOMAIN_ERROR_1ARG(Exponential::pdf,scale,invalid argument);
-#endif
-  // NA value
-  if (isNA(x)) return Arithmetic<Real>::NA();
-  // trivial cases
-  if (x<0) return 0.0;
-  if (Arithmetic<Real>::isInfinite(x)) return 0.0;
-  // compute result
-  return std::exp(-x/scale) / scale;
-}
-
-/*
  * Give the value of the log-pdf at x.
  */
 Real Exponential::lpdf( Real const& x) const
@@ -121,26 +77,7 @@ Real Exponential::lpdf( Real const& x) const
   if (x<0) return -Arithmetic<Real>::infinity();
   if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
   // compute result
-  return (-x / scale_) - log(scale_) ;
-}
-
-/*
- * Give the value of the log-pdf at x.
- */
-Real Exponential::lpdf( Real const& x, Real const& scale)
-{
-#ifdef STK_DEBUG
-  // check parameters
-  if ( !Arithmetic<Real>::isFinite(scale) || scale <= 0 )
-    STKDOMAIN_ERROR_1ARG(Exponential::lpdf,scale,invalid argument);
-#endif
-  // NA value
-  if (isNA(x)) return Arithmetic<Real>::NA();
-  // trivial cases
-  if (x<0) return -Arithmetic<Real>::infinity();
-  if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
-  // compute result
-  return (-x / scale) - log(scale) ;
+  return (-x / scale_) - std::log(scale_) ;
 }
 
 /*
@@ -164,7 +101,6 @@ Real Exponential::icdf( Real const& p) const
 {
   // check NA value
   if (isNA(p)) return Arithmetic<Real>::NA();
-
   // check parameter
   if ((p > 1.) || (p < 0.))
     STKDOMAIN_ERROR_1ARG(Exponential::icdf,p,invalid argument);
@@ -175,6 +111,82 @@ Real Exponential::icdf( Real const& p) const
   return (- scale_ * log(1.-p));
 }
 
+/*
+ *  Generate a pseudo Exponential random variate with the specified parameters.
+ *  (static)
+ */
+Real Exponential::rand( Real const& scale)
+{
+  // check parameters
+  if ( scale <= 0 )
+    STKDOMAIN_ERROR_1ARG(Exponential::rand,scale,invalid argument);
+  return generator.randExp() * scale;
+}
+
+/*
+ *  Give the value of the pdf at x.
+ */
+Real Exponential::pdf( Real const& x, Real const& scale)
+{
+  // NA value
+  if (isNA(x)) return Arithmetic<Real>::NA();
+  // trivial cases
+  if (x<0) return 0.0;
+  if (Arithmetic<Real>::isInfinite(x)) return 0.0;
+  // compute result
+  return std::exp(-x/scale) / scale;
+}
+
+/*
+ * Give the value of the log-pdf at x.
+ */
+Real Exponential::lpdf( Real const& x, Real const& scale)
+{
+  // NA value
+  if (isNA(x)) return Arithmetic<Real>::NA();
+  // trivial cases
+  if (x<0) return -Arithmetic<Real>::infinity();
+  if (Arithmetic<Real>::isInfinite(x)) return -Arithmetic<Real>::infinity();
+  // compute result
+  return (-x / scale) - std::log(scale) ;
+}
+
+/* Compute he cumulative distribution function
+ *  @param t a real value
+ *  @param scale the scale of the distribution
+ **/
+Real Exponential::cdf( Real const& t, Real const& scale)
+{
+  // NA value
+  if (isNA(t)) return Arithmetic<Real>::NA();
+  // trivial cases
+  if (t <= 0.) return 0.0;
+  if (Arithmetic<Real>::isInfinite(t)) return 1.0; /* t= +inf */
+
+  return(1.-exp(-t/scale));
+}
+
+/* Compute rhe inverse cumulative distribution function
+ *  @param p a probability
+ *  @param scale the scale of the distribution
+ **/
+Real Exponential::icdf( Real const& p, Real const& scale)
+{
+  // check NA value
+  if (isNA(p)) return Arithmetic<Real>::NA();
+
+  // check parameter
+  if ((p > 1.) || (p < 0.))
+    STKDOMAIN_ERROR_1ARG(Exponential::icdf,p,invalid argument);
+ // trivial cases
+ if (p == 0.)  return 0.0;
+ if (p == 1.)  return Arithmetic<Real>::infinity();
+  // result
+  return(- scale * log(1.-p));
+}
+#endif
+
 } // namespace Law
 
 } // namespace STK
+

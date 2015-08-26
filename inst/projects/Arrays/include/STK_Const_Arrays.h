@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2013  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -52,33 +52,33 @@ template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSi
 template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSize> class UpperTriangular;
 template< typename Type_, int SizeRows_ = UnknownSize, int SizeCols_ = UnknownSize> class LowerTriangular;
 
-typedef Vector<Real, UnknownSize> ConstVectorX;
-typedef Vector<Real, 3> ConstVector3;
-typedef Vector<Real, 2> ConstVector2;
-typedef Vector<double, UnknownSize> ConstVectorXd;
-typedef Vector<double, 3> ConstVector3d;
-typedef Vector<double, 2> ConstVector2d;
-typedef Vector<int, UnknownSize> ConstVectorXi;
-typedef Vector<int, 3> ConstVector3i;
-typedef Vector<int, 2> ConstVector2i;
+typedef Vector<Real, UnknownSize> VectorX;
+typedef Vector<Real, 3> Vector3;
+typedef Vector<Real, 2> Vector2;
+typedef Vector<double, UnknownSize> VectorXd;
+typedef Vector<double, 3> Vector3d;
+typedef Vector<double, 2> Vector2d;
+typedef Vector<int, UnknownSize> VectorXi;
+typedef Vector<int, 3> Vector3i;
+typedef Vector<int, 2> Vector2i;
 
-typedef Point<Real, UnknownSize> ConstPointX;
+typedef Point<Real, UnknownSize> PointX;
 typedef Point<Real, 3> ConstPoint3;
 typedef Point<Real, 2> ConstPoint2;
-typedef Point<double, UnknownSize> ConstPointXd;
+typedef Point<double, UnknownSize> PointXd;
 typedef Point<double, 3> ConstPoint3d;
 typedef Point<double, 2> ConstPoint2d;
-typedef Point<int, UnknownSize> ConstPointXi;
+typedef Point<int, UnknownSize> PointXi;
 typedef Point<int, 3> ConstPoint3i;
 typedef Point<int, 2> ConstPoint2i;
 
-typedef Point<Real, UnknownSize> ConstPointX;
+typedef Point<Real, UnknownSize> PointX;
 typedef Point<Real, 3> ConstPoint3;
 typedef Point<Real, 2> ConstPoint2;
-typedef Point<double, UnknownSize> ConstPointXd;
+typedef Point<double, UnknownSize> PointXd;
 typedef Point<double, 3> ConstPoint3d;
 typedef Point<double, 2> ConstPoint2d;
-typedef Point<int, UnknownSize> ConstPointXi;
+typedef Point<int, UnknownSize> PointXi;
 typedef Point<int, 3> ConstPoint3i;
 typedef Point<int, 2> ConstPoint2i;
 }
@@ -211,44 +211,56 @@ struct Traits< Const::LowerTriangular<Type_, SizeRows_, SizeCols_> >
 
 namespace Const
 {
-template< class Derived, int SizeRows_, int SizeCols_>
-class IConstArray: protected IArrayBase<SizeRows_, SizeCols_>, public ExprBase<Derived>
+template< class Derived>
+class IConstArray: protected IContainer2D<hidden::Traits<Derived>::sizeRows_, hidden::Traits<Derived>::sizeCols_>, public ExprBase<Derived>
 {
   public:
+    enum
+    {
+      structure_ = hidden::Traits< Derived >::structure_,
+      orient_    = hidden::Traits< Derived >::orient_,
+      sizeRows_  = hidden::Traits< Derived >::sizeRows_,
+      sizeCols_  = hidden::Traits< Derived >::sizeCols_,
+      storage_   = hidden::Traits< Derived >::storage_
+    };
     /** Type of the Range for the rows */
-    typedef TRange<SizeRows_> RowRange;
+    typedef TRange<sizeRows_> RowRange;
     /** Type of the Range for the columns */
-    typedef TRange<SizeCols_> ColRange;
-    /** Type for the IArrayBase base Class. */
-    typedef IArrayBase<SizeRows_, SizeCols_ > Base2D;
+    typedef TRange<sizeCols_> ColRange;
+    /** Type for the IContainer2D base Class. */
+    typedef IContainer2D<sizeRows_, sizeCols_ > Base2D;
     typedef ExprBase<Derived> Base;
 
   protected:
     /** default constructor */
-    inline IConstArray(): Base2D(), Base() {}
+    IConstArray(): Base2D(), Base() {}
     /** constructor with specified dimension */
-    inline IConstArray(Range const& rows, Range const& cols) : Base2D(rows, cols), Base() {}
+    IConstArray(Range const& rows, Range const& cols) : Base2D(rows, cols), Base() {}
     /** destructor */
-    inline ~IConstArray() {}
+    ~IConstArray() {}
 
   public:
-    /**@return the Horizontal range */
-    inline ColRange const& colsImpl() const { return Base2D::colsImpl();}
-    /** @return the index of the first column */
-    inline int beginColsImpl() const { return Base2D::beginColsImpl();}
-    /**  @return the ending index of columns */
-    inline int endColsImpl() const { return Base2D::endColsImpl();}
-    /** @return the number of columns */
-    inline int sizeColsImpl() const { return Base2D ::sizeColsImpl();}
-
     /** @return the Vertical range */
-    inline RowRange const& rowsImpl() const { return Base2D::rowsImpl();}
+    inline RowRange const& rowsImpl() const { return Base2D::rows();}
+    /** @return the Vertical range */
+    inline RowRange const& rows() const { return Base2D::rows();}
     /** @return the index of the first row */
-    inline int beginRowsImpl() const { return Base2D::beginRowsImpl();}
+    inline int beginRows() const { return Base2D::beginRows();}
     /** @return the ending index of the rows */
-    inline int endRowsImpl() const { return Base2D::endRowsImpl();}
+    inline int endRows() const { return Base2D::endRows();}
     /** @return the number of rows */
-    inline int sizeRowsImpl() const { return Base2D::sizeRowsImpl();}
+    inline int sizeRows() const { return Base2D::sizeRows();}
+
+    /**@return the Horizontal range */
+    inline ColRange const&colsImpl() const { return Base2D::cols();}
+    /**@return the Horizontal range */
+    inline ColRange const&cols() const { return Base2D::cols();}
+    /** @return the index of the first column */
+    inline int beginCols() const { return Base2D::beginCols();}
+    /**  @return the ending index of columns */
+    inline int endCols() const { return Base2D::endCols();}
+    /** @return the number of columns */
+    inline int sizeCols() const { return Base2D::sizeCols();}
 
     /**  @return the index of the last column */
     inline int lastIdxCols() const { return Base2D::lastIdxCols();}
@@ -256,7 +268,7 @@ class IConstArray: protected IArrayBase<SizeRows_, SizeCols_>, public ExprBase<D
     inline int lastIdxRows() const { return Base2D::lastIdxRows();}
 
     /**  @return @c true if the container is empty, @c false otherwise */
-    inline bool empty() const { return Base2D::empty();}
+    bool empty() const { return Base2D::empty();}
 };
 
 /**@ingroup Arrays
@@ -282,10 +294,10 @@ class IConstArray: protected IArrayBase<SizeRows_, SizeCols_>, public ExprBase<D
  * @tparam Size_ the size of the identity ArrayXX. Default is UnknownSize.
  **/
 template< typename Type_, int Size_ >
-class Identity : public IConstArray<Identity<Type_, Size_>, Size_, Size_ >
+class Identity : public IConstArray<Identity<Type_, Size_> >
 {
   public:
-    typedef IConstArray<Identity<Type_, Size_>, Size_, Size_ > Base;
+    typedef IConstArray<Identity<Type_, Size_> > Base;
     typedef typename hidden::Traits< Identity<Type_, Size_> >::Type Type;
     typedef typename hidden::Traits< Identity<Type_, Size_> >::ReturnType ReturnType;
     enum
@@ -335,10 +347,10 @@ class Identity : public IConstArray<Identity<Type_, Size_>, Size_, Size_ >
  * @tparam Size_ the size of the square ArrayXX. Default is UnknownSize.
  **/
 template< typename Type_, int Size_ >
-class Square : public IConstArray<Square<Type_, Size_>, Size_, Size_ >
+class Square : public IConstArray<Square<Type_, Size_> >
 {
   public:
-    typedef IConstArray<Square<Type_, Size_>, Size_, Size_ > Base;
+    typedef IConstArray<Square<Type_, Size_> > Base;
     typedef typename hidden::Traits< Square<Type_, Size_> >::Type Type;
     typedef typename hidden::Traits< Square<Type_, Size_> >::ReturnType ReturnType;
     enum
@@ -384,10 +396,10 @@ class Square : public IConstArray<Square<Type_, Size_>, Size_, Size_ >
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
  **/
 template< typename Type_, int SizeRows_, int SizeCols_ >
-class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ >
+class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_> >
 {
   public:
-    typedef IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
+    typedef IConstArray<Array<Type_, SizeRows_, SizeCols_> > Base;
     typedef typename hidden::Traits< Array<Type_, SizeRows_, SizeCols_> >::Type Type;
     typedef typename hidden::Traits< Array<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
 
@@ -434,10 +446,10 @@ class Array : public IConstArray<Array<Type_, SizeRows_, SizeCols_>, SizeRows_, 
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
  **/
 template< typename Type_, int SizeRows_, int SizeCols_ >
-class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ >
+class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, SizeCols_> >
 {
   public:
-    typedef IConstArray<UpperTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
+    typedef IConstArray<UpperTriangular<Type_, SizeRows_, SizeCols_> > Base;
     typedef typename hidden::Traits< UpperTriangular<Type_, SizeRows_, SizeCols_> >::Type Type;
     typedef typename hidden::Traits< UpperTriangular<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
 
@@ -484,10 +496,10 @@ class UpperTriangular : public IConstArray<UpperTriangular<Type_, SizeRows_, Siz
  * @tparam SizeCols_ the number of column of the matrix. Default is UnknownSize.
  **/
 template< typename Type_, int SizeRows_, int SizeCols_ >
-class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ >
+class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, SizeCols_> >
 {
   public:
-    typedef IConstArray<LowerTriangular<Type_, SizeRows_, SizeCols_>, SizeRows_, SizeCols_ > Base;
+    typedef IConstArray<LowerTriangular<Type_, SizeRows_, SizeCols_> > Base;
     typedef typename hidden::Traits< LowerTriangular<Type_, SizeRows_, SizeCols_> >::Type Type;
     typedef typename hidden::Traits< LowerTriangular<Type_, SizeRows_, SizeCols_> >::ReturnType ReturnType;
 
@@ -529,10 +541,10 @@ class LowerTriangular : public IConstArray<LowerTriangular<Type_, SizeRows_, Siz
  * @tparam Size_ the size of the row-vector. Default is UnknownSize.
  **/
 template< typename Type_, int Size_ >
-class Point : public IConstArray<Point<Type_, Size_>, Size_, Size_ >
+class Point : public IConstArray<Point<Type_, Size_> >
 {
   public:
-    typedef IConstArray<Point<Type_, Size_>, Size_, Size_ > Base;
+    typedef IConstArray<Point<Type_, Size_> > Base;
     typedef typename hidden::Traits< Point<Type_, Size_> >::Type Type;
     typedef typename hidden::Traits< Point<Type_, Size_> >::ReturnType ReturnType;
 
@@ -578,10 +590,10 @@ class Point : public IConstArray<Point<Type_, Size_>, Size_, Size_ >
  * @tparam Size_ the size of the row-vector. Default is UnknownSize.
  **/
 template< typename Type_, int Size_ >
-class Vector : public IConstArray<Vector<Type_, Size_>, Size_, Size_ >
+class Vector : public IConstArray<Vector<Type_, Size_> >
 {
   public:
-    typedef IConstArray<Vector<Type_, Size_>, Size_, Size_ > Base;
+    typedef IConstArray<Vector<Type_, Size_> > Base;
     typedef typename hidden::Traits< Vector<Type_, Size_> >::Type Type;
     typedef typename hidden::Traits< Vector<Type_, Size_> >::ReturnType ReturnType;
 
@@ -602,8 +614,7 @@ class Vector : public IConstArray<Vector<Type_, Size_>, Size_, Size_ >
      **/
     inline ReturnType elt1Impl(int i) const { return (Type(1));}
     /** @return the element (i,j) of the constant vector.
-     *  @param i index of the row
-     *  @param j index of the column
+     *  @param i,j row and column indexes
      **/
     inline ReturnType elt2Impl(int i, int j) const { return (Type(1));}
 };

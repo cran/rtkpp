@@ -47,13 +47,13 @@ template< typename Type, int SizeCols_, bool Orient_> class CArrayPoint;
 template< typename Type, int SizeRows_, bool Orient_ > class CArrayVector;
 
 // typedef for CArrayVector Real is by default double, but can be float
-typedef CArrayNumber<Real, Arrays::by_col_>   CNumber1;
-typedef CArrayNumber<double, Arrays::by_col_> CNumber1d;
-typedef CArrayNumber<int, Arrays::by_col_>    CNumber1i;
+typedef CArrayNumber<Real, Arrays::by_col_>   CNumber;
+typedef CArrayNumber<double, Arrays::by_col_> CNumberd;
+typedef CArrayNumber<int, Arrays::by_col_>    CNumberi;
 
-typedef CArrayNumber<Real, Arrays::by_row_>   CNumberByRow1;
-typedef CArrayNumber<double, Arrays::by_row_> CNumberByRow1d;
-typedef CArrayNumber<int, Arrays::by_row_>    CNumberByRow1i;
+typedef CArrayNumber<Real, Arrays::by_row_>   CNumberByRow;
+typedef CArrayNumber<double, Arrays::by_row_> CNumberByRowd;
+typedef CArrayNumber<int, Arrays::by_row_>    CNumberByRowi;
 
 namespace hidden
 {
@@ -111,45 +111,45 @@ class CArrayNumber: public ICArray < CArrayNumber<Type_, Orient_> >
       storage_   = Arrays::dense_
     };
     /** Default constructor. */
-    inline CArrayNumber() : Base() {}
+    CArrayNumber() : Base() {}
     /** constructor with an initial value, initialization with a constant.
      *  @param v initial value of the container
      **/
-    inline CArrayNumber( Type const& v) : Base(1, 1, v) {}
+    CArrayNumber( Type const& v) : Base(1, 1, v) {}
     /** Copy constructor
      *  @param T the container to copy
      *  @param ref true if T is wrapped
      **/
-    inline CArrayNumber( const CArrayNumber &T, bool ref=false) : Base(T, ref) {}
+    CArrayNumber( const CArrayNumber &T, bool ref=false) : Base(T, ref) {}
     /** wrapper constructor for 0 based C-Array.
      *  @param q pointer on the array
      **/
-    inline CArrayNumber( Type* const& q): Base(q, 1, 1) {}
+    CArrayNumber( Type* const& q): Base(q, 1, 1) {}
     /** constructor by reference.
      *  @param allocator the allocator to wrap
      **/
     template<class OtherAllocator>
-    inline CArrayNumber( OtherAllocator const& allocator) : Base(allocator) {}
+    CArrayNumber( OtherAllocator const& allocator) : Base(allocator) {}
     /** Copy constructor using an expression.
      *  @param T the container to wrap
      **/
     template<class OtherDerived>
-    inline CArrayNumber( ExprBase<OtherDerived> const& T): Base(1, 1) { LowBase::operator=(T);}
+    CArrayNumber( ExprBase<OtherDerived> const& T): Base(1, 1) { LowBase::operator=(T);}
     /** destructor. */
-    inline ~CArrayNumber() {}
+    ~CArrayNumber() {}
     /** operator= : set the container to a constant value.
      *  @param v the value to set
      **/
-    inline CArrayNumber& operator=(Type const& v) { return LowBase::setValue(v);}
+    CArrayNumber& operator=(Type const& v) { return LowBase::setValue(v);}
     /** operator = : overwrite the CArrayNumber with the Right hand side T.
      *  @param T the container to copy
      **/
     template<class Rhs>
-    inline CArrayNumber& operator=(ExprBase<Rhs> const& T) { return LowBase::assign(T);}
+    CArrayNumber& operator=(ExprBase<Rhs> const& T) { return LowBase::assign(T);}
     /** operator = : overwrite the CArrayNumber with the Right hand side rhs.
      *  @param rhs the container to copy
      **/
-    inline CArrayNumber& operator=(CArrayNumber const& rhs) { return LowBase::assign(rhs);}
+    CArrayNumber& operator=(CArrayNumber const& rhs) { return LowBase::assign(rhs);}
 };
 
 } // namespace STK

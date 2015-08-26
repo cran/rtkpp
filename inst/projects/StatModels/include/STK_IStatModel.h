@@ -41,7 +41,7 @@
 
 #include "STK_IStatModelBase.h"
 #include "Sdk/include/STK_Macros.h"
-#include "STatistiK/include/STK_Law_IMultiLaw.h"
+#include "STatistiK/include/STK_MultiLaw_IMultiLaw.h"
 
 namespace STK
 {
@@ -91,7 +91,7 @@ class IStatModel : public IStatModelBase
     /** Type of the row of the data container (a sample) */
     typedef typename Data::Row Row;
     /** Type of the law : depend of the sample type */
-    typedef Law::IMultiLaw<Row> MultivariateLaw;
+    typedef MultiLaw::IMultiLaw<Row> MultivariateLaw;
 
   protected:
     /** Constructor with data set. */

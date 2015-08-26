@@ -57,12 +57,12 @@ template <int ref_> struct TRef;
 /** @ingroup Arrays his object is never a reference */
 template <>
 struct TRef<0>
-{ inline static bool isRef() { return false;} };
+{ static bool isRef() { return false;} };
 
 /** @ingroup Arrays This object is always a reference */
 template <>
 struct TRef<1>
-{ inline static bool isRef() { return true;} };
+{ static bool isRef() { return true;} };
 
 /** @ingroup Arrays This object can be or not be a reference */
 template <>
@@ -72,23 +72,23 @@ struct TRef<-1>
     /** Default constructor We have to specify the member ref_.
      *  @param ref : false if this own its own data.
      **/
-    inline explicit TRef( bool ref) : ref_(ref) {}
+    explicit TRef( bool ref) : ref_(ref) {}
     /** destructor. */
-    inline ~TRef() {}
+    ~TRef() {}
 
   public:
     /** @return @c true if *this is reference container, @c false otherwise */
-    inline bool isRef() const { return ref_;}
+    bool isRef() const { return ref_;}
     /** swap this with the container T.
      *  @param T the container to swap with this
      **/
-    inline void exchange(TRef const& T) { std::swap(ref_, T.ref_);}
+    void exchange(TRef const& T) { std::swap(ref_, T.ref_);}
 
     /** Modify the container : can become a reference or the owner of
      *  the data. To use with care if we want to avoid memory leak.
      *  @param ref : false if this own its own data.
      **/
-    inline void setRef(bool ref) const { ref_ = ref;}
+    void setRef(bool ref) const { ref_ = ref;}
 
   private:
     /** Is it a "true" container or a wrapper ?

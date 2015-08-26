@@ -523,9 +523,9 @@ static const Real stirlingCoefArray[9] =
 };
 
 /** @ingroup Analysis
- *  @brief Compute the Lanzcos correction serie for the gamma function
+ *  @brief Compute the Lanzcos correction series for the gamma function
  *  with n = 21 terms.
- *  @param z given value for the lanzcos Serie
+ *  @param z given value for the lanzcos Series
  **/
 static Real lanczosSerie(Real const& z)
 {
@@ -549,8 +549,8 @@ static Real gammaLanczos(Real const& z)
 }
 
 /** @ingroup Analysis
- *  @brief Compute the Stirling's serie for the gammaLn function.
- *  @param z given value for the stirling Serie
+ *  @brief Compute the Stirling's series for the gammaLn function.
+ *  @param z given value for the stirling Series
  **/
 static double stirlingSerie(Real const& z)
 {

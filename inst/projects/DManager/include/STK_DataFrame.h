@@ -36,7 +36,7 @@
 #ifndef STK_DATAFRAME_H
 #define STK_DATAFRAME_H
 
-#include <Arrays/include/STK_IArrayBase.h>
+#include <Arrays/include/STK_ITContainer2D.h>
 #include "STK_List1D.h"
 #include "STK_IVariable.h"
 
@@ -48,19 +48,23 @@ namespace STK
   * @brief DataFrame is a List of Variable with the same number of rows.
   *  This is thus also a 2D container.
   *
-  * A DataFrame inherit from the class @c List1D and and @c IArrayBase.
+  * A DataFrame inherit from the class @c List1D and and @c IContainer2D.
   * It is essentially a List, except that each column (the variables)
   * possess the same dimension.
   *
   * Each Cell of the List1D contain a pointer on a Variable.
  **/
-class DataFrame : protected List1D<IVariable* >, public IArrayBase<UnknownSize,UnknownSize>
+class DataFrame : protected List1D<IVariable* >, public IContainer2D<UnknownSize,UnknownSize>
 {
-  protected:
+  public:
     /** Type of the Base container */
-    typedef IArrayBase<UnknownSize, UnknownSize > Base2D;
+    typedef IContainer2D<UnknownSize, UnknownSize > Base2D;
     /** Type for the list container. */
     typedef List1D<IVariable*> Base;
+    /** Type of the Range for the rows */
+    typedef TRange<UnknownSize> RowRange;
+    /** Type of the Range for the columns */
+    typedef TRange<UnknownSize> ColRange;
 
   public:
     /** Default Constructor, empty table. */
@@ -74,31 +78,8 @@ class DataFrame : protected List1D<IVariable* >, public IArrayBase<UnknownSize,U
     /** Destructor. */
     virtual ~DataFrame();
 
-    /**@return the range of the columns */
-    inline ColRange const& colsImpl() const { return Base2D::colsImpl();}
-    /** @return the index of the first column */
-    inline int beginCols() const { return Base2D::beginColsImpl();}
-    /**  @return the ending index of the columns */
-    inline int endCols() const { return Base2D::endColsImpl();}
-    /** @return the number of columns */
-    inline int sizeCols() const { return Base2D ::sizeColsImpl();}
-
-    /** @return the range of the rows */
-    inline RowRange const& rowsImpl() const { return Base2D::rowsImpl();}
-    /** @return the index of the first row */
-    inline int beginRows() const { return Base2D::beginRowsImpl();}
-    /** @return the ending index of the rows */
-    inline int endRows() const { return Base2D::endRowsImpl();}
-    /** @return the number of rows */
-    inline int sizeRows() const { return Base2D::sizeRowsImpl();}
-
-    /**  @return the index of the last column */
-    inline int lastIdxCols() const { return Base2D::lastIdxCols();}
-    /** @return the index of the last row */
-    inline int lastIdxRows() const { return Base2D::lastIdxRows();}
-
     /** @return @c true if the container is empty, @c false otherwise */
-    inline bool empty() const { return Base2D::empty();}
+     inline bool empty() const { return Base::empty();}
 
     /** Clear the object. */
     void clear();

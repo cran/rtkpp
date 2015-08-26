@@ -46,7 +46,7 @@ DataFrame::DataFrame( DataFrame const& T, bool ref)
                     , Base2D(T)
 {
   // we need to copy explicitly the data
-  for (int j=begin(); j<=lastIdx(); j++) // for all columns
+  for (int j=begin(); j<end(); j++) // for all columns
     if (T[j])                            // if there is data
       elt(j) = T[j]->clone(ref); // set the adress of a clone
 }
@@ -135,7 +135,7 @@ void DataFrame::shift(int const& cbeg)
 {
   // list1D shift
   Base::shift(cbeg);
-  // IArrayBase shift for Col
+  // IContainer2D shift for Col
   shiftBeginCols(cbeg);
 }
 
@@ -168,7 +168,7 @@ void DataFrame::popBackCols(int const& n)
     if (elt(j)) delete elt(j);
   // popBack() of List1D
   Base::popBack(n);
-  // update IArrayBase
+  // update IContainer2D
   decLastIdxCols(n);
   // if it was the last elt, free mem
   if (this->sizeCols() == 0) freeMem();
@@ -379,7 +379,7 @@ void DataFrame::pushBackCols(int const& n)
   if (n <= 0) return;
   // add n columns to list1D
   insert(Range(lastIdx()+1, n), 0);
-  // update IArrayBase
+  // update IContainer2D
   incLastIdxCols(n);
 }
 
@@ -394,7 +394,7 @@ void DataFrame::insertCols( int pos, int const& n)
   { STKOUT_OF_RANGE_2ARG(Dataframe::insertCols,pos, n,pos>lastIdx());}
   // insert n elements in list1D
   insert(Range(pos, n), 0);
-  // update IArrayBase
+  // update IContainer2D
   incLastIdxCols(n);
 }
 
@@ -490,7 +490,7 @@ void DataFrame::writeDataFrame( ostream& os, int const& left
   // get the csv
   ReadWriteCsv* pData = csv.p_readWriteCsv();
   // set delimiters to blank
-  pData->setDelimiters(STRING_BLANK);
+  pData->setDelimiters(_T(" "));
   // write the csv
   pData->writeSelection(os, beginRows(), lastIdxRows(), left, right);
 }

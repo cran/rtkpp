@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2010  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as
@@ -52,10 +52,12 @@ namespace STK
  * the coefficients @c Coefficients() is a matrix of size
  * (n, p*nbControlPoints) where p is the number of variables.
  */
-template<class Data>
+template<class Array>
 class AdditiveBSplineCoefficients : public IRunnerBase
 {
   public:
+    typedef typename Array::Row RowVector;
+    typedef typename Array::Col ColVector;
     /** Constructor : initialize the data members. The number of knots is given
      *  by the formula nbKnots = nbControlPoints + degree +1.
      *  @param p_data a pointer on the input data values
@@ -63,10 +65,10 @@ class AdditiveBSplineCoefficients : public IRunnerBase
      *  @param degree degree of the B-Spline curves
      *  @param position method to use for positioning the knots
      **/
-    AdditiveBSplineCoefficients( Data const* p_data
+    AdditiveBSplineCoefficients( Array const* p_data
                                , int nbControlPoints
                                , int degree = 3
-                               , Regress::KnotsPosition position = Regress::uniform_
+                               , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                                )
                                : IRunnerBase()
                                , p_data_(p_data)
@@ -83,10 +85,10 @@ class AdditiveBSplineCoefficients : public IRunnerBase
      *  @param degree degree of the B-Spline curves
      *  @param position method to use for positioning the knots
      **/
-    AdditiveBSplineCoefficients( Data const& data
+    AdditiveBSplineCoefficients( Array const& data
                                , int nbControlPoints
                                , int degree = 3
-                               , Regress::KnotsPosition position = Regress::uniform_
+                               , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                                )
                                : IRunnerBase()
                                , p_data_(&data)
@@ -118,10 +120,10 @@ class AdditiveBSplineCoefficients : public IRunnerBase
      *  @param degree degree of the B-Spline curves
      *  @param position method to use for positioning the knots
      **/
-    void setData( Data const* p_data
+    void setData( Array const* p_data
                 , int nbControlPoints
                 , int degree = 3
-                , Regress::KnotsPosition position = Regress::uniform_
+                , Regress::KnotsPosition position = Regress::uniformKnotsPositions_
                 );
 
     /** run the computations. */
@@ -136,15 +138,15 @@ class AdditiveBSplineCoefficients : public IRunnerBase
     /** give the computed coefficients of the B-Spline curves.
      *  This is a matrix of size (p_data_->range(), 0:lastControlPoints).
      **/
-    inline Array2D<Real> const& coefficients() const { return coefficients_;}
+    inline ArrayXX const& coefficients() const { return coefficients_;}
     /** @return the extrapolated coefficients for the x matrix.
      *  @param x the values to extrapolate
      **/
-    ArrayXX extrapolate(ArrayXX const& x) const;
+    ArrayXX extrapolate(Array const& x) const;
 
   protected:
     /** the input data set */
-    Data const* p_data_;
+    Array const* p_data_;
     /** number of knots of the B-Spline curves.*/
     int nbKnots_;
     /** number of control points of the B-Spline curves.*/
@@ -154,22 +156,22 @@ class AdditiveBSplineCoefficients : public IRunnerBase
     /** Method used in order to position the knots. */
     Regress::KnotsPosition position_;
     /** Array with the knots and coefficients in each dimension. */
-    Array1D<BSplineCoefficients<Vector> > coefs_;
+    Array1D<BSplineCoefficients<ColVector> > coefs_;
     /** Array of the coefficients */
-    Array2D<Real> coefficients_;
+    ArrayXX coefficients_;
 };
 
 /* run the computations. */
-template<class Data>
-bool AdditiveBSplineCoefficients<Data>::run()
+template<class Array>
+bool AdditiveBSplineCoefficients<Array>::run()
 {
 #ifdef STK_REGRESS_VERBOSE
-  stk_cout << _T("in AdditiveBSplineCoefficients::run()\n");
+  stk_cout << _T("In AdditiveBSplineCoefficients::run()\n");
 #endif
   // check if there exists data
   if (!p_data_)
   {
-    msg_error_ = _T("Error In AdditiveBSplineCoefficients::run()\nWhat: no data\n");
+    msg_error_ = STKERROR_NO_ARG(AdditiveBSplineCoefficients::run,data is not set);
     return false;
   }
   try
@@ -184,7 +186,7 @@ bool AdditiveBSplineCoefficients<Data>::run()
     for (int i=p_data_->beginCols(); i<p_data_->endCols(); i++)
     {
       // create a reference on the ith column of the data
-      Vector colData(p_data_->col(i), true);
+      ColVector colData(p_data_->col(i), true);
       // set data to the i-th coefficient
       // WARNING: colData will be invalidate
       coefs_[i].setData(colData, nbControlPoints_, degree_, position_);
@@ -198,7 +200,7 @@ bool AdditiveBSplineCoefficients<Data>::run()
       coefficients_.merge(coefs_[i].coefficients());
     }
   }
-  catch ( runtime_error const& e)
+  catch ( Exception const& e)
   {
     msg_error_ = e.error();
     return false;
@@ -210,8 +212,8 @@ bool AdditiveBSplineCoefficients<Data>::run()
 }
 
 /* run the computations. */
-template<class Data>
-ArrayXX AdditiveBSplineCoefficients<Data>::extrapolate(ArrayXX const& x) const
+template<class Array>
+ArrayXX AdditiveBSplineCoefficients<Array>::extrapolate(Array const& x) const
 {
 #ifdef STK_REGRESS_VERBOSE
   stk_cout << _T("in AdditiveBSplineCoefficients::extrapolate()\n");
@@ -235,8 +237,8 @@ ArrayXX AdditiveBSplineCoefficients<Data>::extrapolate(ArrayXX const& x) const
  *  @param degree degree of the B-Spline curves
  *  @param position method to use for positioning the knots
  **/
-template<class Data>
-void AdditiveBSplineCoefficients<Data>::setData( Data const* p_data
+template<class Array>
+void AdditiveBSplineCoefficients<Array>::setData( Array const* p_data
                                                , int nbControlPoints
                                                , int degree
                                                , Regress::KnotsPosition position

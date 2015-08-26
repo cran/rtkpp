@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -36,7 +36,7 @@
 #ifndef STK_LAW_ILAWBASE_H
 #define STK_LAW_ILAWBASE_H
 
-#include "STKernel/include/STK_String.h"
+#include <STKernel/include/STK_String.h>
 
 namespace STK
 {

@@ -35,10 +35,6 @@
 
 #include <cmath>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #ifdef STK_MIXTURE_DEBUG
 #include "Arrays/include/STK_Display.h"
 #endif
@@ -100,7 +96,7 @@ void IMixtureComposer::randomClassInit()
 #endif
   if (state() < 2) { initializeStep();}
   Law::Categorical law(prop_);
-  for (int i = zi_.begin(); i< zi_.end(); ++i) { zi_.elt(i) = law.rand();}
+  zi_.rand(law);
   if (cStep()<2) throw(Clust::randomClassInitFail_);
   mStep();
   eStep();
@@ -115,7 +111,7 @@ void IMixtureComposer::randomClassInit()
 void IMixtureComposer::randomFuzzyInit()
 {
 #ifdef STK_MIXTURE_VERBOSE
-  stk_cout << _T("Entering IMixtureComposer::randomFuzzyInit()\n");
+  stk_cout << _T("Entering IMixtureComposer::randomFuzzyInit(). state= ") << state() << _T("\n");
 #endif
   if (state() < 2) { initializeStep();}
   if (randomFuzzyTik()<2) throw(Clust::randomFuzzyInitFail_);

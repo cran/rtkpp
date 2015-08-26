@@ -103,7 +103,7 @@ class JointGammaModel : public IMultiStatModel<Array, WColVector, JointGammaPara
     virtual Real computeLnLikelihood( RowVector const& rowData) const
     {
       Real sum =0.;
-      for (Integer j= rowData.begin(); j <= rowData.lastIdx(); ++j)
+      for (Integer j= rowData.begin(); j < rowData.end(); ++j)
       { sum += Law::Gamma::lpdf(rowData[j], shape()[j], scale()[j]);}
       return sum;
     }

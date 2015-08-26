@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2011  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -37,12 +37,12 @@
  *  Container Class.
  **/
 
-#ifndef STK_ITCONTAINER2D_H
-#define STK_ITCONTAINER2D_H
+#ifndef STK_ITCONTAINER_H
+#define STK_ITCONTAINER_H
 
-#include "Sdk/include/STK_Macros.h"
-#include "Sdk/include/STK_IRecursiveTemplate.h"
-#include "Sdk/include/STK_StaticAssert.h"
+#include <Sdk/include/STK_IRecursiveTemplate.h>
+#include <Sdk/include/STK_StaticAssert.h>
+#include <Sdk/include/STK_Macros.h>
 
 #include "STK_Traits.h"
 #include "STK_Arrays_Util.h"
@@ -83,13 +83,7 @@ class NoAssignOperator
  * in the derived classes have the following definitions for the dimensions:
  * @code
  * ColRange const& colsImpl() const;
- * int beginColsImpl() const;
- * int endColsImpl() const;
- * int sizeColsImpl() const;
  * RowRange const& rowsImpl() const;
- * int beginRowsImpl() const;
- * int endRowsImpl() const;
- * int sizeRowsImpl() const;
  * @endcode
  * and for the accessors the following definitions:
  * @code
@@ -135,28 +129,28 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
 
   protected:
     /** Default constructor */
-    inline ITContainerBase() : Base() {}
+    ITContainerBase() : Base() {}
     /** destructor. **/
-    inline ~ITContainerBase() {}
+    ~ITContainerBase() {}
 
   public:
-    /** @return the range of the columns */
-    inline ColRange const& cols() const { return this->asDerived().colsImpl();};
+    /** @return the columns range */
+    inline ColRange const&cols() const { return this->asDerived().colsImpl();};
     /**  @return the index of the first column */
-    inline int beginCols() const { return this->asDerived().beginColsImpl();}
+    inline int beginCols() const { return cols().begin();}
     /**  @return the ending index of the columns */
-    inline int endCols() const { return this->asDerived().endColsImpl();}
+    inline int endCols() const { return cols().end();}
     /** @return the Horizontal size (the number of column) */
-    inline int sizeCols() const { return this->asDerived().sizeColsImpl();}
+    inline int sizeCols() const { return cols().size();}
 
     /** @return the range of the rows */
     inline RowRange const& rows() const { return this->asDerived().rowsImpl();}
     /** @return the index of the first row*/
-    inline int beginRows() const { return this->asDerived().beginRowsImpl();}
+    inline int beginRows() const { return rows().begin();}
     /** @return the ending index of the rows*/
-    inline int endRows() const { return this->asDerived().endRowsImpl();}
+    inline int endRows() const { return rows().end();}
     /** @return the Vertical size (the number of rows) */
-    inline int sizeRows() const { return this->asDerived().sizeRowsImpl();}
+    inline int sizeRows() const { return rows().size();}
 
     // for backward compatibility
     /** @return the index of the first column */
@@ -169,12 +163,12 @@ class ITContainerBase: public IRecursiveTemplate<Derived>, hidden::NoAssignOpera
     inline int lastIdxRows() const { return endRows()-1;}
 
     /** @return the range of the effectively stored elements in the column. */
-    inline Range rangeRowsInCol(int) const { return rows();}
+    inline RowRange const& rangeRowsInCol(int) const { return rows();}
     /** @return the range of the effectively stored elements in the row. */
-    inline Range rangeColsInRow(int) const { return cols();}
+    inline ColRange const& rangeColsInRow(int) const { return cols();}
 
     /** @return @c true if the container is empty, @c false otherwise */
-    inline bool empty() const { return (sizeCols()<=0 || sizeRows()<=0);}
+    bool empty() const { return (sizeCols()<=0 || sizeRows()<=0);}
 
     /** @return the size of the container (the number of rows by the number of columns */
     inline int sizeArray() const { return sizeRows()*sizeCols();}
@@ -314,9 +308,9 @@ class ITContainer<Derived, Arrays::array2D_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 };
 
 /** @ingroup Arrays Specialization for square_ */
@@ -342,19 +336,19 @@ class ITContainer<Derived, Arrays::square_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the range of the square container. */
-    inline RowRange const& range() const { return this->asDerived().rows();}
+    inline RowRange const& range() const { return this->rows();}
     /** @return the first index of the square container. */
-    inline int begin() const { return this->asDerived().beginRowsImpl();}
+    inline int begin() const { return range().begin();}
     /** @return the ending index of the square container. */
-    inline int end() const { return this->asDerived().endRowsImpl();}
+    inline int end() const { return range().end();}
     /** @return the size of the rows and columns of the container. */
-    inline int size() const { return this->asDerived().sizeRowsImpl();}
+    inline int size() const { return range().size();}
 
     // for backward compatibility
     /** @return the first index of the square container */
@@ -382,9 +376,9 @@ class ITContainer<Derived, Arrays::lower_triangular_> : public ITContainerBase<D
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the Range of the effectively stored elements in the column @c icol.
@@ -445,21 +439,21 @@ class ITContainer<Derived, Arrays::upper_triangular_> : public ITContainerBase<D
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the range of the effectively stored elements in the row @c irow.
      *  @param irow the index of the row we want to compute the range
      **/
-    inline Range rangeColsInRow( int irow) const
+    Range rangeColsInRow( int irow) const
     { return Range(irow, this->lastIdxCols(), 0);}
     /** compute the range of the effectively stored elements in the col
      *  icol.
      *  @param icol the number of the column to compute the range
      **/
-    inline Range rangeRowsInCol( int icol) const
+    Range rangeRowsInCol( int icol) const
     { return Range(this->beginRows(), std::min(icol, this->lastIdxRows()), 0);}
     /** @return safely the constant element (i, j).
      *  @param i, j indexes of the row and of the column
@@ -522,30 +516,35 @@ class ITContainer<Derived, Arrays::diagonal_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the range of the diagonal container. */
-    inline RowRange const& range() const { return this->asDerived().rows();}
-    /** @return the first index of the diagonal container. */
-    inline int begin() const { return this->asDerived().beginRowsImpl();}
-    /** @return the ending index of the diagonal container. */
-    inline int end() const { return this->asDerived().endRowsImpl();}
-    /** @return the size of the rows and columns of the container. */
-    inline int size() const { return this->asDerived().sizeRowsImpl();}
+    inline RowRange const& range() const { return this->rows();}
+    /** @return the index of the first element */
+    inline int begin() const { return range().begin();}
+    /**  @return the ending index of the elements */
+    inline int end() const  { return range().end();}
+    /**  @return the size of the vector */
+    inline int size() const  { return range().size();}
 
     // for backward compatibility
     /** @return the first index of the diagonal container */
-    inline int firstIdx() const { return this->begin();}
+    inline int firstIdx() const { return begin();}
     /** @return the last index of the diagonal container. */
-    inline int lastIdx() const { return this->end()-1;}
+    inline int lastIdx() const { return end()-1;}
 
+//    /** @return the Range of the column pos. */
+//    inline TRange<1> rangeRowsInCol(int pos) const { return TRange<1>(pos);}
+//    /** @return the Range of the row pos. */
+//    inline TRange<1> rangeColsInRow(int pos) const { return TRange<1>(pos);}
     /** @return the Range of the column pos. */
     inline Range rangeRowsInCol(int pos) const { return Range(pos,1);}
     /** @return the Range of the row pos. */
     inline Range rangeColsInRow(int pos) const { return Range(pos,1);}
+
 
     /** @return the first element */
     inline ReturnType front() const { return this->elt(firstIdx());}
@@ -570,7 +569,7 @@ class ITContainer<Derived, Arrays::diagonal_> : public ITContainerBase<Derived>
     /** @return safely the constant ith diagonal element.
      *  @param i index of the diagonal element
      **/
-    inline Type at(int i) const
+    ReturnType at(int i) const
     {
       if (this->begin() > i)
       { STKOUT_OF_RANGE_1ARG(ITContainer::at, i, begin() > i);}
@@ -637,25 +636,25 @@ class ITContainer<Derived, Arrays::vector_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the range of the container */
-    inline RowRange const& range() const  { return this->asDerived().rows();}
+    inline RowRange const& range() const  { return Base::rows();}
     /** @return the index of the first element */
-    inline int begin() const { return this->asDerived().beginRowsImpl();}
+    inline int begin() const { return range().begin();}
     /**  @return the ending index of the elements */
-    inline int end() const  { return this->asDerived().endRowsImpl();}
+    inline int end() const  { return range().end();}
     /**  @return the size of the vector */
-    inline int size() const  { return this->asDerived().sizeRowsImpl();}
+    inline int size() const  { return range().size();}
 
     // for backward compatibility
     /** @return the first index of the vector */
-    inline int firstIdx() const { return this->beginRows();}
+    inline int firstIdx() const { return begin();}
     /** @return the last index of the vector */
-    inline int lastIdx() const { return this->endRows()-1;}
+    inline int lastIdx() const { return end()-1;}
 
     /** @return the index of the column of the vector */
     inline int colIdx() const { return this->beginCols();}
@@ -691,28 +690,28 @@ class ITContainer<Derived, Arrays::point_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /** @return the range of the container */
-    inline ColRange const& range() const  { return this->asDerived().cols();}
+    inline ColRange const&range() const  { return this->asDerived().cols();}
     /** @return the index of the first element */
-    inline int begin() const { return this->asDerived().beginColsImpl();}
+    inline int begin() const { return range().begin();}
     /**  @return the ending index of the elements */
-    inline int end() const  { return this->asDerived().endColsImpl();}
+    inline int end() const  { return range().end();}
     /**  @return the size of the container */
-    inline int size() const  { return this->asDerived().sizeColsImpl();}
+    inline int size() const  { return range().size();}
 
     /** @return the index of the row of the point */
     inline int rowIdx() const { return this->beginRows();}
 
     // for backward compatibility
     /** @return the first index of the point */
-    inline int firstIdx() const { return this->beginCols();}
+    inline int firstIdx() const { return begin();}
     /** @return the last index of the vector */
-    inline int lastIdx() const { return this->endCols()-1;}
+    inline int lastIdx() const { return end()-1;}
 
     /** @return the first element */
     inline ReturnType front() const { return this->elt(firstIdx());}
@@ -731,18 +730,17 @@ class ITContainer<Derived, Arrays::number_> : public ITContainerBase<Derived>
 
   protected:
     /** default constructor. */
-    inline ITContainer() : Base() {}
+    ITContainer() : Base() {}
     /** destructor. */
-    inline ~ITContainer() {}
+    ~ITContainer() {}
 
   public:
     /**  @return the size of the container */
     inline int size() const  { return 1;}
     /** Conversion to scalar */
-    inline operator ReturnType const() const {return this->asDerived().elt0Impl();}
+    operator ReturnType const() const {return this->asDerived().elt0Impl();}
 };
 
 } // namespace STK
 
-#endif
-// STK_ITCONTAINER_H
+#endif /* STK_ITCONTAINER_H */

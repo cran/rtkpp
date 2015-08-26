@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/*     Copyright (C) 2004-2012  Serge Iovleff
+/*     Copyright (C) 2004-2015  Serge Iovleff
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@
 */
 
 /*
- * Project:  stkpp::
+ * Project:  stkpp::Arrays
  * created on: 30 déc. 2012
  * Author:   iovleff, S..._Dot_I..._At_stkpp_Dot_org (see copyright for ...)
  **/
@@ -35,11 +35,6 @@
 
 #ifndef STK_ARRAYBYVECTORPRODUCT_H
 #define STK_ARRAYBYVECTORPRODUCT_H
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 
 namespace STK
 {
@@ -53,17 +48,15 @@ namespace hidden
 template<typename Type>
 struct MultImpl
 {
-  /** multiplication : 1 sized vector */
-  static inline Type vec1(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0]);}
-  /** multiplication : 2 sized vector */
-  static inline Type vec2(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1]);}
-  /** multiplication : 3 sized vector */
-  static inline Type vec3(Type const* p_lhs, Type const* p_rhs)
-  { return(p_lhs[0] * p_rhs[0] + p_lhs[1] * p_rhs[1] + p_lhs[2] * p_rhs[2]);}
   /** multiplication of two vectors */
-  static inline Type vectorByVector(Type const* p_lhs, Type const* p_rhs)
+  static Type vectorByVector(Type const* p_lhs, Type const* p_rhs)
+  {
+    Type sum = Type(0);
+    for (int k=0; k< vectorSize; ++k) sum += p_lhs[k] * p_rhs[k];
+    return(sum);
+  }
+  /** multiplication of two vectors */
+  static Type PanelByVector(Type const* p_lhs, Type const* p_rhs)
   {
     Type sum = Type(0);
     for (int k=0; k< vectorSize; ++k) sum += p_lhs[k] * p_rhs[k];
@@ -87,34 +80,81 @@ struct bv
    **/
   static void run(Lhs const& lhs, Rhs const& rhs, Result& res)
   {
-    int nbInnerLoop = lhs.sizeCols()/vectorSize; // = rhs.sizeRows()/blockSize;
-    int vSize = lhs.sizeCols() - nbInnerLoop * vectorSize;
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int k=0; k< nbInnerLoop; ++k)
+    for (int j= lhs.beginCols(); j<lhs.endCols(); ++j)
     {
-      Type p_lhs[vectorSize];
-      Type p_rhs[vectorSize];
-      int iPos = lhs.beginCols() + k * vectorSize;
-      for (int j=0; j<vectorSize; j++) p_rhs[j]  = rhs.elt(iPos+j);
-      for (int iRow=lhs.beginRows(); iRow< lhs.endRows(); ++iRow)
-      {
-        for (int k=0; k<vectorSize; k++) p_lhs[k]  = lhs.elt(iRow, iPos+k);
-        res.elt(iRow) += Cmult::vectorByVector(p_lhs, p_rhs);
-      }
+      for (int i= lhs.beginRows(); i< lhs.endRows(); ++i)
+      { res.elt(i) += lhs(i,j) * rhs[j];}
     }
-    int iPos= lhs.beginCols()+vectorSize*nbInnerLoop;
-    Type lhsb[vectorSize];
-    Type rhsb[vectorSize];
-    for (int j=0; j<vSize; j++) rhsb[j]  = rhs.elt(iPos+j);
-    for (int iRow=lhs.beginRows(); iRow< lhs.endRows(); ++iRow)
-    {
-      for (int j=0; j<vSize; j++) lhsb[j]  = lhs.elt(iRow, iPos+j);
-      Type sum = Type(0);
-      for (int k=0; k<vSize; ++k) sum += lhsb[k] * rhsb[k];
-      res.elt(iRow) += sum;
-    }
+    return;
+//    // compute dimensions
+//    int nbRawVec = rhs.size()/panelSize;
+//    int nbPanels = lhs.sizeRows()/blockSize;
+//    // create panels and blocks
+//    Panel<Type>* tabPanel = new Panel<Type>[nbPanels];
+//    RawVec<Type> vec;
+//    // start panels by RawVec
+//    for (int k = 0, kPos = rhs.begin(); k<nbRawVec; ++k, kPos += panelSize)
+//    {
+//      vectorToRawVec(rhs, vec, kPos);
+//      for (int i = 0, iRow = lhs.beginRows(); i<nbPanels; ++i, iRow += blockSize)
+//      { arrayToPanel( lhs, tabPanel[i], iRow, kPos);}
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//      for (int i = 0; i<nbPanels; ++i)
+//      {
+//        int iRow = lhs.beginRows() + i * blockSize;
+//        PanelByRawVec(tabPanel[i],vec,res, iRow);
+//      }
+//      // last rows
+//      for (int iRow=lhs.beginRows() + nbPanels * blockSize; iRow<rhs.endRows(); ++iRow)
+//      { ArrayByRawVec(lhs,vec,res, iRow, kPos);}
+//    }
+//    delete[] tabPanel;
+//    // remaining columns
+//    for (int j= lhs.beginCols() + nbRawVec * panelSize; j<lhs.endCols(); ++j)
+//    {
+//      for (int i= lhs.beginRows(); i< lhs.endRows(); ++i)
+//      { res.elt(i) += lhs(i,j) * rhs[j];}
+//    }
+  }
+  /** Default dimension */
+  static void vectorToRawVec( Rhs const& rhs, RawVec<Type>& vec, int iRow)
+  {
+    for (int j=0; j<panelSize; ++j)
+    { vec[j] = rhs[iRow + j];}
+  }
+  /** Default dimension */
+  static void arrayToPanel( Lhs const& lhs, Panel<Type>& panel, int iRow, int jCol)
+  {
+    for (int j=0; j<panelSize; ++j)
+    { panel[j] = lhs(iRow  , jCol+j);}
+    for (int j=0; j<panelSize; ++j)
+    { panel[ panelSize+j] = lhs(iRow+1, jCol+j);}
+    for (int j=0; j<panelSize; ++j)
+    { panel[2*panelSize+j] = lhs(iRow+2, jCol+j);}
+    for (int j=0; j<panelSize; ++j)
+    { panel[3*panelSize+j] = lhs(iRow+3, jCol+j);}
+  }
+  /** Default dimension */
+  static void PanelByRawVec( Panel<Type> const& panel, RawVec<Type> const& vec
+                           , Result& res, int iRow)
+  {
+    for (int j=0; j<panelSize; ++j)
+    { res.elt(iRow)   += panel[            j] * vec[j];}
+    for (int j=0; j<panelSize; ++j)
+    { res.elt(iRow+1) += panel[  panelSize+j] * vec[j];}
+    for (int j=0; j<panelSize; ++j)
+    { res.elt(iRow+2) += panel[2*panelSize+j] * vec[j];}
+    for (int j=0; j<panelSize; ++j)
+    { res.elt(iRow+3) += panel[3*panelSize+j] * vec[j];}
+  }
+  /** Default dimension */
+  static void ArrayByRawVec( Lhs const& lhs, RawVec<Type> const& vec
+                           , Result& res, int iRow, int jCol)
+  {
+    for (int j=0; j<panelSize; ++j)
+    { res.elt(iRow) += lhs(iRow, jCol+j) * vec[j];}
   }
 }; // struct bv
 
@@ -134,34 +174,35 @@ struct vb
    **/
   static void run(Lhs const& lhs, Rhs const& rhs, Result& res)
   {
-    int nbInnerLoop = rhs.sizeRows()/vectorSize; // = rhs.sizeRows()/blockSize;
-    int vSize = rhs.sizeRows() - nbInnerLoop * vectorSize;
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int k = 0; k<nbInnerLoop; ++k)
+    for (int j= rhs.beginCols(); j<rhs.endCols(); ++j)
     {
-      int iPos = lhs.begin() + k * vectorSize;
-      Type p_lhs[vectorSize];
-      Type p_rhs[vectorSize];
-      for (int j=0; j<vectorSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
-      for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
-      {
-        for (int i=0; i<vectorSize; ++i) p_rhs[i]  = rhs.elt(iPos+i, j);
-        res.elt(j) += Cmult::vectorByVector(p_lhs, p_rhs);
-      }
-    } // k loop
-    int iPos = lhs.begin()+vectorSize*nbInnerLoop;
-    Type p_lhs[vectorSize];
-    Type p_rhs[vectorSize];
-    for (int j=0; j<vSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
-    for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
-    {
-      for (int i=0; i<vSize; ++i) p_rhs[i]  = rhs.elt(iPos+i, j);
-      Type sum = Type(0);
-      for (int k=0; k<vSize; ++k) sum += p_lhs[k] * p_rhs[k];
-      res.elt(j) += sum;
-    } // j loop
+      for (int i= rhs.beginRows(); i< rhs.endRows(); ++i)
+      { res.elt(j) += lhs[i] * rhs(i,j);}
+    }
+//    int nbInnerLoop = rhs.sizeRows()/vectorSize; // = rhs.sizeRows()/blockSize;
+//    int vSize = rhs.sizeRows() - nbInnerLoop * vectorSize;
+//    Type p_lhs[vectorSize];
+//    Type p_rhs[vectorSize];
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+//    for (int k = 0; k<nbInnerLoop; ++k)
+//    {
+//      int iPos = lhs.begin() + k * vectorSize;
+//      for (int j=0; j<vectorSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
+//      for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
+//      {
+//        for (int i=0; i<vectorSize; ++i) p_rhs[i]  = rhs.elt(iPos+i, j);
+//        res.elt(j) += Cmult::vectorByVector(p_lhs, p_rhs);
+//      }
+//    } // k loop
+//    int iPos = lhs.begin()+vectorSize*nbInnerLoop;
+//    for (int j=0; j<vSize; ++j) p_lhs[j]  = lhs.elt(iPos+j);
+//    for (int j=rhs.beginCols(); j< rhs.endCols(); ++j)
+//    {
+//      for (int i=0; i<vSize; ++i) p_rhs[i]  = rhs.elt(iPos+i, j);
+//      for (int k=0; k<vSize; ++k) res.elt(j) += p_lhs[k] * p_rhs[k];
+//    } // j loop
   }
 }; // struct pb
 
